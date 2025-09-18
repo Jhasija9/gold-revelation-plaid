@@ -15,14 +15,10 @@ router.post('/', async (req, res) => {
         };
 
         const result = await User.create(userData);
-        
+
         if (result.success) {
-            res.json({
-                success: true,
-                customer_id: result.data.customer_id,
-                user_id: result.data.id,
-                message: 'User created successfully'
-            });
+            // Redirect to connect page
+            return res.redirect(303, '/connect');
         } else {
             res.status(500).json(result);
         }
