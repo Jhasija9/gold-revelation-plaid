@@ -194,6 +194,7 @@ function renderPage({ linkToken, error, userId }) {
       var handler = Plaid.create({
         token: ${JSON.stringify(linkToken)},
         onSuccess: function(public_token, metadata) {
+        console.log('PUBLIC TOKEN:', public_token, metadata);
           
           fetch('/api/plaid/exchange-token', {
             method: 'POST',
