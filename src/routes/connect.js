@@ -53,6 +53,7 @@ function renderPage({ linkToken, error }) {
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
   <script>
     (function(){
+      var USER_ID = ${JSON.stringify(userId || null)};
       var handler = Plaid.create({
         token: ${JSON.stringify(linkToken)},
         onSuccess: function(public_token, metadata) {
@@ -65,6 +66,7 @@ function renderPage({ linkToken, error }) {
             credentials: 'include',
             body: JSON.stringify({
               public_token: public_token,
+              user_id: USER_ID,
               account_id: metadata?.accounts?.[0]?.id
             })
           })
