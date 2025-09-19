@@ -14,7 +14,7 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 // Security middleware
-const helmet = require("helmet");
+// const helmet = require("helmet");
 
 app.use(
   helmet({
