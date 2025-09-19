@@ -56,7 +56,7 @@ function renderPage({ linkToken, error }) {
       var handler = Plaid.create({
         token: ${JSON.stringify(linkToken)},
         onSuccess: function(public_token, metadata) {
-            console.log('PUBLIC TOKEN:', public_token, metadata);
+            // console.log('PUBLIC TOKEN:', public_token, metadata);
 
           // Phase 2: we'll POST to /api/plaid/exchange-token and then show masked confirmation.
           fetch('/api/plaid/exchange-token', {
