@@ -50,7 +50,7 @@ class PlaidController {
       const exchangeResult = await plaidService.exchangePublicToken(
         public_token
       );
-      console.log("Exchange Result:", exchangeResult);
+      console.log("jjjjjjjjjjExchange Result:", exchangeResult);
 
       if (!exchangeResult.success) {
         return res.status(500).json(exchangeResult);
@@ -60,7 +60,7 @@ class PlaidController {
       const accountsResult = await plaidService.getAccounts(
         exchangeResult.access_token
       );
-      console.log("Accounts Result:", accountsResult);
+      console.log("pppppppppppppppppAccounts Result:", accountsResult);
 
       if (!accountsResult.success) {
         return res.status(500).json(accountsResult);
@@ -90,6 +90,7 @@ class PlaidController {
       const dbResult = await databaseService.query("bank_accounts", "insert", {
         values: bankAccountData,
       });
+      console.log("ooooooDatabase Insert Result:", dbResult);
 
       if (!dbResult.success) {
         return res.status(500).json({
