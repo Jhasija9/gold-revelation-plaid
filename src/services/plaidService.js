@@ -143,7 +143,7 @@ class PlaidService {
     clientName = "Revelation Gold Group",
     countryCodes = ["US"],
     language = "en",
-    redirectUri, // optional: for OAuth institutions
+    // optional: for OAuth institutions
   } = {}) {
     try {
       const req = {
