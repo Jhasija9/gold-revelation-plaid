@@ -50,6 +50,7 @@ class PlaidController {
       const exchangeResult = await plaidService.exchangePublicToken(
         public_token
       );
+      console.log("Exchange Result:", exchangeResult);
 
       if (!exchangeResult.success) {
         return res.status(500).json(exchangeResult);
