@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+const { createClient } = require("@supabase/supabase-js");
 
 class User {
   constructor() {
@@ -11,31 +11,31 @@ class User {
   async create(userData) {
     try {
       const { data, error } = await this.supabase
-        .from('users')
+        .from("users")
         .insert([userData])
         .select()
         .single();
 
       if (error) throw error;
-      return { success: true, data };
+      return data;
     } catch (error) {
-      console.error('User creation error:', error);
-      return { success: false, error: error.message };
+      console.error("User creation error:", error);
+      return error;
     }
   }
 
   async findById(id) {
     try {
       const { data, error } = await this.supabase
-        .from('users')
-        .select('*')
-        .eq('id', id)
+        .from("users")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('User find error:', error);
+      console.error("User find error:", error);
       return { success: false, error: error.message };
     }
   }
@@ -43,15 +43,15 @@ class User {
   async findByEmail(email) {
     try {
       const { data, error } = await this.supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
+        .from("users")
+        .select("*")
+        .eq("email", email)
         .single();
 
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('User find error:', error);
+      console.error("User find error:", error);
       return { success: false, error: error.message };
     }
   }
@@ -59,16 +59,16 @@ class User {
   async update(id, updateData) {
     try {
       const { data, error } = await this.supabase
-        .from('users')
+        .from("users")
         .update(updateData)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
 
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error('User update error:', error);
+      console.error("User update error:", error);
       return { success: false, error: error.message };
     }
   }

@@ -4,7 +4,14 @@ const TABLE = "link_sessions";
 
 module.exports = {
   async create({ id, user_id, expires_at, ip, user_agent }) {
-    const row = { user_id, ip, user_agent };
+    const row = {
+      user_id,
+      ip,
+      user_agent,
+      // If expires_at is not passed in, default to "now + 15 minutes"
+      expires_at:
+        expires_at || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    };
     if (id) row.id = id;
     if (expires_at) row.expires_at = expires_at;
 
@@ -24,7 +31,6 @@ module.exports = {
     const rows = result.data || [];
     return rows[0] || null; // return null if not found
   },
-
   async markUsed(id) {
     const result = await db.query(TABLE, "update", {
       values: { used: true, used_at: new Date().toISOString() },
