@@ -110,17 +110,17 @@
 // module.exports = new PlaidService();
 
 // src/services/plaidService.js
-const { Configuration, PlaidApi, PlaidEnvironments } = require('plaid');
+const { Configuration, PlaidApi, PlaidEnvironments } = require("plaid");
 
 class PlaidService {
   constructor() {
-    const env = (process.env.PLAID_ENV || 'sandbox').toLowerCase(); // 'sandbox' | 'development' | 'production'
+    const env = (process.env.PLAID_ENV || "sandbox").toLowerCase(); // 'sandbox' | 'development' | 'production'
     const configuration = new Configuration({
       basePath: PlaidEnvironments[env] || PlaidEnvironments.sandbox,
       baseOptions: {
         headers: {
-          'PLAID-CLIENT-ID': process.env.PLAID_CLIENT_ID,
-          'PLAID-SECRET': process.env.PLAID_SECRET,
+          "PLAID-CLIENT-ID": process.env.PLAID_CLIENT_ID,
+          "PLAID-SECRET": process.env.PLAID_SECRET,
           // Optional but recommended to pin API version explicitly:
           // 'Plaid-Version': '2020-09-14'
         },
@@ -136,12 +136,14 @@ class PlaidService {
    */
   async createLinkToken({
     userId,
-    products = ['auth', 'balance'],
-    webhook = `${process.env.API_BASE_URL || 'http://localhost:3001'}/api/plaid/webhook`,
-    clientName = 'Revelation Gold Group',
-    countryCodes = ['US'],
-    language = 'en',
-    redirectUri,            // optional: for OAuth institutions
+    products = ["auth"],
+    webhook = `${
+      process.env.API_BASE_URL || "http://localhost:3001"
+    }/api/plaid/webhook`,
+    clientName = "Revelation Gold Group",
+    countryCodes = ["US"],
+    language = "en",
+    redirectUri, // optional: for OAuth institutions
   } = {}) {
     try {
       const req = {
@@ -161,22 +163,38 @@ class PlaidService {
     } catch (error) {
       // Let callers decide how to render/log; include Plaid request_id for audit
       const request_id = error?.response?.data?.request_id;
-      console.error('Error creating link token:', request_id || error?.message, error?.response?.data || '');
-      throw Object.assign(new Error('PLAID_LINK_TOKEN_CREATE_FAILED'), { cause: error, request_id });
+      console.error(
+        "Error creating link token:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_LINK_TOKEN_CREATE_FAILED"), {
+        cause: error,
+        request_id,
+      });
     }
   }
 
   async exchangePublicToken(publicToken) {
     try {
-      const resp = await this.client.itemPublicTokenExchange({ public_token: publicToken });
+      const resp = await this.client.itemPublicTokenExchange({
+        public_token: publicToken,
+      });
       return {
         access_token: resp.data.access_token,
         item_id: resp.data.item_id,
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
-      console.error('Error exchanging token:', request_id || error?.message, error?.response?.data || '');
-      throw Object.assign(new Error('PLAID_PUBLIC_TOKEN_EXCHANGE_FAILED'), { cause: error, request_id });
+      console.error(
+        "Error exchanging token:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_PUBLIC_TOKEN_EXCHANGE_FAILED"), {
+        cause: error,
+        request_id,
+      });
     }
   }
 
@@ -186,19 +204,35 @@ class PlaidService {
       return { accounts: resp.data.accounts, item: resp.data.item };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
-      console.error('Error getting accounts:', request_id || error?.message, error?.response?.data || '');
-      throw Object.assign(new Error('PLAID_ACCOUNTS_GET_FAILED'), { cause: error, request_id });
+      console.error(
+        "Error getting accounts:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_ACCOUNTS_GET_FAILED"), {
+        cause: error,
+        request_id,
+      });
     }
   }
 
   async getBalance(accessToken) {
     try {
-      const resp = await this.client.accountsBalanceGet({ access_token: accessToken });
+      const resp = await this.client.accountsBalanceGet({
+        access_token: accessToken,
+      });
       return { accounts: resp.data.accounts };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
-      console.error('Error getting balance:', request_id || error?.message, error?.response?.data || '');
-      throw Object.assign(new Error('PLAID_BALANCE_GET_FAILED'), { cause: error, request_id });
+      console.error(
+        "Error getting balance:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_BALANCE_GET_FAILED"), {
+        cause: error,
+        request_id,
+      });
     }
   }
 }
