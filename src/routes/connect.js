@@ -1,13 +1,13 @@
 // src/routes/connect.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const cookie = require('cookie');
+const cookie = require("cookie");
 
-const LinkSession = require('../models/LinkSession');
-const plaidService = require('../services/plaidService'); // you already have this
+const LinkSession = require("../models/LinkSession");
+const plaidService = require("../services/plaidService"); // you already have this
 
 function parseCookies(req) {
-  const header = req.headers.cookie || '';
+  const header = req.headers.cookie || "";
   return cookie.parse(header);
 }
 
@@ -33,17 +33,23 @@ function renderPage({ linkToken, error }) {
   <div class="card">
     <h1>Securely connect your bank</h1>
     <p class="muted">We use Plaid to connect your account. We never see or store your credentials.</p>
-    ${error ? `
+    ${
+      error
+        ? `
       <p class="error">${error}</p>
       <p><a href="/" class="muted">Session expired — start over</a></p>
-    ` : `
+    `
+        : `
       <div class="logos"></div>
       <button id="connectBtn">Connect bank</button>
       <p class="muted">If the window doesn't open, click the button again.</p>
-    `}
+    `
+    }
   </div>
 
-  ${linkToken ? `
+  ${
+    linkToken
+      ? `
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
   <script>
     (function(){
@@ -72,25 +78,41 @@ function renderPage({ linkToken, error }) {
       document.getElementById('connectBtn').addEventListener('click', function(){ handler.open(); });
       window.addEventListener('load', function(){ handler.open(); });
     })();
-  </script>` : ``}
+  </script>`
+      : ``
+  }
 </body>
 </html>`;
 }
 
-router.get('/', async (req, res, next) => {
+router.get("/", async (req, res, next) => {
   try {
     const cookies = parseCookies(req);
-    const sessionId = cookies['rg_link_session'];
+    const sessionId = cookies["rg_link_session"];
 
     if (!sessionId) {
-      return res.status(200).send(renderPage({ linkToken: null, error: 'Your session expired. Please start again.' }));
+      return res
+        .status(200)
+        .send(
+          renderPage({
+            linkToken: null,
+            error: "Your session expired. Please start again.",
+          })
+        );
     }
 
     const session = await LinkSession.getById(sessionId);
     const now = new Date();
 
     if (!session || session.used || new Date(session.expires_at) < now) {
-      return res.status(200).send(renderPage({ linkToken: null, error: 'Your session expired. Please start again.' }));
+      return res
+        .status(200)
+        .send(
+          renderPage({
+            linkToken: null,
+            error: "Your session expired. Please start again.",
+          })
+        );
     }
 
     // Prevent replay
@@ -99,8 +121,8 @@ router.get('/', async (req, res, next) => {
     // Mint a fresh plaind link_token for this user
     const linkToken = await plaidService.createLinkToken({
       userId: session.user_id,
-      products: ['auth','balance'],
-      webhook: process.env.PLAID_WEBHOOK_URL || undefined
+      products: ["auth"],
+      webhook: process.env.PLAID_WEBHOOK_URL || undefined,
     });
 
     return res.status(200).send(renderPage({ linkToken, error: null }));
