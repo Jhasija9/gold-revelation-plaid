@@ -32,47 +32,55 @@
 
 // module.exports = router;
 // src/routes/users.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { v4: uuidv4 } = require('uuid');
-const cookie = require('cookie');
+const { randomUUID } = require("crypto");
+const cookie = require("cookie");
 
-const User = require('../models/User');
-const LinkSession = require('../models/LinkSession');
+const User = require("../models/User");
+const LinkSession = require("../models/LinkSession");
 // const { requireFields } = require('../middleware/validation'); // optional
 
-router.post('/',
+router.post(
+  "/",
   // requireFields(['first_name','last_name','email','phone','selected_plan']),
   async (req, res, next) => {
     try {
-      const { first_name, last_name, email, phone, selected_plan } = req.body || {};
+      const { first_name, last_name, email, phone, selected_plan } =
+        req.body || {};
 
       // 1) Create user (existing behavior)
-      const created = await User.create({ first_name, last_name, email, phone, selected_plan });
+      const created = await User.create({
+        first_name,
+        last_name,
+        email,
+        phone,
+        selected_plan,
+      });
       const user_id = created?.id;
 
       // 2) Create short-lived link session
-      const link_session_id = uuidv4();
+      const link_session_id = randomUUID();
       await LinkSession.create({
         id: link_session_id,
         user_id,
-        ip: req.headers['x-forwarded-for'] || req.socket?.remoteAddress || null,
-        user_agent: req.headers['user-agent'] || null
+        ip: req.headers["x-forwarded-for"] || req.socket?.remoteAddress || null,
+        user_agent: req.headers["user-agent"] || null,
         // expires_at: omit to use DB default (now()+15m)
       });
 
       // 3) Set secure, opaque cookie (no PII)
-      const cookieStr = cookie.serialize('rg_link_session', link_session_id, {
+      const cookieStr = cookie.serialize("rg_link_session", link_session_id, {
         httpOnly: true,
-        secure: true,          // required with SameSite=None
-        sameSite: 'none',
-        path: '/',
-        maxAge: 15 * 60        // 15 minutes
+        secure: true, // required with SameSite=None
+        sameSite: "none",
+        path: "/",
+        maxAge: 15 * 60, // 15 minutes
       });
-      res.setHeader('Set-Cookie', cookieStr);
+      res.setHeader("Set-Cookie", cookieStr);
 
       // 4) 303 redirect to /connect so the browser follows and the cookie sticks
-      res.status(303).setHeader('Location', '/connect').end();
+      res.status(303).setHeader("Location", "/connect").end();
     } catch (err) {
       next(err);
     }
