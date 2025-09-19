@@ -48,21 +48,25 @@ app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 
 // Add this route
-app.get('/connect', (req, res) => {
-    res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Connect Bank - Revelation Gold Group</title>
-        </head>
-        <body>
-            <h1>Bank Connection Page</h1>
-            <p>User created successfully! This is where Plaid integration will go.</p>
-            <p>User data has been saved to database.</p>
-        </body>
-        </html>
-    `);
-});
+// app.get('/connect', (req, res) => {
+//     res.send(`
+//         <!DOCTYPE html>
+//         <html>
+//         <head>
+//             <title>Connect Bank - Revelation Gold Group</title>
+//         </head>
+//         <body>
+//             <h1>Bank Connection Page</h1>
+//             <p>User created successfully! This is where Plaid integration will go.</p>
+//             <p>User data has been saved to database.</p>
+//         </body>
+//         </html>
+//     `);
+// });
+
+const connectRoute = require('./routes/connect');
+app.use('/connect', connectRoute);
+
 
 // Root endpoint
 app.get('/', (req, res) => {
