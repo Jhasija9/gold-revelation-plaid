@@ -56,6 +56,8 @@ function renderPage({ linkToken, error }) {
       var handler = Plaid.create({
         token: ${JSON.stringify(linkToken)},
         onSuccess: function(public_token, metadata) {
+            console.log('PUBLIC TOKEN:', public_token, metadata);
+
           // Phase 2: we'll POST to /api/plaid/exchange-token and then show masked confirmation.
           fetch('/api/plaid/exchange-token', {
             method: 'POST',
@@ -91,28 +93,24 @@ router.get("/", async (req, res, next) => {
     const sessionId = cookies["rg_link_session"];
 
     if (!sessionId) {
-      return res
-        .status(200)
-        .send(
-          renderPage({
-            linkToken: null,
-            error: "Your session expired. Please start again.",
-          })
-        );
+      return res.status(200).send(
+        renderPage({
+          linkToken: null,
+          error: "Your session expired. Please start again.",
+        })
+      );
     }
 
     const session = await LinkSession.getById(sessionId);
     const now = new Date();
 
     if (!session || session.used || new Date(session.expires_at) < now) {
-      return res
-        .status(200)
-        .send(
-          renderPage({
-            linkToken: null,
-            error: "Your session expired. Please start again.",
-          })
-        );
+      return res.status(200).send(
+        renderPage({
+          linkToken: null,
+          error: "Your session expired. Please start again.",
+        })
+      );
     }
 
     // Prevent replay
