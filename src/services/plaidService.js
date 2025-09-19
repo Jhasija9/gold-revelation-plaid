@@ -143,7 +143,6 @@ class PlaidService {
     clientName = "Revelation Gold Group",
     countryCodes = ["US"],
     language = "en",
-    // optional: for OAuth institutions
   } = {}) {
     try {
       const req = {
@@ -155,7 +154,7 @@ class PlaidService {
         webhook,
       };
 
-      if (redirectUri) req.redirect_uri = redirectUri;
+      // if (redirectUri) req.redirect_uri = redirectUri;
 
       const resp = await this.client.linkTokenCreate(req);
       // return the raw token for convenience in /connect
