@@ -36,6 +36,9 @@ class PlaidController {
   // Exchange Public Token
   async exchangeToken(req, res) {
     try {
+      console.log("=== EXCHANGE TOKEN CALLED ===");
+      console.log("req.body:", req.body);
+
       const { public_token, user_id } = req.body;
 
       // Validate input

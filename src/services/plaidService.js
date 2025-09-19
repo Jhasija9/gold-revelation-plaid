@@ -180,6 +180,7 @@ class PlaidService {
         public_token: publicToken,
       });
       return {
+        success: true,
         access_token: resp.data.access_token,
         item_id: resp.data.item_id,
       };
@@ -200,7 +201,11 @@ class PlaidService {
   async getAccounts(accessToken) {
     try {
       const resp = await this.client.accountsGet({ access_token: accessToken });
-      return { accounts: resp.data.accounts, item: resp.data.item };
+      return {
+        success: true,
+        accounts: resp.data.accounts,
+        item: resp.data.item,
+      };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
       console.error(
@@ -220,7 +225,7 @@ class PlaidService {
       const resp = await this.client.accountsBalanceGet({
         access_token: accessToken,
       });
-      return { accounts: resp.data.accounts };
+      return { success: true, accounts: resp.data.accounts };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
       console.error(
