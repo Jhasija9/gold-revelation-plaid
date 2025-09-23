@@ -120,18 +120,18 @@ class PlaidController {
       }
 
       // Insert all accounts
-      const accountsResult = await databaseService.query("accounts", "insert", {
+      const accountsInsertResult = await databaseService.query("accounts", "insert", {
         values: accounts
       });
 
-      if (!accountsResult.success) {
+      if (!accountsInsertResult.success) {
         return res.status(500).json({
           success: false,
           error: "Failed to store accounts",
         });
       }
 
-      console.log("Database Insert Result:", accountsResult);
+      console.log("Database Insert Result:", accountsInsertResult);
 
       res.json({
         success: true,
