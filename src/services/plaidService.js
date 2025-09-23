@@ -279,7 +279,7 @@ class PlaidService {
         access_token: access_token,
         account_id: account_id,
         type: 'debit',
-        amount: amount.toString(),
+        amount: parseFloat(amount).toFixed(2),
         network: 'ach', // ACH is the standard for US bank transfers
         user: {
           legal_name: user_legal_name || 'John Doe',
@@ -298,7 +298,7 @@ class PlaidService {
       // Step 2: Create transfer using authorization
       const transferRequest = {
         authorization_id: authResponse.data.authorization_id,
-        amount: amount.toString(),
+        amount: parseFloat(amount).toFixed(2),
         description: description
       };
 
