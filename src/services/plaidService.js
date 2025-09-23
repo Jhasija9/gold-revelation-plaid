@@ -292,13 +292,13 @@ class PlaidService {
       const authResponse = await this.client.transferAuthorizationCreate(authRequest);
       console.log('Authorization response:', authResponse.data);
       
-      if (!authResponse.data.authorization_id) {
+      if (!authResponse.data.authorization || !authResponse.data.authorization.id) {
         throw new Error('Failed to create transfer authorization');
       }
 
       // Step 2: Create transfer using authorization
       const transferRequest = {
-        authorization_id: authResponse.data.authorization_id,
+        authorization_id: authResponse.data.authorization.id,
         amount: parseFloat(amount).toFixed(2),
         description: description
       };
