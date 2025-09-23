@@ -207,16 +207,25 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
           
           var amount = document.getElementById('amount');
           var description = document.getElementById('description');
-          
-          if (!amount || !description) {
+          var accountSelect = document.getElementById('account-select');
+
+          if (!amount || !description || !accountSelect) {
             alert('Form elements not found');
             return;
           }
-          
+
           if (!amount.value || amount.value <= 0) {
             alert('Please enter a valid amount');
             return;
           }
+
+          if (!accountSelect.value || accountSelect.value === 'undefined' || accountSelect.value === '') {
+            alert('Please select an account');
+            return;
+          }
+
+          console.log('Selected account ID:', accountSelect.value);
+          console.log('Available accounts:', data.accounts);
           
           try {
             var response = await fetch('/api/transfers/create', {
