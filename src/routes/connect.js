@@ -1,138 +1,3 @@
-// // src/routes/connect.js
-// const express = require("express");
-// const router = express.Router();
-// const cookie = require("cookie");
-
-// const LinkSession = require("../models/LinkSession");
-// const plaidService = require("../services/plaidService"); // you already have this
-
-// function parseCookies(req) {
-//   const header = req.headers.cookie || "";
-//   return cookie.parse(header);
-// }
-
-// function renderPage({ linkToken, error }) {
-//   return `<!doctype html>
-// <html lang="en">
-// <head>
-// <meta charset="utf-8"/>
-// <meta name="viewport" content="width=device-width,initial-scale=1"/>
-// <title>Connect your bank</title>
-// <style>
-//   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f8fafc;margin:0;padding:24px;color:#0f172a}
-//   .card{max-width:520px;margin:40px auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(2,6,23,.08)}
-//   h1{font-size:20px;margin:0 0 8px}
-//   p{margin:8px 0 16px;color:#334155}
-//   button{appearance:none;border:0;border-radius:10px;padding:12px 16px;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
-//   .muted{color:#64748b;font-size:14px}
-//   .error{color:#b91c1c}
-//   .logos{height:40px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);border-radius:10px;margin:12px 0}
-// </style>
-// </head>
-// <body>
-//   <div class="card">
-//     <h1>Securely connect your bank</h1>
-//     <p class="muted">We use Plaid to connect your account. We never see or store your credentials.</p>
-//     ${
-//       error
-//         ? `
-//       <p class="error">${error}</p>
-//       <p><a href="/" class="muted">Session expired — start over</a></p>
-//     `
-//         : `
-//       <div class="logos"></div>
-//       <button id="connectBtn">Connect bank</button>
-//       <p class="muted">If the window doesn't open, click the button again.</p>
-//     `
-//     }
-//   </div>
-
-//   ${
-//     linkToken
-//       ? `
-//   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-//   <script>
-//     (function(){
-//       var USER_ID = ${JSON.stringify(userId ?? null)};
-//       var handler = Plaid.create({
-//         token: ${JSON.stringify(linkToken)},
-//         onSuccess: function(public_token, metadata) {
-//             console.log('PUBLIC TOKEN:', public_token, metadata);
-
-//           // Phase 2: we'll POST to /api/plaid/exchange-token and then show masked confirmation.
-//           fetch('/api/plaid/exchange-token', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             credentials: 'include',
-//             body: JSON.stringify({
-//               public_token: public_token,
-//               user_id: USER_ID,
-//               account_id: metadata?.accounts?.[0]?.id
-//             })
-//           })
-//           .then(r => r.json())
-//           .then(() => alert('Connected!'))
-//           .catch(() => alert('Exchange failed. Please try again.'));
-//         },
-//         onExit: function(err) {
-//           if (err) console.warn('Plaid exit', err);
-//         }
-//       });
-
-//       document.getElementById('connectBtn').addEventListener('click', function(){ handler.open(); });
-//       window.addEventListener('load', function(){ handler.open(); });
-//     })();
-//   </script>`
-//       : ``
-//   }
-// </body>
-// </html>`;
-// }
-
-// router.get("/", async (req, res, next) => {
-//   try {
-//     const cookies = parseCookies(req);
-//     const sessionId = cookies["rg_link_session"];
-
-//     if (!sessionId) {
-//       return res.status(200).send(
-//         renderPage({
-//           linkToken: null,
-//           error: "Your session expired. Please start again.",
-//         })
-//       );
-//     }
-
-//     const session = await LinkSession.getById(sessionId);
-//     const now = new Date();
-
-//     if (!session || session.used || new Date(session.expires_at) < now) {
-//       return res.status(200).send(
-//         renderPage({
-//           linkToken: null,
-//           error: "Your session expired. Please start again.",
-//         })
-//       );
-//     }
-
-//     // Prevent replay
-//     await LinkSession.markUsed(session.id);
-
-//     // Mint a fresh plaind link_token for this user
-//     const linkToken = await plaidService.createLinkToken({
-//       userId: session.user_id,
-//       products: ["auth"],
-//       webhook: process.env.PLAID_WEBHOOK_URL || undefined,
-//     });
-
-//     return res.status(200).send(renderPage({ linkToken, error: null }));
-//   } catch (err) {
-//     next(err);
-//   }
-// });
-
-// module.exports = router;
-
 // src/routes/connect.js
 const express = require("express");
 const router = express.Router();
@@ -147,7 +12,7 @@ function parseCookies(req) {
 }
 
 // NOTE: add userId here
-function renderPage({ linkToken, error, userId }) {
+function renderPage({ linkToken, error, userId, bankConnected, connectedAccount }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -162,7 +27,16 @@ function renderPage({ linkToken, error, userId }) {
   button{appearance:none;border:0;border-radius:10px;padding:12px 16px;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
   .muted{color:#64748b;font-size:14px}
   .error{color:#b91c1c}
+  .success{color:#059669}
   .logos{height:40px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);border-radius:10px;margin:12px 0}
+  .payment-form{display:none;margin-top:20px;padding:20px;background:#f8fafc;border-radius:10px}
+  .form-group{margin-bottom:16px}
+  .form-group label{display:block;margin-bottom:4px;font-weight:600;color:#374151}
+  .form-group input{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
+  .form-group input:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+  .pay-btn{background:#059669;width:100%}
+  .pay-btn:hover{background:#047857}
+  .account-info{background:#f0f9ff;padding:12px;border-radius:8px;margin-bottom:16px;border-left:4px solid #0ea5e9}
 </style>
 </head>
 <body>
@@ -174,6 +48,29 @@ function renderPage({ linkToken, error, userId }) {
         ? `
       <p class="error">${error}</p>
       <p><a href="/" class="muted">Session expired — start over</a></p>
+    `
+        : bankConnected
+        ? `
+      <div class="account-info">
+        <p class="success">✅ Bank Account Connected Successfully!</p>
+        <p><strong>Account:</strong> ${connectedAccount?.institution_name || 'Bank'} - ${connectedAccount?.account_name || 'Account'}</p>
+        <p><strong>Account Type:</strong> ${connectedAccount?.account_type || 'N/A'}</p>
+      </div>
+      
+      <div class="payment-form" id="paymentForm">
+        <h2>Complete Your Purchase</h2>
+        <form id="paymentFormElement">
+          <div class="form-group">
+            <label for="amount">Amount ($):</label>
+            <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
+          </div>
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <input type="text" id="description" required placeholder="What are you purchasing?">
+          </div>
+          <button type="submit" class="pay-btn">Pay Now</button>
+        </form>
+      </div>
     `
         : `
       <div class="logos"></div>
@@ -189,37 +86,106 @@ function renderPage({ linkToken, error, userId }) {
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
   <script>
     (function(){
-      // SAFELY inline userId — no ReferenceError even if null
       var USER_ID = ${JSON.stringify(userId ?? null)};
+      var CONNECTED_ACCOUNT = ${JSON.stringify(connectedAccount ?? null)};
+      
       var handler = Plaid.create({
         token: ${JSON.stringify(linkToken)},
         onSuccess: function(public_token, metadata) {
-        console.log('PUBLIC TOKEN:', public_token, metadata);
+          console.log('PUBLIC TOKEN:', public_token, metadata);
           
           fetch('/api/plaid/exchange-token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
               public_token: public_token,
-              user_id: USER_ID,
-              account_id: metadata?.accounts?.[0]?.id
+              user_id: USER_ID
             })
           })
-          .then(r => r.json())
-          .then(() => alert('Connected!'))
-          .catch(() => alert('Exchange failed. Please try again.'));
+          .then(response => response.json())
+          .then(data => {
+            console.log('Exchange result:', data);
+            if (data.success) {
+              // Show payment form
+              document.getElementById('paymentForm').style.display = 'block';
+              document.getElementById('connectBtn').style.display = 'none';
+              
+              // Update account info
+              const accountInfo = document.querySelector('.account-info');
+              if (accountInfo) {
+                accountInfo.innerHTML = \`
+                  <p class="success">✅ Bank Account Connected Successfully!</p>
+                  <p><strong>Account:</strong> \${metadata.institution.name} - \${metadata.accounts[0].name}</p>
+                  <p><strong>Account Type:</strong> \${metadata.accounts[0].type}</p>
+                \`;
+              }
+              
+              // Store account info for payment
+              window.connectedAccountId = data.accounts_created > 0 ? 'account_id_here' : null;
+            } else {
+              alert('Bank connection failed: ' + (data.error || 'Unknown error'));
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Bank connection failed. Please try again.');
+          });
         },
-        onExit: function(err) {
-          if (err) console.warn('Plaid exit', err);
+        onExit: function(err, metadata) {
+          console.log('Plaid Link exited:', err, metadata);
         }
       });
-
-      document.getElementById('connectBtn')?.addEventListener('click', function(){ handler.open(); });
-      window.addEventListener('load', function(){ handler.open(); });
+      
+      document.getElementById('connectBtn').addEventListener('click', function() {
+        handler.open();
+      });
+      
+      // Payment form submission
+      document.getElementById('paymentFormElement').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const amount = document.getElementById('amount').value;
+        const description = document.getElementById('description').value;
+        
+        if (!amount || amount <= 0) {
+          alert('Please enter a valid amount');
+          return;
+        }
+        
+        try {
+          const response = await fetch('/api/transfers/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              user_id: USER_ID,
+              account_id: window.connectedAccountId,
+              amount: parseFloat(amount),
+              description: description
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Open Plaid Transfer UI
+            window.open(result.transfer_url, '_blank');
+            alert('Payment initiated! Please complete the authorization in the new window.');
+          } else {
+            alert('Payment failed: ' + (result.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Payment error:', error);
+          alert('Payment failed. Please try again.');
+        }
+      });
     })();
-  </script>`
-      : ``
+  </script>
+  `
+      : ""
   }
 </body>
 </html>`;

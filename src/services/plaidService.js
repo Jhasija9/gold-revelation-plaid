@@ -262,6 +262,65 @@ class PlaidService {
       });
     }
   }
+
+  // Create Transfer UI
+  async createTransferUI({
+    access_token,
+    account_id,
+    amount,
+    description,
+    user_id
+  }) {
+    try {
+      const request = {
+        access_token: access_token,
+        account_id: account_id,
+        amount: amount.toString(),
+        description: description,
+        user: {
+          client_user_id: String(user_id)
+        }
+      };
+
+      const response = await this.client.transferCreate(request);
+      
+      return {
+        success: true,
+        transfer_id: response.data.transfer_id,
+        transfer_url: response.data.transfer_url,
+        status: response.data.status
+      };
+    } catch (error) {
+      const request_id = error?.response?.data?.request_id;
+      console.error('Error creating transfer:', request_id || error?.message, error?.response?.data || '');
+      throw Object.assign(new Error('PLAID_TRANSFER_CREATE_FAILED'), {
+        cause: error,
+        request_id,
+      });
+    }
+  }
+
+  // Get Transfer Status
+  async getTransferStatus(transfer_id) {
+    try {
+      const response = await this.client.transferGet({
+        transfer_id: transfer_id
+      });
+
+      return {
+        success: true,
+        transfer: response.data.transfer,
+        status: response.data.transfer.status
+      };
+    } catch (error) {
+      const request_id = error?.response?.data?.request_id;
+      console.error('Error getting transfer status:', request_id || error?.message, error?.response?.data || '');
+      throw Object.assign(new Error('PLAID_TRANSFER_GET_FAILED'), {
+        cause: error,
+        request_id,
+      });
+    }
+  }
 }
 
 module.exports = new PlaidService();

@@ -7,6 +7,7 @@ require("dotenv").config();
 const plaidRoutes = require("./routes/plaid");
 const userRoutes = require("./routes/users");
 const paymentRoutes = require("./routes/payments");
+const transferRoutes = require("./routes/transfers");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -67,11 +68,11 @@ app.get("/health", (req, res) => {
 app.use("/api/plaid", plaidRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/transfers", transferRoutes);
 
 // Add this route
 // app.get('/connect', (req, res) => {
-//     res.send(`
-//         <!DOCTYPE html>
+//     res.send(`//         <!DOCTYPE html>
 //         <html>
 //         <head>
 //             <title>Connect Bank - Revelation Gold Group</title>
@@ -140,3 +141,4 @@ process.on("SIGINT", () => {
 module.exports = app;
 
 //changes made
+
