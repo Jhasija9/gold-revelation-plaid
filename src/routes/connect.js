@@ -247,9 +247,9 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
             var result = await response.json();
             
             if (result.success) {
-              // Open Plaid Transfer UI
-              window.open(result.transfer_url, '_blank');
-              alert('Payment initiated! Please complete the authorization in the new window.');
+              // Don't open a new window - transfer is already processed
+              alert('Payment submitted successfully! Transfer ID: ' + result.transfer_id);
+              // Optionally redirect or show success page
             } else {
               alert('Payment failed: ' + (result.error || 'Unknown error'));
             }

@@ -312,7 +312,7 @@ class PlaidService {
       return {
         success: true,
         transfer_id: transferResponse.data.transfer_id,
-        transfer_url: transferResponse.data.transfer_url,
+        // transfer_url: transferResponse.data.transfer_url,
         status: transferResponse.data.status
       };
     } catch (error) {
