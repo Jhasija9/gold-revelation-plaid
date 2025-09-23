@@ -161,8 +161,8 @@ class PlaidController {
         item_id: itemId,
         accounts_created: accounts.length,
         institution_name: accountsResult.item.institution_name,
-        accounts: accounts.map(acc => ({
-          id: acc.id, // This is the UUID from accounts table
+        accounts: accountsInsertResult.data.map(acc => ({
+          id: acc.id, // This is the actual UUID from the database
           name: acc.account_name,
           type: acc.account_type,
           mask: acc.account_mask
