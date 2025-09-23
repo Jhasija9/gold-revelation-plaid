@@ -283,7 +283,7 @@ class PlaidService {
         network: 'ach', // ACH is the standard for US bank transfers
         user: {
           legal_name: user_legal_name || 'John Doe',
-          client_user_id: String(user_id)
+          // client_user_id: String(user_id)
         }
       };
 
