@@ -278,10 +278,10 @@ class PlaidService {
         account_id: account_id,
         type: 'debit',
         amount: amount.toString(),
-        description: description,
-        user: {
-          client_user_id: String(user_id)
-        }
+        // description: description,
+        // user: {
+        //   client_user_id: String(user_id)
+        // }
       };
 
       console.log('Creating transfer authorization:', authRequest);
