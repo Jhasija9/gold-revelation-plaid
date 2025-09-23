@@ -117,6 +117,16 @@ class PlaidController {
           ach => ach.account_id === account.account_id
         );
 
+        console.log(`Account: ${account.name} (${account.account_id})`);
+  console.log("  - Auth Account Found:", !!authAccount);
+  if (authAccount) {
+    console.log("  - Routing Number:", authAccount.routing);
+    console.log("  - Account Number:", authAccount.account);
+  } else {
+    console.log("  - No ACH data found for this account");
+  }
+
+
         const accountData = {
           item_id: itemId,
           plaid_account_id: account.account_id,
