@@ -60,12 +60,23 @@ class TransferController {
       const decryptedAccessToken = decryptToken(accessToken);
 
       // Then use the decrypted token:
+      // Get user details
+      const userResult = await databaseService.query("users", "select", {
+        where: { id: user_id }
+      });
+      if (!userResult.success || userResult.data.length === 0) {
+        return res.status(404).json({ success: false, error: "User not found" });
+      }
+      const user = userResult.data[0];
+
       const transferResult = await plaidService.createTransferUI({
-        access_token: decryptedAccessToken, // Use decrypted token
+        access_token: decryptedAccessToken,
         account_id: account.plaid_account_id,
         amount: parseFloat(amount),
         description: description || 'Payment',
-        user_id: user_id
+        user_id: user_id,
+        user_legal_name: `${user.first_name} ${user.last_name}`,
+        user_email: user.email
       });
 
       // Verify user ownership

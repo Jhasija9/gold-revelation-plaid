@@ -269,7 +269,9 @@ class PlaidService {
     account_id,
     amount,
     description,
-    user_id
+    user_id,
+    user_legal_name,
+    user_email
   }) {
     try {
       // Step 1: Create transfer authorization
@@ -278,10 +280,11 @@ class PlaidService {
         account_id: account_id,
         type: 'debit',
         amount: amount.toString(),
-        // description: description,
-        // user: {
-        //   client_user_id: String(user_id)
-        // }
+        network: 'ach', // ACH is the standard for US bank transfers
+        user: {
+          legal_name: user_legal_name || 'John Doe',
+          client_user_id: String(user_id)
+        }
       };
 
       console.log('Creating transfer authorization:', authRequest);
