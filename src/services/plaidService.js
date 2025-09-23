@@ -239,6 +239,29 @@ class PlaidService {
       });
     }
   }
+
+  async getAuthData(accessToken) {
+    try {
+      const resp = await this.client.authGet({ access_token: accessToken });
+      return {
+        success: true,
+        accounts: resp.data.accounts,
+        numbers: resp.data.numbers, // This contains account/routing numbers
+        item: resp.data.item,
+      };
+    } catch (error) {
+      const request_id = error?.response?.data?.request_id;
+      console.error(
+        "Error getting auth data:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_AUTH_GET_FAILED"), {
+        cause: error,
+        request_id,
+      });
+    }
+  }
 }
 
 module.exports = new PlaidService();

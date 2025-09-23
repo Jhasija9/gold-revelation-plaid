@@ -57,12 +57,20 @@ class PlaidController {
         return res.status(500).json(exchangeResult);
       }
 
-      // Get account details
+      // Get basic account info
       const accountsResult = await plaidService.getAccounts(exchangeResult.access_token);
       console.log("Accounts Result:", accountsResult);
 
       if (!accountsResult.success) {
         return res.status(500).json(accountsResult);
+      }
+
+      // Get auth data (account/routing numbers)
+      const authResult = await plaidService.getAuthData(exchangeResult.access_token);
+      console.log("Auth Result:", authResult);
+
+      if (!authResult.success) {
+        return res.status(500).json(authResult);
       }
 
       // Check if item already exists
@@ -104,6 +112,11 @@ class PlaidController {
       // Store all accounts for this item
       const accounts = [];
       for (const account of accountsResult.accounts) {
+        // Find matching auth data for this account
+        const authAccount = authResult.numbers?.ach?.find(
+          ach => ach.account_id === account.account_id
+        );
+
         const accountData = {
           item_id: itemId,
           plaid_account_id: account.account_id,
@@ -111,9 +124,9 @@ class PlaidController {
           account_type: account.type,
           account_subtype: account.subtype,
           account_mask: account.mask,
-          routing_number: account.ach_routing,
-          account_number_encrypted: account.ach_account 
-            ? encryptToken(account.ach_account).encrypted 
+          routing_number: authAccount?.routing || null,
+          account_number_encrypted: authAccount?.account 
+            ? encryptToken(authAccount.account).encrypted 
             : null,
         };
         accounts.push(accountData);
