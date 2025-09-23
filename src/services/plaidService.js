@@ -298,6 +298,7 @@ class PlaidService {
 
       // Step 2: Create transfer using authorization
       const transferRequest = {
+        access_token: access_token, // ADD THIS LINE
         authorization_id: authResponse.data.authorization.id,
         amount: parseFloat(amount).toFixed(2),
         description: description
