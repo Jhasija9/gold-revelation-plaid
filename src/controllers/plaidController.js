@@ -161,6 +161,12 @@ class PlaidController {
         item_id: itemId,
         accounts_created: accounts.length,
         institution_name: accountsResult.item.institution_name,
+        accounts: accounts.map(acc => ({
+          id: acc.id, // This is the UUID from accounts table
+          name: acc.account_name,
+          type: acc.account_type,
+          mask: acc.account_mask
+        })),
         message: `Successfully connected ${accounts.length} account(s)`
       });
 

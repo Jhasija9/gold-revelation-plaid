@@ -37,6 +37,8 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
   .pay-btn{background:#059669;width:100%}
   .pay-btn:hover{background:#047857}
   .account-info{background:#f0f9ff;padding:12px;border-radius:8px;margin-bottom:16px;border-left:4px solid #0ea5e9}
+  .form-group select{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
+  .form-group select:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
 </style>
 </head>
 <body>
@@ -65,6 +67,13 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
     <h2>Complete Your Purchase</h2>
     <form id="paymentFormElement">
       <div class="form-group">
+        <label for="account-select">Select Account:</label>
+        <select id="account-select" required>
+          <option value="">Choose an account...</option>
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
+      <div class="form-group">
         <label for="amount">Amount ($):</label>
         <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
       </div>
@@ -90,6 +99,13 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
   <div class="payment-form" id="paymentForm" style="display:none;">
     <h2>Complete Your Purchase</h2>
     <form id="paymentFormElement">
+      <div class="form-group">
+        <label for="account-select">Select Account:</label>
+        <select id="account-select" required>
+          <option value="">Choose an account...</option>
+          <!-- Options will be populated by JavaScript -->
+        </select>
+      </div>
       <div class="form-group">
         <label for="amount">Amount ($):</label>
         <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
@@ -133,7 +149,7 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
           .then(data => {
             console.log('Exchange result:', data);
             if (data.success) {
-              // Show payment form - CHECK IF ELEMENT EXISTS FIRST
+              // Show payment form
               var paymentForm = document.getElementById('paymentForm');
               var connectBtn = document.getElementById('connectBtn');
               
@@ -144,15 +160,23 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
                 connectBtn.style.display = 'none';
               }
               
-              // Update account info - CHECK IF ELEMENT EXISTS FIRST
+              // Update account info
               var accountInfo = document.getElementById('accountInfo');
               if (accountInfo) {
                 accountInfo.style.display = 'block';
-                document.getElementById('accountDetails').textContent = \`\${metadata.institution.name} - \${metadata.accounts[0].name}\`;
+                document.getElementById('accountDetails').textContent = metadata.institution.name + ' - ' + metadata.accounts[0].name;
               }
               
-              // Store account info for payment
-              window.connectedAccountId = data.accounts_created > 0 ? 'temp_account_id' : null;
+              // Populate account dropdown
+              var accountSelect = document.getElementById('account-select');
+              if (accountSelect && data.accounts) {
+                data.accounts.forEach(account => {
+                  var option = document.createElement('option');
+                  option.value = account.id; // This is the real UUID
+                  option.textContent = account.name + ' (' + account.type + ') - ****' + account.mask;
+                  accountSelect.appendChild(option);
+                });
+              }
             } else {
               alert('Bank connection failed: ' + (data.error || 'Unknown error'));
             }
@@ -202,7 +226,7 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
               },
               body: JSON.stringify({
                 user_id: USER_ID,
-                account_id: 'temp_account_id', // We'll fix this in the backend
+                account_id: document.getElementById('account-select').value, // Real account ID
                 amount: parseFloat(amount.value),
                 description: description.value
               })
