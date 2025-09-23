@@ -136,7 +136,7 @@ class PlaidService {
    */
   async createLinkToken({
     userId,
-    products = ["auth"],
+    products = ["auth", "transfer"],
     webhook = `${
       process.env.API_BASE_URL || "http://localhost:3001"
     }/api/plaid/webhook`,
