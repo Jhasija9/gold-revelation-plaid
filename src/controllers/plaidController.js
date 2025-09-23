@@ -72,42 +72,54 @@ class PlaidController {
       // Encrypt access token
       const encryptedToken = encryptToken(exchangeResult.access_token);
 
-      // Store in database
-      const bankAccountData = {
-        user_id: user_id,
-        plaid_item_id: exchangeResult.item_id,
-        plaid_access_token: JSON.stringify(encryptedToken),
-        institution_id: accountsResult.item.institution_id,
-        institution_name: accountsResult.item.institution_name,
-        selected_account_id: accountsResult.accounts[0].account_id,  // ← FIXED: was account_id
-        account_name: accountsResult.accounts[0].name,
-        account_type: accountsResult.accounts[0].type,
-        account_subtype: accountsResult.accounts[0].subtype,
-        account_mask: accountsResult.accounts[0].mask,
-        routing_number: accountsResult.accounts[0].ach_routing,
-        account_number_encrypted: accountsResult.accounts[0].ach_account 
-          ? encryptToken(accountsResult.accounts[0].ach_account).encrypted 
-          : null,
-      };
+      // Store ALL accounts in database (not just the first one)
+      const bankAccounts = []; // Array to store all accounts
 
+      // Loop through ALL accounts returned by Plaid
+      for (let i = 0; i < accountsResult.accounts.length; i++) {
+        const account = accountsResult.accounts[i];
+        
+        const bankAccountData = {
+          user_id: user_id,
+          plaid_item_id: exchangeResult.item_id,
+          plaid_access_token: JSON.stringify(encryptedToken),
+          institution_id: accountsResult.item.institution_id,
+          institution_name: accountsResult.item.institution_name,
+          selected_account_id: account.account_id,  // ← Use current account, not [0]
+          account_name: account.name,               // ← Use current account, not [0]
+          account_type: account.type,               // ← Use current account, not [0]
+          account_subtype: account.subtype,         // ← Use current account, not [0]
+          account_mask: account.mask,               // ← Use current account, not [0]
+          routing_number: account.ach_routing,
+          account_number_encrypted: account.ach_account 
+            ? encryptToken(account.ach_account).encrypted 
+            : null,
+        };
+        
+        bankAccounts.push(bankAccountData); // Add to array
+      }
+
+      // Insert ALL accounts into database
       const dbResult = await databaseService.query("bank_accounts", "insert", {
-        values: bankAccountData,
+        values: bankAccounts, // ← Insert array of accounts, not single account
       });
+
       console.log("ooooooDatabase Insert Result:", dbResult);
 
       if (!dbResult.success) {
         return res.status(500).json({
           success: false,
-          error: "Failed to store bank account",
+          error: "Failed to store bank accounts",
         });
       }
 
+      // Return success with ALL accounts
       res.json({
         success: true,
-        bank_account_id: dbResult.data[0].id,
-        institution_name: bankAccountData.institution_name,
-        account_mask: bankAccountData.account_mask,
-        message: "Bank account connected successfully",
+        bank_accounts: dbResult.data, // ← Return all accounts
+        institution_name: accountsResult.item.institution_name,
+        total_accounts: accountsResult.accounts.length, // ← Show how many accounts
+        message: `Successfully connected ${accountsResult.accounts.length} bank account(s)`,
       });
     } catch (error) {
       console.error("Controller error:", error);
