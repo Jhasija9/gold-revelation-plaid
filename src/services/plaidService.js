@@ -272,9 +272,11 @@ class PlaidService {
     user_id
   }) {
     try {
-      const request = {
+      // Step 1: Create transfer authorization
+      const authRequest = {
         access_token: access_token,
         account_id: account_id,
+        type: 'debit',
         amount: amount.toString(),
         description: description,
         user: {
@@ -282,13 +284,30 @@ class PlaidService {
         }
       };
 
-      const response = await this.client.transferCreate(request);
+      console.log('Creating transfer authorization:', authRequest);
+      const authResponse = await this.client.transferAuthorizationCreate(authRequest);
+      console.log('Authorization response:', authResponse.data);
+      
+      if (!authResponse.data.authorization_id) {
+        throw new Error('Failed to create transfer authorization');
+      }
+
+      // Step 2: Create transfer using authorization
+      const transferRequest = {
+        authorization_id: authResponse.data.authorization_id,
+        amount: amount.toString(),
+        description: description
+      };
+
+      console.log('Creating transfer:', transferRequest);
+      const transferResponse = await this.client.transferCreate(transferRequest);
+      console.log('Transfer response:', transferResponse.data);
       
       return {
         success: true,
-        transfer_id: response.data.transfer_id,
-        transfer_url: response.data.transfer_url,
-        status: response.data.status
+        transfer_id: transferResponse.data.transfer_id,
+        transfer_url: transferResponse.data.transfer_url,
+        status: transferResponse.data.status
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;

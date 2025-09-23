@@ -63,10 +63,23 @@ class TransferController {
         });
       }
 
-      // Create transfer using Plaid Transfer UI
+      // Get the first account for this user (since we don't have account selection yet)
+      const userAccountsResult = await databaseService.query("accounts", "select", {
+        where: { item_id: account.item_id }
+      });
+
+      if (!userAccountsResult.success || userAccountsResult.data.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: "No accounts found for this user"
+        });
+      }
+
+      const firstAccount = userAccountsResult.data[0];
+
       const transferResult = await plaidService.createTransferUI({
         access_token: accessToken,
-        account_id: account.plaid_account_id,
+        account_id: firstAccount.plaid_account_id, // Use the actual Plaid account ID
         amount: parseFloat(amount),
         description: description || 'Payment',
         user_id: user_id

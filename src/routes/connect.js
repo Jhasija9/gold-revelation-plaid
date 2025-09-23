@@ -77,10 +77,31 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
   </div>
 `
         : `
-      <div class="logos"></div>
-      <button id="connectBtn">Connect bank</button>
-      <p class="muted">If the window doesn't open, click the button again.</p>
-    `
+  <div class="logos"></div>
+  <button id="connectBtn">Connect bank</button>
+  <p class="muted">If the window doesn't open, click the button again.</p>
+  
+  <!-- Always include these elements (hidden initially) -->
+  <div class="account-info" id="accountInfo" style="display:none;">
+    <p class="success">✅ Bank Account Connected Successfully!</p>
+    <p><strong>Account:</strong> <span id="accountDetails">Loading...</span></p>
+  </div>
+  
+  <div class="payment-form" id="paymentForm" style="display:none;">
+    <h2>Complete Your Purchase</h2>
+    <form id="paymentFormElement">
+      <div class="form-group">
+        <label for="amount">Amount ($):</label>
+        <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <input type="text" id="description" required placeholder="What are you purchasing?">
+      </div>
+      <button type="submit" class="pay-btn">Pay Now</button>
+    </form>
+  </div>
+`
     }
   </div>
 
@@ -131,7 +152,7 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
               }
               
               // Store account info for payment
-              window.connectedAccountId = data.accounts_created > 0 ? 'account_id_here' : null;
+              window.connectedAccountId = data.accounts_created > 0 ? 'temp_account_id' : null;
             } else {
               alert('Bank connection failed: ' + (data.error || 'Unknown error'));
             }
@@ -181,7 +202,7 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
               },
               body: JSON.stringify({
                 user_id: USER_ID,
-                account_id: window.connectedAccountId,
+                account_id: 'temp_account_id', // We'll fix this in the backend
                 amount: parseFloat(amount.value),
                 description: description.value
               })
