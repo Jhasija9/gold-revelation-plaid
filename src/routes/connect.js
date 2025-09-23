@@ -51,27 +51,31 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
     `
         : bankConnected
         ? `
-      <div class="account-info">
-        <p class="success">✅ Bank Account Connected Successfully!</p>
-        <p><strong>Account:</strong> ${connectedAccount?.institution_name || 'Bank'} - ${connectedAccount?.account_name || 'Account'}</p>
-        <p><strong>Account Type:</strong> ${connectedAccount?.account_type || 'N/A'}</p>
+  <div class="logos"></div>
+  <button id="connectBtn">Connect bank</button>
+  <p class="muted">If the window doesn't open, click the button again.</p>
+  
+  <!-- Always include these elements (hidden initially) -->
+  <div class="account-info" id="accountInfo" style="display:none;">
+    <p class="success">✅ Bank Account Connected Successfully!</p>
+    <p><strong>Account:</strong> <span id="accountDetails">Loading...</span></p>
+  </div>
+  
+  <div class="payment-form" id="paymentForm" style="display:none;">
+    <h2>Complete Your Purchase</h2>
+    <form id="paymentFormElement">
+      <div class="form-group">
+        <label for="amount">Amount ($):</label>
+        <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
       </div>
-      
-      <div class="payment-form" id="paymentForm">
-        <h2>Complete Your Purchase</h2>
-        <form id="paymentFormElement">
-          <div class="form-group">
-            <label for="amount">Amount ($):</label>
-            <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
-          </div>
-          <div class="form-group">
-            <label for="description">Description:</label>
-            <input type="text" id="description" required placeholder="What are you purchasing?">
-          </div>
-          <button type="submit" class="pay-btn">Pay Now</button>
-        </form>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <input type="text" id="description" required placeholder="What are you purchasing?">
       </div>
-    `
+      <button type="submit" class="pay-btn">Pay Now</button>
+    </form>
+  </div>
+`
         : `
       <div class="logos"></div>
       <button id="connectBtn">Connect bank</button>
@@ -120,13 +124,10 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
               }
               
               // Update account info - CHECK IF ELEMENT EXISTS FIRST
-              var accountInfo = document.querySelector('.account-info');
+              var accountInfo = document.getElementById('accountInfo');
               if (accountInfo) {
-                accountInfo.innerHTML = \`
-                  <p class="success">✅ Bank Account Connected Successfully!</p>
-                  <p><strong>Account:</strong> \${metadata.institution.name} - \${metadata.accounts[0].name}</p>
-                  <p><strong>Account Type:</strong> \${metadata.accounts[0].type}</p>
-                \`;
+                accountInfo.style.display = 'block';
+                document.getElementById('accountDetails').textContent = \`\${metadata.institution.name} - \${metadata.accounts[0].name}\`;
               }
               
               // Store account info for payment
