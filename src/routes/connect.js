@@ -247,9 +247,26 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
             var result = await response.json();
             
             if (result.success) {
+              // Reset the form
+              document.getElementById('paymentFormElement').reset();
+              
+              // Clear the account dropdown
+              var accountSelect = document.getElementById('account-select');
+              if (accountSelect) {
+                accountSelect.innerHTML = '<option value="">Choose an account...</option>';
+              }
+              
+              // Hide the payment form and show connect button again
+              var paymentForm = document.getElementById('paymentForm');
+              var connectBtn = document.getElementById('connectBtn');
+              var accountInfo = document.getElementById('accountInfo');
+              
+              if (paymentForm) paymentForm.style.display = 'none';
+              if (connectBtn) connectBtn.style.display = 'block';
+              if (accountInfo) accountInfo.style.display = 'none';
+              
               // Don't open a new window - transfer is already processed
               alert('Payment submitted successfully! Transfer ID: ' + result.transfer_id);
-              // Optionally redirect or show success page
             } else {
               alert('Payment failed: ' + (result.error || 'Unknown error'));
             }
