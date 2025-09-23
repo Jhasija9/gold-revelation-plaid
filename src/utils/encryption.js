@@ -6,11 +6,21 @@ const KEY = crypto.createHash('sha256').update(String(RAW_KEY)).digest();
 const ALGORITHM = 'aes-256-gcm';
 
 const encryptToken = (text) => {
-  // const iv = crypto.randomBytes(16);
+  // Handle undefined/null values
+  if (text === undefined || text === null) {
+    return {
+      encrypted: null,
+      iv: null,
+      authTag: null
+    };
+  }
+
+  // Convert to string if not already
+  const textToEncrypt = String(text);
+  
   const iv = crypto.randomBytes(12);
-  // const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
   const cipher = crypto.createCipheriv(ALGORITHM, KEY, iv);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
+  let encrypted = cipher.update(textToEncrypt, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   const authTag = cipher.getAuthTag();
   

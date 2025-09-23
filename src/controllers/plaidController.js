@@ -85,9 +85,9 @@ class PlaidController {
         account_subtype: accountsResult.accounts[0].subtype,
         account_mask: accountsResult.accounts[0].mask,
         routing_number: accountsResult.accounts[0].ach_routing,
-        account_number_encrypted: encryptToken(
-          accountsResult.accounts[0].ach_account
-        ).encrypted,
+        account_number_encrypted: accountsResult.accounts[0].ach_account 
+  ? encryptToken(accountsResult.accounts[0].ach_account).encrypted 
+  : null,
       };
 
       const dbResult = await databaseService.query("bank_accounts", "insert", {
