@@ -79,15 +79,15 @@ class PlaidController {
         plaid_access_token: JSON.stringify(encryptedToken),
         institution_id: accountsResult.item.institution_id,
         institution_name: accountsResult.item.institution_name,
-        account_id: accountsResult.accounts[0].account_id,
+        selected_account_id: accountsResult.accounts[0].account_id,  // ← FIXED: was account_id
         account_name: accountsResult.accounts[0].name,
         account_type: accountsResult.accounts[0].type,
         account_subtype: accountsResult.accounts[0].subtype,
         account_mask: accountsResult.accounts[0].mask,
         routing_number: accountsResult.accounts[0].ach_routing,
         account_number_encrypted: accountsResult.accounts[0].ach_account 
-  ? encryptToken(accountsResult.accounts[0].ach_account).encrypted 
-  : null,
+          ? encryptToken(accountsResult.accounts[0].ach_account).encrypted 
+          : null,
       };
 
       const dbResult = await databaseService.query("bank_accounts", "insert", {
