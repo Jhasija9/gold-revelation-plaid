@@ -281,6 +281,7 @@ class PlaidService {
         type: 'debit',
         amount: parseFloat(amount).toFixed(2),
         network: 'ach', // ACH is the standard for US bank transfers
+        ach_class: 'ppd',
         user: {
           legal_name: user_legal_name || 'John Doe',
           // client_user_id: String(user_id)
