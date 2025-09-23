@@ -108,12 +108,19 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
           .then(data => {
             console.log('Exchange result:', data);
             if (data.success) {
-              // Show payment form
-              document.getElementById('paymentForm').style.display = 'block';
-              document.getElementById('connectBtn').style.display = 'none';
+              // Show payment form - CHECK IF ELEMENT EXISTS FIRST
+              var paymentForm = document.getElementById('paymentForm');
+              var connectBtn = document.getElementById('connectBtn');
               
-              // Update account info
-              const accountInfo = document.querySelector('.account-info');
+              if (paymentForm) {
+                paymentForm.style.display = 'block';
+              }
+              if (connectBtn) {
+                connectBtn.style.display = 'none';
+              }
+              
+              // Update account info - CHECK IF ELEMENT EXISTS FIRST
+              var accountInfo = document.querySelector('.account-info');
               if (accountInfo) {
                 accountInfo.innerHTML = \`
                   <p class="success">✅ Bank Account Connected Successfully!</p>
@@ -138,50 +145,62 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
         }
       });
       
-      document.getElementById('connectBtn').addEventListener('click', function() {
-        handler.open();
-      });
+      // Add event listener - CHECK IF ELEMENT EXISTS FIRST
+      var connectBtn = document.getElementById('connectBtn');
+      if (connectBtn) {
+        connectBtn.addEventListener('click', function() {
+          handler.open();
+        });
+      }
       
-      // Payment form submission
-      document.getElementById('paymentFormElement').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const amount = document.getElementById('amount').value;
-        const description = document.getElementById('description').value;
-        
-        if (!amount || amount <= 0) {
-          alert('Please enter a valid amount');
-          return;
-        }
-        
-        try {
-          const response = await fetch('/api/transfers/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              user_id: USER_ID,
-              account_id: window.connectedAccountId,
-              amount: parseFloat(amount),
-              description: description
-            })
-          });
+      // Payment form submission - CHECK IF ELEMENT EXISTS FIRST
+      var paymentFormElement = document.getElementById('paymentFormElement');
+      if (paymentFormElement) {
+        paymentFormElement.addEventListener('submit', async function(e) {
+          e.preventDefault();
           
-          const result = await response.json();
+          var amount = document.getElementById('amount');
+          var description = document.getElementById('description');
           
-          if (result.success) {
-            // Open Plaid Transfer UI
-            window.open(result.transfer_url, '_blank');
-            alert('Payment initiated! Please complete the authorization in the new window.');
-          } else {
-            alert('Payment failed: ' + (result.error || 'Unknown error'));
+          if (!amount || !description) {
+            alert('Form elements not found');
+            return;
           }
-        } catch (error) {
-          console.error('Payment error:', error);
-          alert('Payment failed. Please try again.');
-        }
-      });
+          
+          if (!amount.value || amount.value <= 0) {
+            alert('Please enter a valid amount');
+            return;
+          }
+          
+          try {
+            var response = await fetch('/api/transfers/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                user_id: USER_ID,
+                account_id: window.connectedAccountId,
+                amount: parseFloat(amount.value),
+                description: description.value
+              })
+            });
+            
+            var result = await response.json();
+            
+            if (result.success) {
+              // Open Plaid Transfer UI
+              window.open(result.transfer_url, '_blank');
+              alert('Payment initiated! Please complete the authorization in the new window.');
+            } else {
+              alert('Payment failed: ' + (result.error || 'Unknown error'));
+            }
+          } catch (error) {
+            console.error('Payment error:', error);
+            alert('Payment failed. Please try again.');
+          }
+        });
+      }
     })();
   </script>
   `
