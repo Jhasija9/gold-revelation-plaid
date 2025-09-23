@@ -1,5 +1,6 @@
 const plaidService = require('../services/plaidService');
 const databaseService = require('../services/databaseService');
+const { decryptToken } = require('../utils/encryption'); // Added this import
 
 class TransferController {
   // Create Transfer
@@ -55,6 +56,18 @@ class TransferController {
       const item = itemResult.data[0];
       const accessToken = JSON.parse(item.access_token_encrypted);
 
+      // Change this line to decrypt the token:
+      const decryptedAccessToken = decryptToken(accessToken);
+
+      // Then use the decrypted token:
+      const transferResult = await plaidService.createTransferUI({
+        access_token: decryptedAccessToken, // Use decrypted token
+        account_id: account.plaid_account_id,
+        amount: parseFloat(amount),
+        description: description || 'Payment',
+        user_id: user_id
+      });
+
       // Verify user ownership
       if (item.user_id !== user_id) {
         return res.status(403).json({
@@ -76,14 +89,6 @@ class TransferController {
       }
 
       const firstAccount = userAccountsResult.data[0];
-
-      const transferResult = await plaidService.createTransferUI({
-        access_token: accessToken,
-        account_id: firstAccount.plaid_account_id, // Use the actual Plaid account ID
-        amount: parseFloat(amount),
-        description: description || 'Payment',
-        user_id: user_id
-      });
 
       // Store transaction record in database
       const transactionRecord = {
