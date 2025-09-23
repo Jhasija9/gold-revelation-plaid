@@ -149,6 +149,9 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
           .then(data => {
             console.log('Exchange result:', data);
             if (data.success) {
+              // Store accounts globally so form submission can access them
+              window.ACCOUNTS_DATA = data.accounts;
+              
               // Show payment form
               var paymentForm = document.getElementById('paymentForm');
               var connectBtn = document.getElementById('connectBtn');
@@ -225,7 +228,7 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
           }
 
           console.log('Selected account ID:', accountSelect.value);
-          console.log('Available accounts:', data.accounts);
+          console.log('Available accounts:', window.ACCOUNTS_DATA);
           
           try {
             var response = await fetch('/api/transfers/create', {
