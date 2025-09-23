@@ -50,77 +50,97 @@ class PlaidController {
       }
 
       // Exchange token with Plaid
-      const exchangeResult = await plaidService.exchangePublicToken(
-        public_token
-      );
-      console.log("jjjjjjjjjjExchange Result:", exchangeResult);
+      const exchangeResult = await plaidService.exchangePublicToken(public_token);
+      console.log("Exchange Result:", exchangeResult);
 
       if (!exchangeResult.success) {
         return res.status(500).json(exchangeResult);
       }
 
       // Get account details
-      const accountsResult = await plaidService.getAccounts(
-        exchangeResult.access_token
-      );
-      console.log("pppppppppppppppppAccounts Result:", accountsResult);
+      const accountsResult = await plaidService.getAccounts(exchangeResult.access_token);
+      console.log("Accounts Result:", accountsResult);
 
       if (!accountsResult.success) {
         return res.status(500).json(accountsResult);
       }
 
-      // Encrypt access token
-      const encryptedToken = encryptToken(exchangeResult.access_token);
+      // Check if item already exists
+      const existingItem = await databaseService.query("items", "select", {
+        where: { plaid_item_id: exchangeResult.item_id }
+      });
 
-      // Store ALL accounts in database (not just the first one)
-      const bankAccounts = []; // Array to store all accounts
-
-      // Loop through ALL accounts returned by Plaid
-      for (let i = 0; i < accountsResult.accounts.length; i++) {
-        const account = accountsResult.accounts[i];
-        
-        const bankAccountData = {
+      let itemId;
+      
+      if (existingItem.success && existingItem.data.length > 0) {
+        // Item exists, use existing item_id
+        itemId = existingItem.data[0].id;
+        console.log("Using existing item:", itemId);
+      } else {
+        // Create new item
+        const itemData = {
           user_id: user_id,
           plaid_item_id: exchangeResult.item_id,
-          plaid_access_token: JSON.stringify(encryptedToken),
+          access_token_encrypted: JSON.stringify(encryptToken(exchangeResult.access_token)),
           institution_id: accountsResult.item.institution_id,
           institution_name: accountsResult.item.institution_name,
-          selected_account_id: account.account_id,  // ← Use current account, not [0]
-          account_name: account.name,               // ← Use current account, not [0]
-          account_type: account.type,               // ← Use current account, not [0]
-          account_subtype: account.subtype,         // ← Use current account, not [0]
-          account_mask: account.mask,               // ← Use current account, not [0]
+        };
+        
+        const itemResult = await databaseService.query("items", "insert", {
+          values: [itemData]
+        });
+        
+        if (!itemResult.success) {
+          return res.status(500).json({
+            success: false,
+            error: "Failed to create item",
+          });
+        }
+        
+        itemId = itemResult.data[0].id;
+        console.log("Created new item:", itemId);
+      }
+
+      // Store all accounts for this item
+      const accounts = [];
+      for (const account of accountsResult.accounts) {
+        const accountData = {
+          item_id: itemId,
+          plaid_account_id: account.account_id,
+          account_name: account.name,
+          account_type: account.type,
+          account_subtype: account.subtype,
+          account_mask: account.mask,
           routing_number: account.ach_routing,
           account_number_encrypted: account.ach_account 
             ? encryptToken(account.ach_account).encrypted 
             : null,
         };
-        
-        bankAccounts.push(bankAccountData); // Add to array
+        accounts.push(accountData);
       }
 
-      // Insert ALL accounts into database
-      const dbResult = await databaseService.query("bank_accounts", "insert", {
-        values: bankAccounts, // ← Insert array of accounts, not single account
+      // Insert all accounts
+      const accountsResult = await databaseService.query("accounts", "insert", {
+        values: accounts
       });
 
-      console.log("ooooooDatabase Insert Result:", dbResult);
-
-      if (!dbResult.success) {
+      if (!accountsResult.success) {
         return res.status(500).json({
           success: false,
-          error: "Failed to store bank accounts",
+          error: "Failed to store accounts",
         });
       }
 
-      // Return success with ALL accounts
+      console.log("Database Insert Result:", accountsResult);
+
       res.json({
         success: true,
-        bank_accounts: dbResult.data, // ← Return all accounts
+        item_id: itemId,
+        accounts_created: accounts.length,
         institution_name: accountsResult.item.institution_name,
-        total_accounts: accountsResult.accounts.length, // ← Show how many accounts
-        message: `Successfully connected ${accountsResult.accounts.length} bank account(s)`,
+        message: `Successfully connected ${accounts.length} account(s)`
       });
+
     } catch (error) {
       console.error("Controller error:", error);
       res.status(500).json({
