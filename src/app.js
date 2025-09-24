@@ -8,9 +8,8 @@ const plaidRoutes = require("./routes/plaid");
 const userRoutes = require("./routes/users");
 const paymentRoutes = require("./routes/payments");
 const transferRoutes = require("./routes/transfers");
-const transferStatusService = require('./services/transferStatusService');
-const bodyParser = require('body-parser');
-
+const transferStatusService = require("./services/transferStatusService");
+const bodyParser = require("body-parser");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -46,21 +45,21 @@ app.use(
     credentials: true,
   })
 );
-app.use('/api/plaid/webhook', 
-  bodyParser.raw({ type: 'application/json' }), 
+app.use(
+  "/api/plaid/webhook",
+  bodyParser.raw({ type: "application/json" }),
   (req, res, next) => {
     if (req.body && req.body.length) {
       try {
         req.body = JSON.parse(req.body.toString());
       } catch (e) {
         // Log parsing error but continue
-        console.error('Error parsing webhook body', e);
+        console.error("Error parsing webhook body", e);
       }
     }
     next();
   }
 );
-
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
@@ -147,7 +146,7 @@ app.listen(PORT, HOST, () => {
 // Set up polling for pending transfers (every hour)
 const transferPollInterval = setInterval(() => {
   transferStatusService.pollPendingTransfers();
-}, 60 * 60 * 1000); // 1 hour
+}, 1 * 60 * 1000); // 1 minute
 
 // Consider adding an initial delayed poll
 setTimeout(() => {
@@ -169,4 +168,3 @@ process.on("SIGINT", () => {
 module.exports = app;
 
 //changes made
-
