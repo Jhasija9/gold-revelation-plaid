@@ -41,9 +41,9 @@ router.post("/get-balance", plaidController.getBalance.bind(plaidController));
 // Replace your existing webhook route with this updated version
 router.post("/webhook", verifyPlaidWebhook, (req, res) => {
   res.status(200).json({ received: true });
-  
+
   // Log full webhook data for debugging
-  console.log('Webhook received:', JSON.stringify(req.body));
+  console.log("Webhook received:", JSON.stringify(req.body));
   // Process webhook asynchronously
   setImmediate(() => {
     try {
@@ -58,6 +58,12 @@ router.post("/webhook", verifyPlaidWebhook, (req, res) => {
       console.error("Error processing webhook:", error);
     }
   }, 0);
+});
+
+// In routes/plaid.js, add this route temporarily
+router.post("/webhook-test", (req, res) => {
+  console.log("🧪 WEBHOOK TEST RECEIVED:", req.body);
+  res.status(200).json({ message: "Test received" });
 });
 
 module.exports = router;
