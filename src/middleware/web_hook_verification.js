@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const webhookKeyService = require('../services/webhookKeyService');
+const webhookKeyService = require('../services/webhookKeyService.js');
 
 async function verifyPlaidWebhook(req, res, next) {
   try {
