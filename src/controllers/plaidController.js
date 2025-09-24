@@ -206,6 +206,97 @@ class PlaidController {
       });
     }
   }
+  // Add these methods at the end of the class, before the closing bracket and module.exports
+
+async handleWebhook(webhookData) {
+  const { webhook_type, webhook_code } = webhookData;
+  
+  console.log(`Received ${webhook_type}.${webhook_code} webhook`);
+  
+  // Handle different webhook types
+  switch(webhook_type) {
+    case 'TRANSFER':
+      await this.handleTransferWebhook(webhookData);
+      break;
+    // Add other webhook types as needed
+    default:
+      console.log(`Unhandled webhook type: ${webhook_type}`);
+  }
+}
+
+async handleTransferWebhook(webhookData) {
+  const { webhook_code, transfer_id } = webhookData;
+  
+  // Ensure we have a transfer_id
+  if (!transfer_id) {
+    console.error('Missing transfer_id in webhook data');
+    return;
+  }
+  
+  // Update database based on webhook code
+  // Reference: https://plaid.com/docs/api/products/transfer/#transfer-events
+  switch(webhook_code) {
+    case 'transfer_created':
+      // Usually already handled during creation, but can update if needed
+      break;
+      
+    case 'transfer_pending':
+      await databaseService.query("transactions", "update", {
+        where: { plaid_transfer_id: transfer_id },
+        values: { status: 'pending' }
+      });
+      break;
+      
+    case 'transfer_posted':
+      await databaseService.query("transactions", "update", {
+        where: { plaid_transfer_id: transfer_id },
+        values: { 
+          status: 'posted',
+          processed_at: new Date().toISOString(),
+          // Per Plaid docs: https://plaid.com/docs/api/products/transfer/#transfer_posted
+          ach_reference_id: webhookData.ach_transfer_id || null
+        }
+      });
+      break;
+      
+    case 'transfer_settled':
+      await databaseService.query("transactions", "update", {
+        where: { plaid_transfer_id: transfer_id },
+        values: { 
+          status: 'settled',
+          completed_at: new Date().toISOString() 
+        }
+      });
+      break;
+      
+    case 'transfer_failed':
+      await databaseService.query("transactions", "update", {
+        where: { plaid_transfer_id: transfer_id },
+        values: { 
+          status: 'failed',
+          failed_at: new Date().toISOString(),
+          // Per Plaid docs: https://plaid.com/docs/api/products/transfer/#transfer_failed
+          failure_reason: webhookData.failure_reason || null
+        }
+      });
+      break;
+      
+    case 'transfer_returned':
+      await databaseService.query("transactions", "update", {
+        where: { plaid_transfer_id: transfer_id },
+        values: { 
+          status: 'returned',
+          failed_at: new Date().toISOString(),
+          // Per Plaid docs: https://plaid.com/docs/api/products/transfer/#transfer_returned
+          failure_reason: webhookData.return_reason || null
+        }
+      });
+      break;
+      
+    default:
+      console.log(`Unhandled transfer webhook code: ${webhook_code}`);
+  }
+}
 
   // Get Balance
   async getBalance(req, res) {

@@ -8,6 +8,9 @@ const plaidRoutes = require("./routes/plaid");
 const userRoutes = require("./routes/users");
 const paymentRoutes = require("./routes/payments");
 const transferRoutes = require("./routes/transfers");
+const transferStatusService = require('./services/transferStatusService');
+const bodyParser = require('body-parser');
+
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -43,6 +46,16 @@ app.use(
     credentials: true,
   })
 );
+app.use('/api/plaid/webhook', 
+  bodyParser.raw({ type: 'application/json' }), 
+  (req, res, next) => {
+    if (req.body.length) {
+      req.body = JSON.parse(req.body.toString());
+    }
+    next();
+  }
+);
+
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
@@ -126,10 +139,20 @@ app.listen(PORT, HOST, () => {
   console.log(`�� API endpoints: http://${HOST}:${PORT}/api`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
+// Set up polling for pending transfers (every hour)
+const transferPollInterval = setInterval(() => {
+  transferStatusService.pollPendingTransfers();
+}, 60 * 60 * 1000); // 1 hour
+
+// Consider adding an initial delayed poll
+setTimeout(() => {
+  transferStatusService.pollPendingTransfers();
+}, 30000); // 30 seconds after startup
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("SIGTERM received. Shutting down gracefully...");
+  clearInterval(transferPollInterval);
   process.exit(0);
 });
 

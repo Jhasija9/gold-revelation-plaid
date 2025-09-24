@@ -357,6 +357,29 @@ class PlaidService {
       };
     }
   }
+  // Add this method to the PlaidService class, before the closing bracket
+
+async getTransferById(accessToken, transferId) {
+  try {
+    // https://plaid.com/docs/api/products/transfer/#transferget
+    const request = {
+      transfer_id: transferId
+    };
+    
+    const response = await this.client.transferGet(request);
+    
+    return {
+      success: true,
+      transfer: response.data.transfer
+    };
+  } catch (error) {
+    console.error('Error getting transfer:', error);
+    return {
+      success: false,
+      error: error.response?.data?.error_message || error.message
+    };
+  }
+}
 
   // Get Transfer Status
   async getTransferStatus(transfer_id) {

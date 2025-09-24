@@ -1,5 +1,8 @@
 const express = require('express');
 const plaidController = require('../controllers/plaidController');
+const verifyPlaidWebhook = require('../middleware/web_hook_verification');
+
+
 
 const router = express.Router();
 
@@ -29,27 +32,33 @@ router.post('/get-accounts', plaidController.getAccounts.bind(plaidController));
 router.post('/get-balance', plaidController.getBalance.bind(plaidController));
 
 // Add this route
-router.post('/webhook', (req, res) => {
-  console.log('Plaid webhook received:', req.body);
-  
-  // Handle different webhook events
-  const { webhook_type, webhook_code } = req.body;
-  
-  switch (webhook_type) {
-    case 'ITEM':
-      console.log('Item webhook:', webhook_code);
-      break;
-    case 'ACCOUNTS':
-      console.log('Accounts webhook:', webhook_code);
-      break;
-    case 'AUTH':
-      console.log('Auth webhook:', webhook_code);
-      break;
-    default:
-      console.log('Unknown webhook type:', webhook_type);
-  }
-  
-  res.status(200).json({ received: true });
-});
+// Add this import at the top of the file
 
-module.exports = router;
+// Replace your existing webhook route with this updated version
+router.post('/webhook', verifyPlaidWebhook, (req, res) => {
+  // Already responded with 200 OK in middleware if verification passed
+  // Process webhook asynchronously to avoid timeouts
+  setImmediate(() => {
+    try {
+      const { webhook_type, webhook_code } = req.body;
+      console.log(`Processing ${webhook_type}.${webhook_code} webhook`);
+      
+      // Handle different webhook types
+      switch (webhook_type) {
+        case 'TRANSFER':
+          plaidController.handleTransferWebhook(req.body);
+          break;
+        case 'ITEM':
+          // Handle item webhooks
+          break;
+        case 'AUTH':
+          // Handle auth webhooks
+          break;
+        default:
+          console.log(`Unhandled webhook type: ${webhook_type}`);
+      }
+    } catch (error) {
+      console.error('Error processing webhook:', error);
+    }
+  });
+});
