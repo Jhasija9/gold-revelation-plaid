@@ -3,6 +3,12 @@ const jwt = require("jsonwebtoken");
 const webhookKeyService = require("../services/webhookKeyService.js");
 
 async function verifyPlaidWebhook(req, res, next) {
+  console.log("🔍 Webhook verification called");
+  console.log(
+    "🔍 SKIP_WEBHOOK_VERIFICATION:",
+    process.env.SKIP_WEBHOOK_VERIFICATION
+  );
+
   try {
     // Skip verification in development if needed (optional)
     if (process.env.SKIP_WEBHOOK_VERIFICATION === "true") {
