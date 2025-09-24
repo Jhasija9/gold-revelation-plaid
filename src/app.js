@@ -49,8 +49,13 @@ app.use(
 app.use('/api/plaid/webhook', 
   bodyParser.raw({ type: 'application/json' }), 
   (req, res, next) => {
-    if (req.body.length) {
-      req.body = JSON.parse(req.body.toString());
+    if (req.body && req.body.length) {
+      try {
+        req.body = JSON.parse(req.body.toString());
+      } catch (e) {
+        // Log parsing error but continue
+        console.error('Error parsing webhook body', e);
+      }
     }
     next();
   }
