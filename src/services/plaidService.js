@@ -271,29 +271,34 @@ class PlaidService {
     description,
     user_id,
     user_legal_name,
-    user_email
+    user_email,
   }) {
     try {
       // Step 1: Create transfer authorization
       const authRequest = {
         access_token: access_token,
         account_id: account_id,
-        type: 'debit',
+        type: "debit",
         amount: parseFloat(amount).toFixed(2),
-        network: 'ach', // ACH is the standard for US bank transfers
-        ach_class: 'ppd',
+        network: "ach", // ACH is the standard for US bank transfers
+        ach_class: "ppd",
         user: {
-          legal_name: user_legal_name || 'John Doe',
+          legal_name: user_legal_name || "John Doe",
           // client_user_id: String(user_id)
-        }
+        },
       };
 
-      console.log('Creating transfer authorization:', authRequest);
-      const authResponse = await this.client.transferAuthorizationCreate(authRequest);
-      console.log('Authorization response:', authResponse.data);
-      
-      if (!authResponse.data.authorization || !authResponse.data.authorization.id) {
-        throw new Error('Failed to create transfer authorization');
+      console.log("Creating transfer authorization:", authRequest);
+      const authResponse = await this.client.transferAuthorizationCreate(
+        authRequest
+      );
+      console.log("Authorization response:", authResponse.data);
+
+      if (
+        !authResponse.data.authorization ||
+        !authResponse.data.authorization.id
+      ) {
+        throw new Error("Failed to create transfer authorization");
       }
 
       // Step 2: Create transfer using authorization
@@ -302,26 +307,54 @@ class PlaidService {
         account_id: account_id, // ADD THIS LINE
         authorization_id: authResponse.data.authorization.id,
         amount: parseFloat(amount).toFixed(2),
-        description: description
+        description: description,
       };
 
-      console.log('Creating transfer:', transferRequest);
-      const transferResponse = await this.client.transferCreate(transferRequest);
-      console.log('Transfer response:', transferResponse.data);
-      
+      console.log("Creating transfer:", transferRequest);
+      const transferResponse = await this.client.transferCreate(
+        transferRequest
+      );
+      console.log("Transfer response:", transferResponse.data);
+
       return {
         success: true,
         transfer_id: transferResponse.data.transfer_id,
         // transfer_url: transferResponse.data.transfer_url,
-        status: transferResponse.data.status
+        status: transferResponse.data.status,
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
-      console.error('Error creating transfer:', request_id || error?.message, error?.response?.data || '');
-      throw Object.assign(new Error('PLAID_TRANSFER_CREATE_FAILED'), {
+      console.error(
+        "Error creating transfer:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_TRANSFER_CREATE_FAILED"), {
         cause: error,
         request_id,
       });
+    }
+  }
+  // Add this method to plaidService.js
+
+  async getAccountBalances(accessToken) {
+    try {
+      const request = {
+        access_token: accessToken,
+      };
+
+      const response = await this.client.accountsBalanceGet(request);
+
+      return {
+        success: true,
+        accounts: response.data.accounts,
+      };
+    } catch (error) {
+      console.error("Error getting account balances:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error_message || error.message,
+      };
     }
   }
 
@@ -329,18 +362,22 @@ class PlaidService {
   async getTransferStatus(transfer_id) {
     try {
       const response = await this.client.transferGet({
-        transfer_id: transfer_id
+        transfer_id: transfer_id,
       });
 
       return {
         success: true,
         transfer: response.data.transfer,
-        status: response.data.transfer.status
+        status: response.data.transfer.status,
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
-      console.error('Error getting transfer status:', request_id || error?.message, error?.response?.data || '');
-      throw Object.assign(new Error('PLAID_TRANSFER_GET_FAILED'), {
+      console.error(
+        "Error getting transfer status:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      throw Object.assign(new Error("PLAID_TRANSFER_GET_FAILED"), {
         cause: error,
         request_id,
       });
