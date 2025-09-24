@@ -274,6 +274,7 @@ class PlaidService {
     user_email,
   }) {
     try {
+      console.log("Creating transfer with Plaid");
       // Step 1: Create transfer authorization
       const authRequest = {
         access_token: access_token,
@@ -318,7 +319,7 @@ class PlaidService {
 
       return {
         success: true,
-        transfer_id: transferResponse.data.transfer_id,
+        transfer_id: transferResponse.data.transfer.id,
         // transfer_url: transferResponse.data.transfer_url,
         status: transferResponse.data.status,
       };
@@ -359,27 +360,27 @@ class PlaidService {
   }
   // Add this method to the PlaidService class, before the closing bracket
 
-async getTransferById(accessToken, transferId) {
-  try {
-    // https://plaid.com/docs/api/products/transfer/#transferget
-    const request = {
-      transfer_id: transferId
-    };
-    
-    const response = await this.client.transferGet(request);
-    
-    return {
-      success: true,
-      transfer: response.data.transfer
-    };
-  } catch (error) {
-    console.error('Error getting transfer:', error);
-    return {
-      success: false,
-      error: error.response?.data?.error_message || error.message
-    };
+  async getTransferById(accessToken, transferId) {
+    try {
+      // https://plaid.com/docs/api/products/transfer/#transferget
+      const request = {
+        transfer_id: transferId,
+      };
+
+      const response = await this.client.transferGet(request);
+
+      return {
+        success: true,
+        transfer: response.data.transfer,
+      };
+    } catch (error) {
+      console.error("Error getting transfer:", error);
+      return {
+        success: false,
+        error: error.response?.data?.error_message || error.message,
+      };
+    }
   }
-}
 
   // Get Transfer Status
   async getTransferStatus(transfer_id) {
