@@ -224,77 +224,84 @@ async handleWebhook(webhookData) {
   }
 }
 
+// Add this method to your PlaidController class
+
 async handleTransferWebhook(webhookData) {
-  const { webhook_code, transfer_id } = webhookData;
-  
-  // Ensure we have a transfer_id
-  if (!transfer_id) {
-    console.error('Missing transfer_id in webhook data');
-    return;
-  }
-  
-  // Update database based on webhook code
-  // Reference: https://plaid.com/docs/api/products/transfer/#transfer-events
-  switch(webhook_code) {
-    case 'transfer_created':
-      // Usually already handled during creation, but can update if needed
-      break;
-      
-    case 'transfer_pending':
-      await databaseService.query("transactions", "update", {
-        where: { plaid_transfer_id: transfer_id },
-        values: { status: 'pending' }
-      });
-      break;
-      
-    case 'transfer_posted':
-      await databaseService.query("transactions", "update", {
-        where: { plaid_transfer_id: transfer_id },
-        values: { 
+  try {
+    console.log('Processing transfer webhook:', JSON.stringify(webhookData, null, 2));
+    
+    const { webhook_code, transfer_id } = webhookData;
+    
+    if (!transfer_id) {
+      console.error('Missing transfer_id in webhook data');
+      return;
+    }
+    
+    // Find the transaction record using the transfer_id
+    const transactionResult = await databaseService.query("transactions", "select", {
+      where: { plaid_transfer_id: transfer_id }
+    });
+    
+    if (!transactionResult.success || transactionResult.data.length === 0) {
+      console.error(`No transaction found with plaid_transfer_id: ${transfer_id}`);
+      return;
+    }
+    
+    const transaction = transactionResult.data[0];
+    let updateValues = {};
+    
+    // Map webhook events to database updates
+    switch(webhook_code) {
+      case 'transfer_posted':
+        updateValues = {
           status: 'posted',
           processed_at: new Date().toISOString(),
-          // Per Plaid docs: https://plaid.com/docs/api/products/transfer/#transfer_posted
           ach_reference_id: webhookData.ach_transfer_id || null
-        }
-      });
-      break;
-      
-    case 'transfer_settled':
-      await databaseService.query("transactions", "update", {
-        where: { plaid_transfer_id: transfer_id },
-        values: { 
+        };
+        break;
+        
+      case 'transfer_settled':
+        updateValues = {
           status: 'settled',
-          completed_at: new Date().toISOString() 
-        }
-      });
-      break;
-      
-    case 'transfer_failed':
-      await databaseService.query("transactions", "update", {
-        where: { plaid_transfer_id: transfer_id },
-        values: { 
+          completed_at: new Date().toISOString()
+        };
+        break;
+        
+      case 'transfer_failed':
+        updateValues = {
           status: 'failed',
           failed_at: new Date().toISOString(),
-          // Per Plaid docs: https://plaid.com/docs/api/products/transfer/#transfer_failed
-          failure_reason: webhookData.failure_reason || null
-        }
-      });
-      break;
-      
-    case 'transfer_returned':
-      await databaseService.query("transactions", "update", {
-        where: { plaid_transfer_id: transfer_id },
-        values: { 
+          failure_reason: webhookData.failure_reason || 'Transfer failed'
+        };
+        break;
+        
+      case 'transfer_returned':
+        updateValues = {
           status: 'returned',
           failed_at: new Date().toISOString(),
-          // Per Plaid docs: https://plaid.com/docs/api/products/transfer/#transfer_returned
-          failure_reason: webhookData.return_reason || null
-        }
-      });
-      break;
-      
-    default:
-      console.log(`Unhandled transfer webhook code: ${webhook_code}`);
+          failure_reason: webhookData.return_reason || 'Transfer returned'
+        };
+        break;
+        
+      default:
+        console.log(`Unhandled transfer webhook: ${webhook_code}`);
+        return;
+    }
+    
+    // Update the transaction record
+    const updateResult = await databaseService.query("transactions", "update", {
+      where: { id: transaction.id },
+      values: updateValues
+    });
+    
+    if (updateResult.success) {
+      console.log(`✅ Updated transaction ${transaction.id} for ${webhook_code}`);
+    } else {
+      console.error(`❌ Failed to update transaction:`, updateResult.error);
+    }
+    
+  } catch (error) {
+    console.error('Error handling transfer webhook:', error);
   }
 }
 
