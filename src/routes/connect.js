@@ -11,114 +11,530 @@ function parseCookies(req) {
   return cookie.parse(header);
 }
 
-// NOTE: add userId here
-function renderPage({ linkToken, error, userId, bankConnected, connectedAccount }) {
+function renderPage({ linkToken, error, userId }) {
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Connect your bank</title>
+<title>Complete Your Purchase - Revelation Gold Group</title>
 <style>
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f8fafc;margin:0;padding:24px;color:#0f172a}
-  .card{max-width:520px;margin:40px auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(2,6,23,.08)}
-  h1{font-size:20px;margin:0 0 8px}
-  p{margin:8px 0 16px;color:#334155}
-  button{appearance:none;border:0;border-radius:10px;padding:12px 16px;background:#0ea5e9;color:#fff;font-weight:600;cursor:pointer}
-  .muted{color:#64748b;font-size:14px}
-  .error{color:#b91c1c}
-  .success{color:#059669}
-  .logos{height:40px;background:linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9);border-radius:10px;margin:12px 0}
-  .payment-form{display:none;margin-top:20px;padding:20px;background:#f8fafc;border-radius:10px}
-  .form-group{margin-bottom:16px}
-  .form-group label{display:block;margin-bottom:4px;font-weight:600;color:#374151}
-  .form-group input{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
-  .form-group input:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
-  .pay-btn{background:#059669;width:100%}
-  .pay-btn:hover{background:#047857}
-  .account-info{background:#f0f9ff;padding:12px;border-radius:8px;margin-bottom:16px;border-left:4px solid #0ea5e9}
-  .form-group select{width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
-  .form-group select:focus{outline:none;border-color:#0ea5e9;box-shadow:0 0 0 3px rgba(14,165,233,0.1)}
+  * { box-sizing: border-box; }
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8fafc; 
+    margin: 0; 
+    padding: 0; 
+    color: #0f172a;
+    line-height: 1.5;
+  }
+  
+  .container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 48px 24px; 
+  }
+  
+  .grid { 
+    display: grid; 
+    grid-template-columns: 1fr 400px; 
+    gap: 32px; 
+  }
+  
+  .card { 
+    background: white; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 16px; 
+    padding: 28px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .sticky { 
+    position: sticky; 
+    top: 24px; 
+  }
+  
+  h1 { 
+    font-size: 24px; 
+    font-weight: 600; 
+    color: #0f172a; 
+    margin: 0 0 8px; 
+  }
+  
+  .subtitle { 
+    color: #64748b; 
+    font-size: 14px; 
+    margin-bottom: 32px; 
+  }
+  
+  .section-title { 
+    font-size: 18px; 
+    font-weight: 600; 
+    color: #0f172a; 
+    margin: 0 0 16px; 
+  }
+  
+  .method-group { 
+    margin-bottom: 24px; 
+  }
+  
+  .method-option { 
+    display: flex; 
+    align-items: center; 
+    padding: 16px; 
+    border: 2px solid #e2e8f0; 
+    border-radius: 12px; 
+    margin-bottom: 12px; 
+    cursor: pointer; 
+    transition: all 0.2s;
+  }
+  
+  .method-option:hover { 
+    border-color: #cbd5e1; 
+  }
+  
+  .method-option.selected { 
+    border-color: #3b82f6; 
+    background: #f0f9ff; 
+  }
+  
+  .method-option.disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+  
+  .method-radio { 
+    margin-right: 12px; 
+  }
+  
+  .method-content { 
+    flex: 1; 
+  }
+  
+  .method-title { 
+    font-weight: 600; 
+    color: #0f172a; 
+    margin: 0 0 4px; 
+  }
+  
+  .method-desc { 
+    font-size: 14px; 
+    color: #64748b; 
+    margin: 0; 
+  }
+  
+  .connect-btn { 
+    width: 100%; 
+    background: #3b82f6; 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    padding: 16px; 
+    font-weight: 600; 
+    font-size: 16px; 
+    cursor: pointer; 
+    transition: background 0.2s;
+    margin-bottom: 16px;
+  }
+  
+  .connect-btn:hover { 
+    background: #2563eb; 
+  }
+  
+  .connect-btn:disabled { 
+    background: #94a3b8; 
+    cursor: not-allowed; 
+  }
+  
+  .connected-badge { 
+    display: flex; 
+    align-items: center; 
+    padding: 12px 16px; 
+    background: #f0f9ff; 
+    border: 1px solid #0ea5e9; 
+    border-radius: 12px; 
+    margin-bottom: 24px; 
+  }
+  
+  .connected-icon { 
+    color: #059669; 
+    margin-right: 8px; 
+  }
+  
+  .connected-text { 
+    flex: 1; 
+    font-weight: 500; 
+    color: #0f172a; 
+  }
+  
+  .change-link { 
+    color: #3b82f6; 
+    text-decoration: none; 
+    font-size: 14px; 
+  }
+  
+  .form-group { 
+    margin-bottom: 20px; 
+  }
+  
+  .form-label { 
+    display: block; 
+    font-weight: 500; 
+    color: #374151; 
+    margin-bottom: 6px; 
+    font-size: 14px; 
+  }
+  
+  .form-input { 
+    width: 100%; 
+    padding: 12px 16px; 
+    border: 1px solid #d1d5db; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    transition: border-color 0.2s;
+  }
+  
+  .form-input:focus { 
+    outline: none; 
+    border-color: #3b82f6; 
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+  }
+  
+  .form-input.error { 
+    border-color: #dc2626; 
+  }
+  
+  .form-select { 
+    width: 100%; 
+    padding: 12px 16px; 
+    border: 1px solid #d1d5db; 
+    border-radius: 8px; 
+    font-size: 16px; 
+    background: white; 
+    cursor: pointer; 
+  }
+  
+  .form-select:focus { 
+    outline: none; 
+    border-color: #3b82f6; 
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+  }
+  
+  .checkbox-group { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 24px; 
+  }
+  
+  .checkbox { 
+    margin-right: 8px; 
+  }
+  
+  .checkbox-label { 
+    font-size: 14px; 
+    color: #64748b; 
+  }
+  
+  .review-row { 
+    background: #f8fafc; 
+    padding: 16px; 
+    border-radius: 8px; 
+    margin-bottom: 24px; 
+    font-size: 14px; 
+    color: #374151; 
+  }
+  
+  .pay-btn { 
+    width: 100%; 
+    background: #059669; 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    padding: 16px; 
+    font-weight: 600; 
+    font-size: 16px; 
+    cursor: pointer; 
+    transition: background 0.2s;
+  }
+  
+  .pay-btn:hover { 
+    background: #047857; 
+  }
+  
+  .pay-btn:disabled { 
+    background: #94a3b8; 
+    cursor: not-allowed; 
+  }
+  
+  .success-view { 
+    text-align: center; 
+    padding: 48px 24px; 
+  }
+  
+  .success-icon { 
+    color: #059669; 
+    font-size: 48px; 
+    margin-bottom: 16px; 
+  }
+  
+  .success-title { 
+    font-size: 24px; 
+    font-weight: 600; 
+    color: #0f172a; 
+    margin: 0 0 8px; 
+  }
+  
+  .success-details { 
+    color: #64748b; 
+    margin-bottom: 32px; 
+  }
+  
+  .success-actions { 
+    display: flex; 
+    gap: 12px; 
+    justify-content: center; 
+  }
+  
+  .btn-primary { 
+    background: #3b82f6; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    padding: 12px 24px; 
+    font-weight: 500; 
+    cursor: pointer; 
+    text-decoration: none; 
+    display: inline-block; 
+  }
+  
+  .btn-secondary { 
+    background: white; 
+    color: #374151; 
+    border: 1px solid #d1d5db; 
+    border-radius: 8px; 
+    padding: 12px 24px; 
+    font-weight: 500; 
+    cursor: pointer; 
+    text-decoration: none; 
+    display: inline-block; 
+  }
+  
+  .order-summary { 
+    background: white; 
+    border: 1px solid #e2e8f0; 
+    border-radius: 16px; 
+    padding: 24px; 
+  }
+  
+  .order-title { 
+    font-size: 18px; 
+    font-weight: 600; 
+    color: #0f172a; 
+    margin: 0 0 20px; 
+  }
+  
+  .order-item { 
+    display: flex; 
+    justify-content: space-between; 
+    margin-bottom: 12px; 
+    font-size: 14px; 
+  }
+  
+  .order-item.total { 
+    border-top: 1px solid #e2e8f0; 
+    padding-top: 12px; 
+    font-weight: 600; 
+    font-size: 16px; 
+  }
+  
+  .trust-row { 
+    display: flex; 
+    align-items: center; 
+    margin-top: 20px; 
+    padding-top: 20px; 
+    border-top: 1px solid #e2e8f0; 
+    font-size: 12px; 
+    color: #64748b; 
+  }
+  
+  .trust-icon { 
+    margin-right: 8px; 
+    color: #059669; 
+  }
+  
+  .error-message { 
+    color: #dc2626; 
+    font-size: 12px; 
+    margin-top: 4px; 
+  }
+  
+  .loading { 
+    opacity: 0.6; 
+    pointer-events: none; 
+  }
+  
+  .hidden { 
+    display: none; 
+  }
+  
+  @media (max-width: 768px) {
+    .grid { 
+      grid-template-columns: 1fr; 
+    }
+    .sticky { 
+      position: static; 
+    }
+  }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Securely connect your bank</h1>
-    <p class="muted">We use Plaid to connect your account. We never see or store your credentials.</p>
-    ${
-      error
-        ? `
-      <p class="error">${error}</p>
-      <p><a href="/" class="muted">Session expired — start over</a></p>
-    `
-        : bankConnected
-        ? `
-  <div class="logos"></div>
-  <button id="connectBtn">Connect bank</button>
-  <p class="muted">If the window doesn't open, click the button again.</p>
-  
-  <!-- Always include these elements (hidden initially) -->
-  <div class="account-info" id="accountInfo" style="display:none;">
-    <p class="success">✅ Bank Account Connected Successfully!</p>
-    <p><strong>Account:</strong> <span id="accountDetails">Loading...</span></p>
-  </div>
-  
-  <div class="payment-form" id="paymentForm" style="display:none;">
-    <h2>Complete Your Purchase</h2>
-    <form id="paymentFormElement">
-      <div class="form-group">
-        <label for="account-select">Select Account:</label>
-        <select id="account-select" required>
-          <option value="">Choose an account...</option>
-          <!-- Options will be populated by JavaScript -->
-        </select>
+  <div class="container">
+    <div class="grid">
+      <!-- Left Column: Payment Flow -->
+      <div class="main-content">
+        <div class="card">
+          <h1>Complete your purchase</h1>
+          <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
+          
+          ${
+            error
+              ? `
+            <div style="color: #dc2626; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 24px;">
+              <strong>Error:</strong> ${error}
+            </div>
+            <p><a href="/" style="color: #3b82f6;">← Start over</a></p>
+          `
+              : `
+          <!-- Payment Method Selection -->
+          <div class="method-group">
+            <div class="section-title">Payment method</div>
+            <div class="method-option selected" data-method="bank">
+              <input type="radio" name="payment-method" value="bank" class="method-radio" checked>
+              <div class="method-content">
+                <div class="method-title">Bank account (Plaid)</div>
+                <div class="method-desc">Connect your bank account securely</div>
+              </div>
+            </div>
+            <div class="method-option disabled" data-method="card">
+              <input type="radio" name="payment-method" value="card" class="method-radio" disabled>
+              <div class="method-content">
+                <div class="method-title">Credit/Debit card</div>
+                <div class="method-desc">Coming soon</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bank Connection Section -->
+          <div id="bankSection">
+            <button id="connectBtn" class="connect-btn">
+              Connect bank account
+            </button>
+            
+            <div id="connectedBadge" class="connected-badge hidden">
+              <div class="connected-icon">✓</div>
+              <div class="connected-text" id="connectedText">Bank connected</div>
+              <a href="#" id="changeBankLink" class="change-link">Change</a>
+            </div>
+          </div>
+
+          <!-- Payment Details (shown after bank connection) -->
+          <div id="paymentDetails" class="hidden">
+            <div class="section-title">Payment details</div>
+            
+            <div class="form-group">
+              <label class="form-label" for="accountSelect">Account</label>
+              <select id="accountSelect" class="form-select" required>
+                <option value="">Choose an account...</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="amountInput">Amount</label>
+              <input 
+                type="text" 
+                id="amountInput" 
+                class="form-input" 
+                placeholder="$0.00" 
+                required
+              >
+              <div id="amountError" class="error-message hidden">Please enter a valid amount</div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="descriptionInput">Description (optional)</label>
+              <input 
+                type="text" 
+                id="descriptionInput" 
+                class="form-input" 
+                placeholder="What are you purchasing?"
+              >
+            </div>
+            
+            <div class="checkbox-group">
+              <input type="checkbox" id="saveBankCheckbox" class="checkbox">
+              <label for="saveBankCheckbox" class="checkbox-label">Save this bank for faster checkout</label>
+            </div>
+            
+            <div id="reviewRow" class="review-row hidden">
+              <div>Pay <span id="reviewAmount">$0.00</span> from <span id="reviewAccount">Account</span></div>
+            </div>
+            
+            <button id="payBtn" class="pay-btn" disabled>
+              Complete payment
+            </button>
+          </div>
+
+          <!-- Success View (shown after successful payment) -->
+          <div id="successView" class="success-view hidden">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Payment successful!</h2>
+            <div class="success-details">
+              <div>Amount: <span id="successAmount">$0.00</span></div>
+              <div>Account: <span id="successAccount">Account</span></div>
+              <div>Date: <span id="successDate">Date</span></div>
+              <div>Reference: <span id="successReference">Reference</span></div>
+            </div>
+            <div class="success-actions">
+              <a href="/dashboard" class="btn-primary">Back to Dashboard</a>
+              <button id="newPaymentBtn" class="btn-secondary">New payment</button>
+            </div>
+          </div>
+          `
+          }
+        </div>
       </div>
-      <div class="form-group">
-        <label for="amount">Amount ($):</label>
-        <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
+
+      <!-- Right Column: Order Summary -->
+      <div class="sticky">
+        <div class="order-summary">
+          <h3 class="order-title">Order summary</h3>
+          
+          <div class="order-item">
+            <span>Gold Investment Plan</span>
+            <span id="orderAmount">$0.00</span>
+          </div>
+          
+          <div class="order-item">
+            <span>Processing fee</span>
+            <span>$0.00</span>
+          </div>
+          
+          <div class="order-item total">
+            <span>Total</span>
+            <span id="orderTotal">$0.00</span>
+          </div>
+          
+          <div class="trust-row">
+            <div class="trust-icon">🔒</div>
+            <div>
+              Bank connection is secure via Plaid. 
+              <a href="/terms" style="color: #3b82f6;">Terms</a> • 
+              <a href="/privacy" style="color: #3b82f6;">Privacy</a>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="description">Description:</label>
-        <input type="text" id="description" required placeholder="What are you purchasing?">
-      </div>
-      <button type="submit" class="pay-btn">Pay Now</button>
-    </form>
-  </div>
-`
-        : `
-  <div class="logos"></div>
-  <button id="connectBtn">Connect bank</button>
-  <p class="muted">If the window doesn't open, click the button again.</p>
-  
-  <!-- Always include these elements (hidden initially) -->
-  <div class="account-info" id="accountInfo" style="display:none;">
-    <p class="success">✅ Bank Account Connected Successfully!</p>
-    <p><strong>Account:</strong> <span id="accountDetails">Loading...</span></p>
-  </div>
-  
-  <div class="payment-form" id="paymentForm" style="display:none;">
-    <h2>Complete Your Purchase</h2>
-    <form id="paymentFormElement">
-      <div class="form-group">
-        <label for="account-select">Select Account:</label>
-        <select id="account-select" required>
-          <option value="">Choose an account...</option>
-          <!-- Options will be populated by JavaScript -->
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="amount">Amount ($):</label>
-        <input type="number" id="amount" step="0.01" min="0.01" required placeholder="Enter amount">
-      </div>
-      <div class="form-group">
-        <label for="description">Description:</label>
-        <input type="text" id="description" required placeholder="What are you purchasing?">
-      </div>
-      <button type="submit" class="pay-btn">Pay Now</button>
-    </form>
-  </div>
-`
-    }
+    </div>
   </div>
 
   ${
@@ -128,18 +544,99 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
   <script>
     (function(){
       var USER_ID = ${JSON.stringify(userId ?? null)};
-      var CONNECTED_ACCOUNT = ${JSON.stringify(connectedAccount ?? null)};
+      var linkToken = ${JSON.stringify(linkToken)};
+      var isConnected = false;
+      var isSubmitting = false;
+      var currentStep = 'connect'; // connect, details, success
+      var accountsData = [];
+      var selectedAccount = null;
       
+      // State management
+      function updateUI() {
+        var connectBtn = document.getElementById('connectBtn');
+        var connectedBadge = document.getElementById('connectedBadge');
+        var paymentDetails = document.getElementById('paymentDetails');
+        var successView = document.getElementById('successView');
+        
+        // Hide all sections first
+        if (connectBtn) connectBtn.classList.add('hidden');
+        if (connectedBadge) connectedBadge.classList.add('hidden');
+        if (paymentDetails) paymentDetails.classList.add('hidden');
+        if (successView) successView.classList.add('hidden');
+        
+        // Show appropriate section based on step
+        if (currentStep === 'connect') {
+          if (connectBtn) connectBtn.classList.remove('hidden');
+        } else if (currentStep === 'details') {
+          if (connectedBadge) connectedBadge.classList.remove('hidden');
+          if (paymentDetails) paymentDetails.classList.remove('hidden');
+        } else if (currentStep === 'success') {
+          if (successView) successView.classList.remove('hidden');
+        }
+      }
+      
+      // Currency formatting
+      function formatCurrency(value) {
+        var num = parseFloat(value) || 0;
+        return '$' + num.toFixed(2);
+      }
+      
+      // Update order summary
+      function updateOrderSummary(amount) {
+        var orderAmount = document.getElementById('orderAmount');
+        var orderTotal = document.getElementById('orderTotal');
+        var formattedAmount = formatCurrency(amount);
+        
+        if (orderAmount) orderAmount.textContent = formattedAmount;
+        if (orderTotal) orderTotal.textContent = formattedAmount;
+      }
+      
+      // Validate form
+      function validateForm() {
+        var amountInput = document.getElementById('amountInput');
+        var accountSelect = document.getElementById('accountSelect');
+        var payBtn = document.getElementById('payBtn');
+        
+        var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
+        var isValid = isConnected && amount > 0 && accountSelect.value;
+        
+        if (payBtn) {
+          payBtn.disabled = !isValid;
+        }
+        
+        return isValid;
+      }
+      
+      // Update review row
+      function updateReviewRow() {
+        var amountInput = document.getElementById('amountInput');
+        var accountSelect = document.getElementById('accountSelect');
+        var reviewRow = document.getElementById('reviewRow');
+        var reviewAmount = document.getElementById('reviewAmount');
+        var reviewAccount = document.getElementById('reviewAccount');
+        
+        var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
+        var accountText = accountSelect.options[accountSelect.selectedIndex]?.text || 'Account';
+        
+        if (amount > 0 && accountSelect.value) {
+          if (reviewRow) reviewRow.classList.remove('hidden');
+          if (reviewAmount) reviewAmount.textContent = formatCurrency(amount);
+          if (reviewAccount) reviewAccount.textContent = accountText;
+        } else {
+          if (reviewRow) reviewRow.classList.add('hidden');
+        }
+      }
+      
+      // Initialize Plaid Link
       var handler = Plaid.create({
-        token: ${JSON.stringify(linkToken)},
+        token: linkToken,
         onSuccess: function(public_token, metadata) {
-          console.log('PUBLIC TOKEN:', public_token, metadata);
+          console.log('Plaid Link success:', public_token, metadata);
           
+          // Exchange token
           fetch('/api/plaid/exchange-token', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               public_token: public_token,
               user_id: USER_ID
@@ -149,43 +646,40 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
           .then(data => {
             console.log('Exchange result:', data);
             if (data.success) {
-              // Store accounts globally so form submission can access them
-              window.ACCOUNTS_DATA = data.accounts;
+              isConnected = true;
+              accountsData = data.accounts;
+              currentStep = 'details';
               
-              // Show payment form
-              var paymentForm = document.getElementById('paymentForm');
-              var connectBtn = document.getElementById('connectBtn');
-              
-              if (paymentForm) {
-                paymentForm.style.display = 'block';
-              }
-              if (connectBtn) {
-                connectBtn.style.display = 'none';
-              }
-              
-              // Update account info
-              var accountInfo = document.getElementById('accountInfo');
-              if (accountInfo) {
-                accountInfo.style.display = 'block';
-                document.getElementById('accountDetails').textContent = metadata.institution.name + ' - ' + metadata.accounts[0].name;
+              // Update connected badge
+              var connectedText = document.getElementById('connectedText');
+              if (connectedText) {
+                connectedText.textContent = metadata.institution.name + ' ••••' + metadata.accounts[0].mask;
               }
               
               // Populate account dropdown
-              var accountSelect = document.getElementById('account-select');
-              if (accountSelect && data.accounts) {
-                data.accounts.forEach(account => {
+              var accountSelect = document.getElementById('accountSelect');
+              if (accountSelect && accountsData.length > 0) {
+                accountSelect.innerHTML = '<option value="">Choose an account...</option>';
+                accountsData.forEach(function(account) {
                   var option = document.createElement('option');
-                  option.value = account.id; // This is the real UUID
-                  option.textContent = account.name + ' (' + account.type + ') - ****' + account.mask;
+                  option.value = account.id;
+                  option.textContent = account.name + ' (' + account.type + ') ••••' + account.mask;
                   accountSelect.appendChild(option);
                 });
+                
+                // Select first account by default
+                accountSelect.selectedIndex = 1;
+                selectedAccount = accountsData[0];
               }
+              
+              updateUI();
+              validateForm();
             } else {
               alert('Bank connection failed: ' + (data.error || 'Unknown error'));
             }
           })
-          .catch(error => {
-            console.error('Error:', error);
+          .catch(function(error) {
+            console.error('Exchange error:', error);
             alert('Bank connection failed. Please try again.');
           });
         },
@@ -194,88 +688,138 @@ function renderPage({ linkToken, error, userId, bankConnected, connectedAccount 
         }
       });
       
-      // Add event listener - CHECK IF ELEMENT EXISTS FIRST
-      var connectBtn = document.getElementById('connectBtn');
-      if (connectBtn) {
-        connectBtn.addEventListener('click', function() {
-          handler.open();
-        });
-      }
-      
-      // Payment form submission - CHECK IF ELEMENT EXISTS FIRST
-      var paymentFormElement = document.getElementById('paymentFormElement');
-      if (paymentFormElement) {
-        paymentFormElement.addEventListener('submit', async function(e) {
-          e.preventDefault();
-          
-          var amount = document.getElementById('amount');
-          var description = document.getElementById('description');
-          var accountSelect = document.getElementById('account-select');
-
-          if (!amount || !description || !accountSelect) {
-            alert('Form elements not found');
-            return;
-          }
-
-          if (!amount.value || amount.value <= 0) {
-            alert('Please enter a valid amount');
-            return;
-          }
-
-          if (!accountSelect.value || accountSelect.value === 'undefined' || accountSelect.value === '') {
-            alert('Please select an account');
-            return;
-          }
-
-          console.log('Selected account ID:', accountSelect.value);
-          console.log('Available accounts:', window.ACCOUNTS_DATA);
-          
-          try {
-            var response = await fetch('/api/transfers/create', {
+      // Event listeners
+      document.addEventListener('DOMContentLoaded', function() {
+        updateUI();
+        
+        // Connect button
+        var connectBtn = document.getElementById('connectBtn');
+        if (connectBtn) {
+          connectBtn.addEventListener('click', function() {
+            handler.open();
+          });
+        }
+        
+        // Change bank link
+        var changeBankLink = document.getElementById('changeBankLink');
+        if (changeBankLink) {
+          changeBankLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            handler.open();
+          });
+        }
+        
+        // Amount input formatting
+        var amountInput = document.getElementById('amountInput');
+        if (amountInput) {
+          amountInput.addEventListener('input', function() {
+            var value = this.value.replace(/[^0-9.]/g, '');
+            var num = parseFloat(value) || 0;
+            this.value = formatCurrency(num).substring(1); // Remove $ for input
+            
+            updateOrderSummary(num);
+            updateReviewRow();
+            validateForm();
+          });
+        }
+        
+        // Account select
+        var accountSelect = document.getElementById('accountSelect');
+        if (accountSelect) {
+          accountSelect.addEventListener('change', function() {
+            selectedAccount = accountsData.find(function(acc) {
+              return acc.id === this.value;
+            }.bind(this));
+            updateReviewRow();
+            validateForm();
+          });
+        }
+        
+        // Description input
+        var descriptionInput = document.getElementById('descriptionInput');
+        if (descriptionInput) {
+          descriptionInput.addEventListener('input', function() {
+            updateReviewRow();
+          });
+        }
+        
+        // Pay button
+        var payBtn = document.getElementById('payBtn');
+        if (payBtn) {
+          payBtn.addEventListener('click', function() {
+            if (isSubmitting || !validateForm()) return;
+            
+            isSubmitting = true;
+            payBtn.disabled = true;
+            payBtn.textContent = 'Processing...';
+            
+            var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
+            var description = descriptionInput.value || 'Gold purchase';
+            
+            fetch('/api/transfers/create', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 user_id: USER_ID,
-                account_id: document.getElementById('account-select').value, // Real account ID
-                amount: parseFloat(amount.value),
-                description: description.value
+                account_id: accountSelect.value,
+                amount: amount,
+                description: description
               })
-            });
-            
-            var result = await response.json();
-            
-            if (result.success) {
-              // Reset the form
-              document.getElementById('paymentFormElement').reset();
-              
-              // Clear the account dropdown
-              var accountSelect = document.getElementById('account-select');
-              if (accountSelect) {
-                accountSelect.innerHTML = '<option value="">Choose an account...</option>';
+            })
+            .then(response => response.json())
+            .then(function(result) {
+              if (result.success) {
+                // Show success view
+                currentStep = 'success';
+                
+                var successAmount = document.getElementById('successAmount');
+                var successAccount = document.getElementById('successAccount');
+                var successDate = document.getElementById('successDate');
+                var successReference = document.getElementById('successReference');
+                
+                if (successAmount) successAmount.textContent = formatCurrency(amount);
+                if (successAccount) successAccount.textContent = accountSelect.options[accountSelect.selectedIndex].text;
+                if (successDate) successDate.textContent = new Date().toLocaleDateString();
+                if (successReference) successReference.textContent = result.transfer_id || 'N/A';
+                
+                updateUI();
+              } else {
+                alert('Payment failed: ' + (result.error || 'Unknown error'));
+                isSubmitting = false;
+                payBtn.disabled = false;
+                payBtn.textContent = 'Complete payment';
               }
-              
-              // Hide the payment form and show connect button again
-              var paymentForm = document.getElementById('paymentForm');
-              var connectBtn = document.getElementById('connectBtn');
-              var accountInfo = document.getElementById('accountInfo');
-              
-              if (paymentForm) paymentForm.style.display = 'none';
-              if (connectBtn) connectBtn.style.display = 'block';
-              if (accountInfo) accountInfo.style.display = 'none';
-              
-              // Don't open a new window - transfer is already processed
-              alert('Payment submitted successfully! Transfer ID: ' + result.transfer_id);
-            } else {
-              alert('Payment failed: ' + (result.error || 'Unknown error'));
-            }
-          } catch (error) {
-            console.error('Payment error:', error);
-            alert('Payment failed. Please try again.');
-          }
-        });
-      }
+            })
+            .catch(function(error) {
+              console.error('Payment error:', error);
+              alert('Payment failed. Please try again.');
+              isSubmitting = false;
+              payBtn.disabled = false;
+              payBtn.textContent = 'Complete payment';
+            });
+          });
+        }
+        
+        // New payment button
+        var newPaymentBtn = document.getElementById('newPaymentBtn');
+        if (newPaymentBtn) {
+          newPaymentBtn.addEventListener('click', function() {
+            // Reset form
+            isConnected = false;
+            currentStep = 'connect';
+            accountsData = [];
+            selectedAccount = null;
+            
+            if (amountInput) amountInput.value = '';
+            if (descriptionInput) descriptionInput.value = '';
+            if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
+            
+            updateOrderSummary(0);
+            updateUI();
+            validateForm();
+          });
+        }
+      });
     })();
   </script>
   `
@@ -295,7 +839,7 @@ router.get("/", async (req, res, next) => {
         renderPage({
           linkToken: null,
           error: "Your session expired. Please start again.",
-          userId: null, // include to avoid template ReferenceError
+          userId: null,
         })
       );
     }
@@ -315,7 +859,7 @@ router.get("/", async (req, res, next) => {
 
     // Issue a new link_token for THIS user
     const linkToken = await plaidService.createLinkToken({
-      userId: session.user_id, // ensure plaidService maps this to user.user_id string
+      userId: session.user_id,
       products: ["auth", "transfer"],
       webhook: process.env.PLAID_WEBHOOK_URL || undefined,
     });
