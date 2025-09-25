@@ -32,13 +32,21 @@ class TransferStatusService {
   
   async updateTransferStatus(transfer) {
     try {
-      // Get item to retrieve access token
+      // Get account first, then get item - this is the correct approach
+      const accountResult = await databaseService.query("accounts", "select", {
+        where: { id: transfer.account_id }
+      });
+      
+      if (!accountResult.success || accountResult.data.length === 0) {
+        console.error(`No account found for transfer ${transfer.id}`);
+        return;
+      }
+      
+      const account = accountResult.data[0];
+      
+      // Get item using the account's item_id
       const itemResult = await databaseService.query("items", "select", {
-        join: {
-          table: "accounts",
-          on: "items.id = accounts.item_id",
-          where: { "accounts.id": transfer.account_id }
-        }
+        where: { id: account.item_id }
       });
       
       if (!itemResult.success || itemResult.data.length === 0) {

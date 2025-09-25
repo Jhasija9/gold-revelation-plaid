@@ -45,14 +45,14 @@ router.post("/webhook", verifyPlaidWebhook, (req, res) => {
   // Log full webhook data for debugging
   console.log("Webhook received:", JSON.stringify(req.body));
   // Process webhook asynchronously
-  setImmediate(() => {
+  setImmediate(async () => {
     try {
       const { webhook_type, webhook_code } = req.body;
       console.log(`Processing ${webhook_type}.${webhook_code} webhook`);
 
       // Handle different webhook types
       if (webhook_type === "TRANSFER") {
-        plaidController.handleTransferWebhook(req.body);
+        await plaidController.handleTransferWebhook(req.body);
       }
     } catch (error) {
       console.error("Error processing webhook:", error);
