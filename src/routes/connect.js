@@ -11,7 +11,7 @@ function parseCookies(req) {
   return cookie.parse(header);
 }
 
-function renderPage({ linkToken, error, userId }) {
+function renderPage({ linkToken, error, userId, selectedPlan }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -669,6 +669,7 @@ function renderPage({ linkToken, error, userId }) {
     (function(){
       var USER_ID = ${JSON.stringify(userId ?? null)};
       var linkToken = ${JSON.stringify(linkToken)};
+      var selectedPlan = ${JSON.stringify(selectedPlan || '')};
       
       // State management - single source of truth
       var state = {
@@ -1020,6 +1021,15 @@ function renderPage({ linkToken, error, userId }) {
             validateForm();
           });
         }
+
+        // Auto-populate description with plan
+        if (selectedPlan) {
+          var descriptionInput = document.getElementById('descriptionInput');
+          if (descriptionInput) {
+            descriptionInput.value = selectedPlan;
+            state.description = selectedPlan;
+          }
+        }
       });
     })();
   </script>
@@ -1034,6 +1044,7 @@ router.get("/", async (req, res, next) => {
   try {
     const cookies = parseCookies(req);
     const sessionId = cookies["rg_link_session"];
+    const { plan } = req.query;
 
     if (!sessionId) {
       return res.status(200).send(
@@ -1041,6 +1052,7 @@ router.get("/", async (req, res, next) => {
           linkToken: null,
           error: "Your session expired. Please start again.",
           userId: null,
+          selectedPlan: plan || null
         })
       );
     }
@@ -1068,23 +1080,14 @@ router.get("/", async (req, res, next) => {
     // (Optional) Only mark used after link token creation succeeds
     await LinkSession.markUsed(session.id);
 
-    return res.status(200).send(
-      renderPage({
+    return res.status(200).send(renderPage({ 
         linkToken,
         error: null,
         userId: session.user_id,
-      })
-    );
+      selectedPlan: plan || null
+    }));
   } catch (err) {
-    // render an error page WITHOUT crashing template
-    return res.status(500).send(
-      renderPage({
-        linkToken: null,
-        error:
-          "Something went wrong creating your bank connection. Please try again.",
-        userId: null,
-      })
-    );
+    next(err);
   }
 });
 
