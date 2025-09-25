@@ -903,12 +903,26 @@ function renderPage({ linkToken, error, userId }) {
             // Update state
             state.amount = parsedAmount;
             
-            // Update display to show formatted amount
-            this.value = formatAmount(parsedAmount);
+            // Don't reformat the input while typing - let user type naturally
+            // Only format on blur (when user leaves the field)
             
             updateOrderSummary();
             updateReviewRow();
             validateForm();
+          });
+          
+          // Format on blur (when user leaves the field)
+          amountInput.addEventListener('blur', function() {
+            if (state.amount > 0) {
+              this.value = formatAmount(state.amount);
+            }
+          });
+          
+          // Allow user to clear the field
+          amountInput.addEventListener('focus', function() {
+            if (this.value === '0.00') {
+              this.value = '';
+            }
           });
         }
         
