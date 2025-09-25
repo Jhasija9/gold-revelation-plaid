@@ -601,11 +601,6 @@ function renderPage({ linkToken, error, userId }) {
               >
             </div>
             
-            <div class="checkbox-group">
-              <input type="checkbox" id="saveBankCheckbox" class="checkbox">
-              <label for="saveBankCheckbox" class="checkbox-label">Save this bank for faster checkout</label>
-            </div>
-            
             <div id="reviewRow" class="review-row hidden">
               <div>Pay <span id="reviewAmount">$0.00</span> from <span id="reviewAccount">Account</span></div>
             </div>
@@ -623,11 +618,9 @@ function renderPage({ linkToken, error, userId }) {
               <div>Amount: <span id="successAmount">$0.00</span></div>
               <div>Account: <span id="successAccount">Account</span></div>
               <div>Date: <span id="successDate">Date</span></div>
-              <div>Reference: <span id="successReference">Reference</span></div>
             </div>
             <div class="success-actions">
-              <a href="/dashboard" class="btn-primary">Back to Dashboard</a>
-              <button id="newPaymentBtn" class="btn-secondary">New payment</button>
+              <button id="newPaymentBtn" class="btn-primary">New payment</button>
             </div>
           </div>
           `
@@ -977,7 +970,7 @@ function renderPage({ linkToken, error, userId }) {
                 var successAmount = document.getElementById('successAmount');
                 var successAccount = document.getElementById('successAccount');
                 var successDate = document.getElementById('successDate');
-                var successReference = document.getElementById('successReference');
+                // Remove successReference references
                 
                 var selected = getSelectedAccount();
                 var accountName = selected ? (selected.name + ' ••••' + selected.mask) : 'Account';
@@ -985,7 +978,7 @@ function renderPage({ linkToken, error, userId }) {
                 if (successAmount) successAmount.textContent = formatCurrency(state.amount);
                 if (successAccount) successAccount.textContent = accountName;
                 if (successDate) successDate.textContent = new Date().toLocaleDateString();
-                if (successReference) successReference.textContent = result.transfer_id || 'N/A';
+                // Remove reference ID display
                 
                 updateUI();
               } else {
