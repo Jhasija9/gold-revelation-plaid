@@ -516,7 +516,7 @@ function renderPage({ linkToken, error, userId }) {
     <div class="grid">
       <!-- Left Column: Payment Flow -->
       <div class="main-content">
-        <div class="card">
+  <div class="card">
           <!-- Company Logo and Header -->
           <div class="header">
             <img src="/logo.png" alt="Revelation Gold Group" class="logo" onerror="this.style.display='none'">
@@ -524,9 +524,9 @@ function renderPage({ linkToken, error, userId }) {
             <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
           </div>
           
-          ${
-            error
-              ? `
+    ${
+      error
+        ? `
             <div style="color: #dc2626; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 24px;">
               <strong>Error:</strong> ${error}
             </div>
