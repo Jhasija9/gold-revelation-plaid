@@ -18,84 +18,108 @@ function renderPage({ linkToken, error, userId }) {
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Complete Your Purchase - Revelation Gold Group</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
+  :root {
+    --rg-navy: #0f2547;
+    --rg-navy-50: #f0f4f8;
+    --rg-navy-600: #0a1f3a;
+    --rg-ink: #0f2547;
+    --rg-body: #64748b;
+    --rg-border: #e2e8f0;
+    --rg-card: #ffffff;
+    --rg-gold: #d4af37;
+  }
+  
+  * { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+  }
+  
   body { 
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f8fafc; 
-    margin: 0; 
-    padding: 0; 
-    color: #0f172a;
-    line-height: 1.5;
+    color: var(--rg-body);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
   }
   
   .container { 
     max-width: 1200px; 
     margin: 0 auto; 
-    padding: 48px 24px; 
+    padding: 48px 32px; 
   }
   
   .grid { 
     display: grid; 
-    grid-template-columns: 1fr 400px; 
+    grid-template-columns: 7fr 5fr; 
     gap: 32px; 
   }
   
   .card { 
-    background: white; 
-    border: 1px solid #e2e8f0; 
+    background: var(--rg-card); 
+    border: 1px solid var(--rg-border); 
     border-radius: 16px; 
     padding: 28px; 
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 24px rgba(15, 39, 65, 0.06);
   }
   
   .sticky { 
     position: sticky; 
-    top: 24px; 
+    top: 40px; 
   }
   
   h1 { 
-    font-size: 24px; 
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px; 
     font-weight: 600; 
-    color: #0f172a; 
+    color: var(--rg-ink); 
     margin: 0 0 8px; 
   }
   
   .subtitle { 
-    color: #64748b; 
-    font-size: 14px; 
+    color: var(--rg-body); 
+    font-size: 15px; 
     margin-bottom: 32px; 
   }
   
   .section-title { 
-    font-size: 18px; 
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px; 
     font-weight: 600; 
-    color: #0f172a; 
+    color: var(--rg-ink); 
     margin: 0 0 16px; 
   }
   
   .method-group { 
-    margin-bottom: 24px; 
+    margin-bottom: 32px; 
   }
   
   .method-option { 
     display: flex; 
     align-items: center; 
-    padding: 16px; 
-    border: 2px solid #e2e8f0; 
+    padding: 20px; 
+    border: 1px solid var(--rg-border); 
     border-radius: 12px; 
     margin-bottom: 12px; 
     cursor: pointer; 
-    transition: all 0.2s;
+    transition: all 0.2s ease;
+    background: var(--rg-card);
   }
   
   .method-option:hover { 
-    border-color: #cbd5e1; 
+    border-color: rgba(15, 39, 65, 0.3); 
   }
   
   .method-option.selected { 
-    border-color: #3b82f6; 
-    background: #f0f9ff; 
+    border-color: var(--rg-navy); 
+    background: var(--rg-navy-50);
+    box-shadow: 0 0 0 4px var(--rg-navy-50);
   }
   
   .method-option.disabled { 
@@ -104,7 +128,10 @@ function renderPage({ linkToken, error, userId }) {
   }
   
   .method-radio { 
-    margin-right: 12px; 
+    margin-right: 16px; 
+    width: 20px;
+    height: 20px;
+    accent-color: var(--rg-navy);
   }
   
   .method-content { 
@@ -113,19 +140,27 @@ function renderPage({ linkToken, error, userId }) {
   
   .method-title { 
     font-weight: 600; 
-    color: #0f172a; 
+    color: var(--rg-ink); 
     margin: 0 0 4px; 
+    font-size: 16px;
   }
   
   .method-desc { 
     font-size: 14px; 
-    color: #64748b; 
+    color: rgba(100, 116, 139, 0.7); 
     margin: 0; 
+  }
+  
+  .method-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+    color: var(--rg-navy);
   }
   
   .connect-btn { 
     width: 100%; 
-    background: #3b82f6; 
+    background: var(--rg-navy); 
     color: white; 
     border: none; 
     border-radius: 12px; 
@@ -133,71 +168,84 @@ function renderPage({ linkToken, error, userId }) {
     font-weight: 600; 
     font-size: 16px; 
     cursor: pointer; 
-    transition: background 0.2s;
-    margin-bottom: 16px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(15, 39, 65, 0.18);
   }
   
   .connect-btn:hover { 
-    background: #2563eb; 
+    background: var(--rg-navy-600); 
+  }
+  
+  .connect-btn:focus { 
+    outline: none; 
+    box-shadow: 0 0 0 4px var(--rg-navy-50), 0 4px 14px rgba(15, 39, 65, 0.18);
   }
   
   .connect-btn:disabled { 
     background: #94a3b8; 
     cursor: not-allowed; 
+    opacity: 0.6;
   }
   
   .connected-badge { 
-    display: flex; 
-    align-items: center; 
-    padding: 12px 16px; 
-    background: #f0f9ff; 
-    border: 1px solid #0ea5e9; 
-    border-radius: 12px; 
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px; 
+    background: #f0fdf4; 
+    border: 1px solid #bbf7d0; 
+    border-radius: 9999px; 
     margin-bottom: 24px; 
+    font-size: 14px;
+    font-weight: 500;
+    color: #166534;
   }
   
   .connected-icon { 
     color: #059669; 
-    margin-right: 8px; 
   }
   
   .connected-text { 
     flex: 1; 
-    font-weight: 500; 
-    color: #0f172a; 
   }
   
   .change-link { 
-    color: #3b82f6; 
+    color: var(--rg-navy); 
     text-decoration: none; 
     font-size: 14px; 
+    font-weight: 500;
+  }
+  
+  .change-link:hover {
+    text-decoration: underline;
   }
   
   .form-group { 
-    margin-bottom: 20px; 
+    margin-bottom: 24px; 
   }
   
   .form-label { 
     display: block; 
     font-weight: 500; 
-    color: #374151; 
-    margin-bottom: 6px; 
+    color: var(--rg-ink); 
+    margin-bottom: 8px; 
     font-size: 14px; 
   }
   
   .form-input { 
     width: 100%; 
     padding: 12px 16px; 
-    border: 1px solid #d1d5db; 
+    border: 1px solid var(--rg-border); 
     border-radius: 8px; 
-    font-size: 16px; 
-    transition: border-color 0.2s;
+    font-size: 15px; 
+    transition: all 0.2s ease;
+    background: var(--rg-card);
   }
   
   .form-input:focus { 
     outline: none; 
-    border-color: #3b82f6; 
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+    border-color: var(--rg-navy); 
+    box-shadow: 0 0 0 3px var(--rg-navy-50); 
   }
   
   .form-input.error { 
@@ -207,46 +255,51 @@ function renderPage({ linkToken, error, userId }) {
   .form-select { 
     width: 100%; 
     padding: 12px 16px; 
-    border: 1px solid #d1d5db; 
+    border: 1px solid var(--rg-border); 
     border-radius: 8px; 
-    font-size: 16px; 
-    background: white; 
+    font-size: 15px; 
+    background: var(--rg-card); 
     cursor: pointer; 
+    transition: all 0.2s ease;
   }
   
   .form-select:focus { 
     outline: none; 
-    border-color: #3b82f6; 
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+    border-color: var(--rg-navy); 
+    box-shadow: 0 0 0 3px var(--rg-navy-50); 
   }
   
   .checkbox-group { 
     display: flex; 
     align-items: center; 
-    margin-bottom: 24px; 
+    margin-bottom: 32px; 
   }
   
   .checkbox { 
-    margin-right: 8px; 
+    margin-right: 12px; 
+    width: 16px;
+    height: 16px;
+    accent-color: var(--rg-navy);
   }
   
   .checkbox-label { 
     font-size: 14px; 
-    color: #64748b; 
+    color: var(--rg-body); 
   }
   
   .review-row { 
-    background: #f8fafc; 
+    background: var(--rg-navy-50); 
     padding: 16px; 
     border-radius: 8px; 
     margin-bottom: 24px; 
     font-size: 14px; 
-    color: #374151; 
+    color: var(--rg-ink);
+    border: 1px solid var(--rg-border);
   }
   
   .pay-btn { 
     width: 100%; 
-    background: #059669; 
+    background: var(--rg-navy); 
     color: white; 
     border: none; 
     border-radius: 12px; 
@@ -254,16 +307,23 @@ function renderPage({ linkToken, error, userId }) {
     font-weight: 600; 
     font-size: 16px; 
     cursor: pointer; 
-    transition: background 0.2s;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px rgba(15, 39, 65, 0.18);
   }
   
   .pay-btn:hover { 
-    background: #047857; 
+    background: var(--rg-navy-600); 
+  }
+  
+  .pay-btn:focus { 
+    outline: none; 
+    box-shadow: 0 0 0 4px var(--rg-navy-50), 0 4px 14px rgba(15, 39, 65, 0.18);
   }
   
   .pay-btn:disabled { 
     background: #94a3b8; 
     cursor: not-allowed; 
+    opacity: 0.6;
   }
   
   .success-view { 
@@ -272,21 +332,27 @@ function renderPage({ linkToken, error, userId }) {
   }
   
   .success-icon { 
-    color: #059669; 
+    color: var(--rg-gold); 
     font-size: 48px; 
     margin-bottom: 16px; 
   }
   
   .success-title { 
-    font-size: 24px; 
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px; 
     font-weight: 600; 
-    color: #0f172a; 
-    margin: 0 0 8px; 
+    color: var(--rg-ink); 
+    margin: 0 0 16px; 
   }
   
   .success-details { 
-    color: #64748b; 
+    color: var(--rg-body); 
     margin-bottom: 32px; 
+    font-size: 15px;
+  }
+  
+  .success-details div {
+    margin-bottom: 8px;
   }
   
   .success-actions { 
@@ -296,7 +362,7 @@ function renderPage({ linkToken, error, userId }) {
   }
   
   .btn-primary { 
-    background: #3b82f6; 
+    background: var(--rg-navy); 
     color: white; 
     border: none; 
     border-radius: 8px; 
@@ -305,31 +371,42 @@ function renderPage({ linkToken, error, userId }) {
     cursor: pointer; 
     text-decoration: none; 
     display: inline-block; 
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary:hover {
+    background: var(--rg-navy-600);
   }
   
   .btn-secondary { 
     background: white; 
-    color: #374151; 
-    border: 1px solid #d1d5db; 
+    color: var(--rg-navy); 
+    border: 1px solid var(--rg-border); 
     border-radius: 8px; 
     padding: 12px 24px; 
     font-weight: 500; 
     cursor: pointer; 
     text-decoration: none; 
     display: inline-block; 
+    transition: all 0.2s ease;
+  }
+  
+  .btn-secondary:hover {
+    background: var(--rg-navy-50);
   }
   
   .order-summary { 
-    background: white; 
-    border: 1px solid #e2e8f0; 
+    background: var(--rg-card); 
+    border: 1px solid var(--rg-border); 
     border-radius: 16px; 
     padding: 24px; 
   }
   
   .order-title { 
-    font-size: 18px; 
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 20px; 
     font-weight: 600; 
-    color: #0f172a; 
+    color: var(--rg-ink); 
     margin: 0 0 20px; 
   }
   
@@ -338,13 +415,22 @@ function renderPage({ linkToken, error, userId }) {
     justify-content: space-between; 
     margin-bottom: 12px; 
     font-size: 14px; 
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rg-border);
+  }
+  
+  .order-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
   }
   
   .order-item.total { 
-    border-top: 1px solid #e2e8f0; 
-    padding-top: 12px; 
     font-weight: 600; 
     font-size: 16px; 
+    color: var(--rg-ink);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rg-border);
   }
   
   .trust-row { 
@@ -352,19 +438,28 @@ function renderPage({ linkToken, error, userId }) {
     align-items: center; 
     margin-top: 20px; 
     padding-top: 20px; 
-    border-top: 1px solid #e2e8f0; 
+    border-top: 1px solid var(--rg-border); 
     font-size: 12px; 
-    color: #64748b; 
+    color: var(--rg-body); 
   }
   
   .trust-icon { 
     margin-right: 8px; 
-    color: #059669; 
+    color: var(--rg-gold); 
+  }
+  
+  .trust-row a {
+    color: var(--rg-navy);
+    text-decoration: none;
+  }
+  
+  .trust-row a:hover {
+    text-decoration: underline;
   }
   
   .error-message { 
     color: #dc2626; 
-    font-size: 12px; 
+    font-size: 13px; 
     margin-top: 4px; 
   }
   
@@ -377,12 +472,31 @@ function renderPage({ linkToken, error, userId }) {
     display: none; 
   }
   
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 8px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
   @media (max-width: 768px) {
     .grid { 
       grid-template-columns: 1fr; 
     }
     .sticky { 
       position: static; 
+    }
+    .container {
+      padding: 24px 16px;
     }
   }
 </style>
@@ -393,7 +507,7 @@ function renderPage({ linkToken, error, userId }) {
       <!-- Left Column: Payment Flow -->
       <div class="main-content">
         <div class="card">
-          <h1>Complete your purchase</h1>
+          <h1 class="font-serif">Complete your purchase</h1>
           <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
           
           ${
@@ -402,7 +516,7 @@ function renderPage({ linkToken, error, userId }) {
             <div style="color: #dc2626; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 24px;">
               <strong>Error:</strong> ${error}
             </div>
-            <p><a href="/" style="color: #3b82f6;">← Start over</a></p>
+            <p><a href="/" style="color: var(--rg-navy);">← Start over</a></p>
           `
               : `
           <!-- Payment Method Selection -->
@@ -410,6 +524,7 @@ function renderPage({ linkToken, error, userId }) {
             <div class="section-title">Payment method</div>
             <div class="method-option selected" data-method="bank">
               <input type="radio" name="payment-method" value="bank" class="method-radio" checked>
+              <div class="method-icon">🏦</div>
               <div class="method-content">
                 <div class="method-title">Bank account (Plaid)</div>
                 <div class="method-desc">Connect your bank account securely</div>
@@ -417,6 +532,7 @@ function renderPage({ linkToken, error, userId }) {
             </div>
             <div class="method-option disabled" data-method="card">
               <input type="radio" name="payment-method" value="card" class="method-radio" disabled>
+              <div class="method-icon">💳</div>
               <div class="method-content">
                 <div class="method-title">Credit/Debit card</div>
                 <div class="method-desc">Coming soon</div>
@@ -487,7 +603,7 @@ function renderPage({ linkToken, error, userId }) {
           <!-- Success View (shown after successful payment) -->
           <div id="successView" class="success-view hidden">
             <div class="success-icon">✓</div>
-            <h2 class="success-title">Payment successful!</h2>
+            <h2 class="success-title">Payment successful</h2>
             <div class="success-details">
               <div>Amount: <span id="successAmount">$0.00</span></div>
               <div>Account: <span id="successAccount">Account</span></div>
@@ -528,8 +644,8 @@ function renderPage({ linkToken, error, userId }) {
             <div class="trust-icon">🔒</div>
             <div>
               Bank connection is secure via Plaid. 
-              <a href="/terms" style="color: #3b82f6;">Terms</a> • 
-              <a href="/privacy" style="color: #3b82f6;">Privacy</a>
+              <a href="/terms">Terms</a> • 
+              <a href="/privacy">Privacy</a>
             </div>
           </div>
         </div>
@@ -653,7 +769,7 @@ function renderPage({ linkToken, error, userId }) {
               // Update connected badge
               var connectedText = document.getElementById('connectedText');
               if (connectedText) {
-                connectedText.textContent = metadata.institution.name + ' ••••' + metadata.accounts[0].mask;
+                connectedText.textContent = 'Connected — ' + metadata.institution.name + ' ••••' + metadata.accounts[0].mask;
               }
               
               // Populate account dropdown
@@ -751,7 +867,7 @@ function renderPage({ linkToken, error, userId }) {
             
             isSubmitting = true;
             payBtn.disabled = true;
-            payBtn.textContent = 'Processing...';
+            payBtn.innerHTML = '<span class="spinner"></span>Processing...';
             
             var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
             var description = descriptionInput.value || 'Gold purchase';
