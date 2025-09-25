@@ -74,6 +74,16 @@ function renderPage({ linkToken, error, userId }) {
     top: 40px; 
   }
   
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  
+  .logo {
+    height: 60px;
+    margin-bottom: 16px;
+  }
+  
   h1 { 
     font-family: 'Playfair Display', Georgia, serif;
     font-size: 28px; 
@@ -507,8 +517,12 @@ function renderPage({ linkToken, error, userId }) {
       <!-- Left Column: Payment Flow -->
       <div class="main-content">
         <div class="card">
-          <h1 class="font-serif">Complete your purchase</h1>
-          <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
+          <!-- Company Logo and Header -->
+          <div class="header">
+            <img src="/logo.png" alt="Revelation Gold Group" class="logo" onerror="this.style.display='none'">
+            <h1 class="font-serif">Complete your purchase</h1>
+            <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
+          </div>
           
           ${
             error
@@ -570,7 +584,7 @@ function renderPage({ linkToken, error, userId }) {
                 type="text" 
                 id="amountInput" 
                 class="form-input" 
-                placeholder="$0.00" 
+                placeholder="0.00" 
                 inputmode="decimal"
                 required
               >
@@ -670,8 +684,7 @@ function renderPage({ linkToken, error, userId }) {
         currentStep: 'connect', // connect, details, success
         accounts: [], // Array of account objects
         selectedAccountId: null, // Currently selected account ID
-        amountCents: null, // Amount in cents (canonical value)
-        amountDisplay: '', // What user sees in input
+        amount: 0, // Amount as decimal number
         description: ''
       };
       
@@ -693,58 +706,31 @@ function renderPage({ linkToken, error, userId }) {
         }
       }
       
-      // Parse amount string to cents (canonical value)
-      function parseToCents(value) {
-        if (!value || value.trim() === '') return null;
+      // Format amount for display
+      function formatAmount(amount) {
+        return amount.toFixed(2);
+      }
+      
+      // Parse amount input to decimal
+      function parseAmount(value) {
+        if (!value || value.trim() === '') return 0;
         
-        // Strip non [0-9.]
+        // Remove any non-numeric characters except decimal point
         var cleaned = value.replace(/[^0-9.]/g, '');
-        if (cleaned === '') return null;
+        if (cleaned === '') return 0;
         
-        // Split on first dot
+        // Ensure only one decimal point
         var parts = cleaned.split('.');
-        var dollars = parseInt(parts[0] || '0', 10) || 0;
-        var fractional = parts[1] || '';
-        
-        // Limit to 2 decimal places and pad
-        if (fractional.length > 2) {
-          fractional = fractional.substring(0, 2);
-        }
-        while (fractional.length < 2) {
-          fractional += '0';
-        }
-        
-        var cents = parseInt(fractional, 10) || 0;
-        return dollars * 100 + cents;
-      }
-      
-      // Format cents to display string
-      function formatCentsToDisplay(cents) {
-        if (cents === null) return '';
-        var dollars = Math.floor(cents / 100);
-        var remainingCents = cents % 100;
-        return dollars + '.' + remainingCents.toString().padStart(2, '0');
-      }
-      
-      // Validate amount input
-      function validateAmountInput(value) {
-        // Allow digits and at most one dot
-        var cleaned = value.replace(/[^0-9.]/g, '');
-        var dotCount = (cleaned.match(/\./g) || []).length;
-        
-        if (dotCount > 1) {
-          // Remove extra dots
-          var firstDot = cleaned.indexOf('.');
-          cleaned = cleaned.substring(0, firstDot + 1) + cleaned.substring(firstDot + 1).replace(/\./g, '');
+        if (parts.length > 2) {
+          cleaned = parts[0] + '.' + parts.slice(1).join('');
         }
         
         // Limit to 2 decimal places
-        var parts = cleaned.split('.');
         if (parts[1] && parts[1].length > 2) {
           cleaned = parts[0] + '.' + parts[1].substring(0, 2);
         }
         
-        return cleaned;
+        return parseFloat(cleaned) || 0;
       }
       
       // State management
@@ -773,16 +759,14 @@ function renderPage({ linkToken, error, userId }) {
       
       // Currency formatting for display
       function formatCurrency(value) {
-        var num = parseFloat(value) || 0;
-        return '$' + num.toFixed(2);
+        return '$' + value.toFixed(2);
       }
       
       // Update order summary
       function updateOrderSummary() {
         var orderAmount = document.getElementById('orderAmount');
         var orderTotal = document.getElementById('orderTotal');
-        var amount = state.amountCents ? state.amountCents / 100 : 0;
-        var formattedAmount = formatCurrency(amount);
+        var formattedAmount = formatCurrency(state.amount);
         
         if (orderAmount) orderAmount.textContent = formattedAmount;
         if (orderTotal) orderTotal.textContent = formattedAmount;
@@ -793,8 +777,7 @@ function renderPage({ linkToken, error, userId }) {
         var payBtn = document.getElementById('payBtn');
         var isValid = state.isConnected && 
                      state.selectedAccountId && 
-                     state.amountCents !== null && 
-                     state.amountCents > 0;
+                     state.amount > 0;
         
         if (payBtn) {
           payBtn.disabled = !isValid;
@@ -810,11 +793,10 @@ function renderPage({ linkToken, error, userId }) {
         var reviewAccount = document.getElementById('reviewAccount');
         
         var selected = getSelectedAccount();
-        var amount = state.amountCents ? state.amountCents / 100 : 0;
         
-        if (amount > 0 && selected) {
+        if (state.amount > 0 && selected) {
           if (reviewRow) reviewRow.classList.remove('hidden');
-          if (reviewAmount) reviewAmount.textContent = formatCurrency(amount);
+          if (reviewAmount) reviewAmount.textContent = formatCurrency(state.amount);
           if (reviewAccount) {
             var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
             reviewAccount.textContent = accountName + ' ••••' + selected.mask;
@@ -906,7 +888,7 @@ function renderPage({ linkToken, error, userId }) {
           });
         }
         
-        // Amount input - stable currency input
+        // Amount input - normal text input
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
           // Prevent wheel events
@@ -916,12 +898,13 @@ function renderPage({ linkToken, error, userId }) {
           
           amountInput.addEventListener('input', function() {
             var value = this.value;
-            var validated = validateAmountInput(value);
-            this.value = validated;
+            var parsedAmount = parseAmount(value);
             
             // Update state
-            state.amountDisplay = validated;
-            state.amountCents = parseToCents(validated);
+            state.amount = parsedAmount;
+            
+            // Update display to show formatted amount
+            this.value = formatAmount(parsedAmount);
             
             updateOrderSummary();
             updateReviewRow();
@@ -959,7 +942,6 @@ function renderPage({ linkToken, error, userId }) {
             payBtn.disabled = true;
             payBtn.innerHTML = '<span class="spinner"></span>Processing...';
             
-            var amount = state.amountCents ? (state.amountCents / 100).toFixed(2) : '0.00';
             var description = state.description || 'Gold purchase';
             
             fetch('/api/transfers/create', {
@@ -968,7 +950,7 @@ function renderPage({ linkToken, error, userId }) {
               body: JSON.stringify({
                 user_id: USER_ID,
                 account_id: state.selectedAccountId, // Use selected account ID
-                amount: parseFloat(amount),
+                amount: state.amount, // Send as decimal number
                 description: description
               })
             })
@@ -986,7 +968,7 @@ function renderPage({ linkToken, error, userId }) {
                 var selected = getSelectedAccount();
                 var accountName = selected ? (selected.name + ' ••••' + selected.mask) : 'Account';
                 
-                if (successAmount) successAmount.textContent = formatCurrency(amount);
+                if (successAmount) successAmount.textContent = formatCurrency(state.amount);
                 if (successAccount) successAccount.textContent = accountName;
                 if (successDate) successDate.textContent = new Date().toLocaleDateString();
                 if (successReference) successReference.textContent = result.transfer_id || 'N/A';
@@ -1018,8 +1000,7 @@ function renderPage({ linkToken, error, userId }) {
             state.currentStep = 'connect';
             state.accounts = [];
             state.selectedAccountId = null;
-            state.amountCents = null;
-            state.amountDisplay = '';
+            state.amount = 0;
             state.description = '';
             
             // Reset form

@@ -81,6 +81,9 @@ app.get("/health", (req, res) => {
   });
 });
 
+// Serve static files from public directory
+app.use(express.static('public'));
+
 // API routes
 app.use("/api/plaid", plaidRoutes);
 app.use("/api/users", userRoutes);
