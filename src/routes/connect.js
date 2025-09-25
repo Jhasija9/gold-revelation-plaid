@@ -571,6 +571,7 @@ function renderPage({ linkToken, error, userId }) {
                 id="amountInput" 
                 class="form-input" 
                 placeholder="$0.00" 
+                inputmode="decimal"
                 required
               >
               <div id="amountError" class="error-message hidden">Please enter a valid amount</div>
@@ -661,11 +662,90 @@ function renderPage({ linkToken, error, userId }) {
     (function(){
       var USER_ID = ${JSON.stringify(userId ?? null)};
       var linkToken = ${JSON.stringify(linkToken)};
-      var isConnected = false;
-      var isSubmitting = false;
-      var currentStep = 'connect'; // connect, details, success
-      var accountsData = [];
-      var selectedAccount = null;
+      
+      // State management - single source of truth
+      var state = {
+        isConnected: false,
+        isSubmitting: false,
+        currentStep: 'connect', // connect, details, success
+        accounts: [], // Array of account objects
+        selectedAccountId: null, // Currently selected account ID
+        amountCents: null, // Amount in cents (canonical value)
+        amountDisplay: '', // What user sees in input
+        description: ''
+      };
+      
+      // Get currently selected account
+      function getSelectedAccount() {
+        if (!state.selectedAccountId || state.accounts.length === 0) return null;
+        return state.accounts.find(function(acc) {
+          return acc.id === state.selectedAccountId;
+        });
+      }
+      
+      // Update connected badge text based on selected account
+      function updateConnectedBadge() {
+        var selected = getSelectedAccount();
+        var connectedText = document.getElementById('connectedText');
+        if (connectedText && selected) {
+          var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
+          connectedText.textContent = 'Connected — ' + accountName + ' ••••' + selected.mask;
+        }
+      }
+      
+      // Parse amount string to cents (canonical value)
+      function parseToCents(value) {
+        if (!value || value.trim() === '') return null;
+        
+        // Strip non [0-9.]
+        var cleaned = value.replace(/[^0-9.]/g, '');
+        if (cleaned === '') return null;
+        
+        // Split on first dot
+        var parts = cleaned.split('.');
+        var dollars = parseInt(parts[0] || '0', 10) || 0;
+        var fractional = parts[1] || '';
+        
+        // Limit to 2 decimal places and pad
+        if (fractional.length > 2) {
+          fractional = fractional.substring(0, 2);
+        }
+        while (fractional.length < 2) {
+          fractional += '0';
+        }
+        
+        var cents = parseInt(fractional, 10) || 0;
+        return dollars * 100 + cents;
+      }
+      
+      // Format cents to display string
+      function formatCentsToDisplay(cents) {
+        if (cents === null) return '';
+        var dollars = Math.floor(cents / 100);
+        var remainingCents = cents % 100;
+        return dollars + '.' + remainingCents.toString().padStart(2, '0');
+      }
+      
+      // Validate amount input
+      function validateAmountInput(value) {
+        // Allow digits and at most one dot
+        var cleaned = value.replace(/[^0-9.]/g, '');
+        var dotCount = (cleaned.match(/\./g) || []).length;
+        
+        if (dotCount > 1) {
+          // Remove extra dots
+          var firstDot = cleaned.indexOf('.');
+          cleaned = cleaned.substring(0, firstDot + 1) + cleaned.substring(firstDot + 1).replace(/\./g, '');
+        }
+        
+        // Limit to 2 decimal places
+        var parts = cleaned.split('.');
+        if (parts[1] && parts[1].length > 2) {
+          cleaned = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        
+        return cleaned;
+      }
       
       // State management
       function updateUI() {
@@ -681,26 +761,27 @@ function renderPage({ linkToken, error, userId }) {
         if (successView) successView.classList.add('hidden');
         
         // Show appropriate section based on step
-        if (currentStep === 'connect') {
+        if (state.currentStep === 'connect') {
           if (connectBtn) connectBtn.classList.remove('hidden');
-        } else if (currentStep === 'details') {
+        } else if (state.currentStep === 'details') {
           if (connectedBadge) connectedBadge.classList.remove('hidden');
           if (paymentDetails) paymentDetails.classList.remove('hidden');
-        } else if (currentStep === 'success') {
+        } else if (state.currentStep === 'success') {
           if (successView) successView.classList.remove('hidden');
         }
       }
       
-      // Currency formatting
+      // Currency formatting for display
       function formatCurrency(value) {
         var num = parseFloat(value) || 0;
         return '$' + num.toFixed(2);
       }
       
       // Update order summary
-      function updateOrderSummary(amount) {
+      function updateOrderSummary() {
         var orderAmount = document.getElementById('orderAmount');
         var orderTotal = document.getElementById('orderTotal');
+        var amount = state.amountCents ? state.amountCents / 100 : 0;
         var formattedAmount = formatCurrency(amount);
         
         if (orderAmount) orderAmount.textContent = formattedAmount;
@@ -709,12 +790,11 @@ function renderPage({ linkToken, error, userId }) {
       
       // Validate form
       function validateForm() {
-        var amountInput = document.getElementById('amountInput');
-        var accountSelect = document.getElementById('accountSelect');
         var payBtn = document.getElementById('payBtn');
-        
-        var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
-        var isValid = isConnected && amount > 0 && accountSelect.value;
+        var isValid = state.isConnected && 
+                     state.selectedAccountId && 
+                     state.amountCents !== null && 
+                     state.amountCents > 0;
         
         if (payBtn) {
           payBtn.disabled = !isValid;
@@ -725,19 +805,20 @@ function renderPage({ linkToken, error, userId }) {
       
       // Update review row
       function updateReviewRow() {
-        var amountInput = document.getElementById('amountInput');
-        var accountSelect = document.getElementById('accountSelect');
         var reviewRow = document.getElementById('reviewRow');
         var reviewAmount = document.getElementById('reviewAmount');
         var reviewAccount = document.getElementById('reviewAccount');
         
-        var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
-        var accountText = accountSelect.options[accountSelect.selectedIndex]?.text || 'Account';
+        var selected = getSelectedAccount();
+        var amount = state.amountCents ? state.amountCents / 100 : 0;
         
-        if (amount > 0 && accountSelect.value) {
+        if (amount > 0 && selected) {
           if (reviewRow) reviewRow.classList.remove('hidden');
           if (reviewAmount) reviewAmount.textContent = formatCurrency(amount);
-          if (reviewAccount) reviewAccount.textContent = accountText;
+          if (reviewAccount) {
+            var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
+            reviewAccount.textContent = accountName + ' ••••' + selected.mask;
+          }
         } else {
           if (reviewRow) reviewRow.classList.add('hidden');
         }
@@ -762,32 +843,32 @@ function renderPage({ linkToken, error, userId }) {
           .then(data => {
             console.log('Exchange result:', data);
             if (data.success) {
-              isConnected = true;
-              accountsData = data.accounts;
-              currentStep = 'details';
+              state.isConnected = true;
+              state.accounts = data.accounts;
               
-              // Update connected badge
-              var connectedText = document.getElementById('connectedText');
-              if (connectedText) {
-                connectedText.textContent = 'Connected — ' + metadata.institution.name + ' ••••' + metadata.accounts[0].mask;
+              // Initialize selectedAccountId only if null
+              if (state.selectedAccountId === null && data.accounts.length > 0) {
+                state.selectedAccountId = data.accounts[0].id;
               }
+              
+              state.currentStep = 'details';
               
               // Populate account dropdown
               var accountSelect = document.getElementById('accountSelect');
-              if (accountSelect && accountsData.length > 0) {
+              if (accountSelect && state.accounts.length > 0) {
                 accountSelect.innerHTML = '<option value="">Choose an account...</option>';
-                accountsData.forEach(function(account) {
+                state.accounts.forEach(function(account) {
                   var option = document.createElement('option');
                   option.value = account.id;
                   option.textContent = account.name + ' (' + account.type + ') ••••' + account.mask;
                   accountSelect.appendChild(option);
                 });
                 
-                // Select first account by default
-                accountSelect.selectedIndex = 1;
-                selectedAccount = accountsData[0];
+                // Set selected value
+                accountSelect.value = state.selectedAccountId;
               }
               
+              updateConnectedBadge();
               updateUI();
               validateForm();
             } else {
@@ -825,27 +906,35 @@ function renderPage({ linkToken, error, userId }) {
           });
         }
         
-        // Amount input formatting
+        // Amount input - stable currency input
         var amountInput = document.getElementById('amountInput');
         if (amountInput) {
+          // Prevent wheel events
+          amountInput.addEventListener('wheel', function(e) {
+            e.preventDefault();
+          });
+          
           amountInput.addEventListener('input', function() {
-            var value = this.value.replace(/[^0-9.]/g, '');
-            var num = parseFloat(value) || 0;
-            this.value = formatCurrency(num).substring(1); // Remove $ for input
+            var value = this.value;
+            var validated = validateAmountInput(value);
+            this.value = validated;
             
-            updateOrderSummary(num);
+            // Update state
+            state.amountDisplay = validated;
+            state.amountCents = parseToCents(validated);
+            
+            updateOrderSummary();
             updateReviewRow();
             validateForm();
           });
         }
         
-        // Account select
+        // Account select - controlled select
         var accountSelect = document.getElementById('accountSelect');
         if (accountSelect) {
           accountSelect.addEventListener('change', function() {
-            selectedAccount = accountsData.find(function(acc) {
-              return acc.id === this.value;
-            }.bind(this));
+            state.selectedAccountId = this.value;
+            updateConnectedBadge();
             updateReviewRow();
             validateForm();
           });
@@ -855,6 +944,7 @@ function renderPage({ linkToken, error, userId }) {
         var descriptionInput = document.getElementById('descriptionInput');
         if (descriptionInput) {
           descriptionInput.addEventListener('input', function() {
+            state.description = this.value;
             updateReviewRow();
           });
         }
@@ -863,22 +953,22 @@ function renderPage({ linkToken, error, userId }) {
         var payBtn = document.getElementById('payBtn');
         if (payBtn) {
           payBtn.addEventListener('click', function() {
-            if (isSubmitting || !validateForm()) return;
+            if (state.isSubmitting || !validateForm()) return;
             
-            isSubmitting = true;
+            state.isSubmitting = true;
             payBtn.disabled = true;
             payBtn.innerHTML = '<span class="spinner"></span>Processing...';
             
-            var amount = parseFloat(amountInput.value.replace(/[^0-9.]/g, '')) || 0;
-            var description = descriptionInput.value || 'Gold purchase';
+            var amount = state.amountCents ? (state.amountCents / 100).toFixed(2) : '0.00';
+            var description = state.description || 'Gold purchase';
             
             fetch('/api/transfers/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 user_id: USER_ID,
-                account_id: accountSelect.value,
-                amount: amount,
+                account_id: state.selectedAccountId, // Use selected account ID
+                amount: parseFloat(amount),
                 description: description
               })
             })
@@ -886,22 +976,25 @@ function renderPage({ linkToken, error, userId }) {
             .then(function(result) {
               if (result.success) {
                 // Show success view
-                currentStep = 'success';
+                state.currentStep = 'success';
                 
                 var successAmount = document.getElementById('successAmount');
                 var successAccount = document.getElementById('successAccount');
                 var successDate = document.getElementById('successDate');
                 var successReference = document.getElementById('successReference');
                 
+                var selected = getSelectedAccount();
+                var accountName = selected ? (selected.name + ' ••••' + selected.mask) : 'Account';
+                
                 if (successAmount) successAmount.textContent = formatCurrency(amount);
-                if (successAccount) successAccount.textContent = accountSelect.options[accountSelect.selectedIndex].text;
+                if (successAccount) successAccount.textContent = accountName;
                 if (successDate) successDate.textContent = new Date().toLocaleDateString();
                 if (successReference) successReference.textContent = result.transfer_id || 'N/A';
                 
                 updateUI();
               } else {
                 alert('Payment failed: ' + (result.error || 'Unknown error'));
-                isSubmitting = false;
+                state.isSubmitting = false;
                 payBtn.disabled = false;
                 payBtn.textContent = 'Complete payment';
               }
@@ -909,7 +1002,7 @@ function renderPage({ linkToken, error, userId }) {
             .catch(function(error) {
               console.error('Payment error:', error);
               alert('Payment failed. Please try again.');
-              isSubmitting = false;
+              state.isSubmitting = false;
               payBtn.disabled = false;
               payBtn.textContent = 'Complete payment';
             });
@@ -920,17 +1013,21 @@ function renderPage({ linkToken, error, userId }) {
         var newPaymentBtn = document.getElementById('newPaymentBtn');
         if (newPaymentBtn) {
           newPaymentBtn.addEventListener('click', function() {
-            // Reset form
-            isConnected = false;
-            currentStep = 'connect';
-            accountsData = [];
-            selectedAccount = null;
+            // Reset state
+            state.isConnected = false;
+            state.currentStep = 'connect';
+            state.accounts = [];
+            state.selectedAccountId = null;
+            state.amountCents = null;
+            state.amountDisplay = '';
+            state.description = '';
             
+            // Reset form
             if (amountInput) amountInput.value = '';
             if (descriptionInput) descriptionInput.value = '';
             if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
             
-            updateOrderSummary(0);
+            updateOrderSummary();
             updateUI();
             validateForm();
           });
