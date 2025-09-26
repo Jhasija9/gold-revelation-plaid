@@ -670,6 +670,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       var USER_ID = ${JSON.stringify(userId ?? null)};
       var linkToken = ${JSON.stringify(linkToken)};
       var selectedPlan = ${JSON.stringify(selectedPlan || '')};
+      console.log('🔍 DEBUG: selectedPlan variable =', selectedPlan);
+      console.log('🔍 DEBUG: selectedPlan type =', typeof selectedPlan);
+      console.log('🔍 DEBUG: selectedPlan length =', selectedPlan ? selectedPlan.length : 'null/undefined');
       
       // State management - single source of truth
       var state = {
@@ -845,12 +848,29 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               }
               
               // AUTO-POPULATE DESCRIPTION HERE (after payment details are visible)
+              console.log('🔍 DEBUG: About to check selectedPlan for auto-populate');
+              console.log('🔍 DEBUG: selectedPlan value =', selectedPlan);
+              console.log('🔍 DEBUG: selectedPlan truthy =', !!selectedPlan);
+
               if (selectedPlan) {
+                console.log('🔍 DEBUG: selectedPlan is truthy, proceeding with auto-populate');
                 var descriptionInput = document.getElementById('descriptionInput');
+                console.log('�� DEBUG: descriptionInput element =', descriptionInput);
+                console.log('�� DEBUG: descriptionInput found =', !!descriptionInput);
+                
                 if (descriptionInput) {
+                  console.log('🔍 DEBUG: Setting description input value to:', selectedPlan);
                   descriptionInput.value = selectedPlan;
                   state.description = selectedPlan;
+                  console.log('🔍 DEBUG: Auto-populate completed successfully');
+                  console.log('�� DEBUG: descriptionInput.value after setting =', descriptionInput.value);
+                  console.log('🔍 DEBUG: state.description after setting =', state.description);
+                } else {
+                  console.log('🔍 DEBUG: ERROR - descriptionInput element not found!');
                 }
+              } else {
+                console.log('🔍 DEBUG: selectedPlan is falsy, skipping auto-populate');
+                console.log('🔍 DEBUG: selectedPlan value was:', selectedPlan);
               }
               
               updateConnectedBadge();
@@ -1045,6 +1065,10 @@ router.get("/", async (req, res, next) => {
     const cookies = parseCookies(req);
     const sessionId = cookies["rg_link_session"];
     const { selected_plan } = req.query;
+    
+    // DEBUG: Log the URL parameters
+    console.log('🔍 DEBUG: req.query =', req.query);
+    console.log('🔍 DEBUG: selected_plan =', selected_plan);
 
     if (!sessionId) {
       return res.status(200).send(
