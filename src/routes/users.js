@@ -80,7 +80,8 @@ router.post(
       res.setHeader("Set-Cookie", cookieStr);
 
       // 4) 303 redirect to /connect so the browser follows and the cookie sticks
-      res.status(303).setHeader("Location", "/connect").end();
+      const redirectUrl = `/connect?selected_plan=${encodeURIComponent(selected_plan)}`;
+      res.status(303).setHeader("Location", redirectUrl).end();
     } catch (err) {
       next(err);
     }
