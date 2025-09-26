@@ -138,48 +138,33 @@ class PlaidService {
     userId,
     products = ["auth", "transfer"],
     webhook = process.env.PLAID_WEBHOOK_URL,
-    clientName = "Revelation Gold Group",
-    countryCodes = ["US"],
-    language = "en",
-  } = {}) {
+    clientName = "Revelation Gold Group"
+  }) {
     try {
       console.log("🎯 PLAID SERVICE: createLinkToken called");
       console.log("�� PLAID SERVICE: Webhook URL:", webhook);
       console.log("🎯 PLAID SERVICE: Products:", products);
       
-      const req = {
-        user: { client_user_id: String(userId) },
-        client_name: clientName,
-        products,
-        country_codes: countryCodes,
-        language,
-        webhook:webhook
+      const request = {
+        user: { client_user_id: userId },
+        client_id: process.env.PLAID_CLIENT_ID,
+        secret: process.env.PLAID_SECRET,
+        products: products,
+        country_codes: ["US"],
+        language: "en",
+        webhook: webhook,
+        environment: process.env.PLAID_ENV,
       };
       
-      // Only add webhook if it's provided and not undefined
-      if (webhook && webhook !== 'undefined') {
-        req.webhook = webhook;
-        console.log('🔗 Setting webhook URL:', webhook);
-      } else {
-        console.warn('⚠️ No webhook URL provided - webhooks will not work!');
-      }
-
-      const resp = await this.client.linkTokenCreate(req);
-      console.log("🎯 PLAID SERVICE: Link token response:", JSON.stringify(resp.data, null, 2));
-      // return the raw token for convenience in /connect
-      return resp.data.link_token;
+      console.log("🎯 PLAID SERVICE: Full request object:", JSON.stringify(request, null, 2));
+      
+      const response = await this.client.linkTokenCreate(request);
+      console.log("🎯 PLAID SERVICE: Link token response:", JSON.stringify(response.data, null, 2));
+      
+      return response.data;
     } catch (error) {
-      // Let callers decide how to render/log; include Plaid request_id for audit
-      const request_id = error?.response?.data?.request_id;
-      console.error(
-        "Error creating link token:",
-        request_id || error?.message,
-        error?.response?.data || ""
-      );
-      throw Object.assign(new Error("PLAID_LINK_TOKEN_CREATE_FAILED"), {
-        cause: error,
-        request_id,
-      });
+      console.error("🎯 PLAID SERVICE: Error creating link token:", error);
+      throw error;
     }
   }
 
