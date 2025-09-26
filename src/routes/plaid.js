@@ -40,38 +40,22 @@ router.post("/get-balance", plaidController.getBalance.bind(plaidController));
 
 // Replace your existing webhook route with this updated version
 router.post("/webhook", verifyPlaidWebhook, (req, res) => {
-  console.log("🎯 WEBHOOK RECEIVED:", JSON.stringify(req.body, null, 2));
-  console.log("🎯 WEBHOOK HEADERS:", JSON.stringify(req.headers, null, 2));
-  console.log("🎯 WEBHOOK TIMESTAMP:", new Date().toISOString());
-  
   res.status(200).json({ received: true });
 
+  // Log full webhook data for debugging
+  console.log("Webhook received:", JSON.stringify(req.body));
   // Process webhook asynchronously
   setImmediate(async () => {
     try {
       const { webhook_type, webhook_code } = req.body;
-      console.log(`🎯 Processing ${webhook_type}.${webhook_code} webhook`);
+      console.log(`Processing ${webhook_type}.${webhook_code} webhook`);
 
       // Handle different webhook types
       if (webhook_type === "TRANSFER") {
-        console.log("🎯 TRANSFER WEBHOOK DETECTED");
-        console.log("🎯 Transfer webhook data:", JSON.stringify(req.body, null, 2));
-        
-        // Handle transfer status updates
-        if (webhook_code === "TRANSFER_POSTED") {
-          console.log("🎯 TRANSFER_POSTED - Transfer has been posted");
-        } else if (webhook_code === "TRANSFER_SETTLED") {
-          console.log("🎯 TRANSFER_SETTLED - Transfer has been settled");
-        } else if (webhook_code === "TRANSFER_FAILED") {
-          console.log("🎯 TRANSFER_FAILED - Transfer has failed");
-        } else if (webhook_code === "TRANSFER_CANCELLED") {
-          console.log("🎯 TRANSFER_CANCELLED - Transfer has been cancelled");
-        }
-      } else {
-        console.log(`🎯 OTHER WEBHOOK TYPE: ${webhook_type}.${webhook_code}`);
+        await plaidController.handleTransferWebhook(req.body);
       }
     } catch (error) {
-      console.error("🎯 Error processing webhook:", error);
+      console.error("Error processing webhook:", error);
     }
   }, 0);
 });
