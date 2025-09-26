@@ -6,12 +6,13 @@ class TransferStatusService {
   // Poll for pending transfers that are over 1 hour old
   async pollPendingTransfers() {
     try {
+      // Fix: Use proper date comparison syntax
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      
       const pendingTransfers = await databaseService.query("transactions", "select", {
         where: { 
           status: 'pending',
-          created_at: {
-            $lt: new Date(Date.now() - 60 * 60 * 1000).toISOString()  // 1 hour ago
-          }
+          created_at: oneHourAgo  // Remove the $lt object wrapper
         }
       });
       

@@ -844,6 +844,15 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 accountSelect.value = state.selectedAccountId;
               }
               
+              // AUTO-POPULATE DESCRIPTION HERE (after payment details are visible)
+              if (selectedPlan) {
+                var descriptionInput = document.getElementById('descriptionInput');
+                if (descriptionInput) {
+                  descriptionInput.value = selectedPlan;
+                  state.description = selectedPlan;
+                }
+              }
+              
               updateConnectedBadge();
               updateUI();
               validateForm();
@@ -1020,15 +1029,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             updateUI();
             validateForm();
           });
-        }
-
-        // Auto-populate description with plan
-        if (selectedPlan) {
-          var descriptionInput = document.getElementById('descriptionInput');
-          if (descriptionInput) {
-            descriptionInput.value = selectedPlan;
-            state.description = selectedPlan;
-          }
         }
       });
     })();
