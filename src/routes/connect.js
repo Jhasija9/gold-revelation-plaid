@@ -592,12 +592,14 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             </div>
             
             <div class="form-group">
-              <label class="form-label" for="descriptionInput">Description (optional)</label>
+              <label class="form-label" for="descriptionInput">Investment Plan</label>
               <input 
                 type="text" 
                 id="descriptionInput" 
                 class="form-input" 
-                placeholder="What are you purchasing?"
+                placeholder="Plan will be auto-selected"
+                readonly
+                style="background-color: #f8fafc; cursor: not-allowed;"
               >
             </div>
             
