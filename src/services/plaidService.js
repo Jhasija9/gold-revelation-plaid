@@ -137,9 +137,7 @@ class PlaidService {
   async createLinkToken({
     userId,
     products = ["auth", "transfer"],
-    webhook = `${
-      process.env.API_BASE_URL || "http://localhost:3001"
-    }/api/plaid/webhook`,
+    webhook = process.env.PLAID_WEBHOOK_URL,
     clientName = "Revelation Gold Group",
     countryCodes = ["US"],
     language = "en",
@@ -305,10 +303,10 @@ class PlaidService {
       // Step 2: Create transfer using authorization
       const transferRequest = {
         access_token: access_token,
-        account_id: account_id, // ADD THIS LINE
+        account_id: account_id,
         authorization_id: authResponse.data.authorization.id,
         amount: parseFloat(amount).toFixed(2),
-        description: description,
+        description: this.getShortDescription(description), // Use abbreviated description
       };
 
       console.log("Creating transfer:", transferRequest);
@@ -406,6 +404,31 @@ class PlaidService {
         request_id,
       });
     }
+  }
+
+  // Add this method to PlaidService class
+  getShortDescription(description) {
+    // Map longer descriptions to shorter ones (max 15 characters)
+    const shortDescriptions = {
+      'Gold Subscription': 'Gold Sub',
+      'Silver Plan': 'Silver',
+      'Platinum Package': 'Platinum',
+      'GoldIRA': 'GoldIRA',
+      'Silver IRA': 'Silver IRA',
+      'Platinum IRA': 'Platinum IRA',
+      'Gold Investment': 'Gold Invest',
+      'Silver Investment': 'Silver Inv',
+      'Platinum Investment': 'Platinum Inv',
+      'Gold Purchase': 'Gold Purchase',
+      'Silver Purchase': 'Silver Purch',
+      'Platinum Purchase': 'Platinum Pur',
+      'Gold Plan': 'Gold Plan',
+      'Silver Plan': 'Silver Plan',
+      'Platinum Plan': 'Platinum Plan'
+    };
+    
+    // Return mapped description or truncate if not found
+    return shortDescriptions[description] || description.substring(0, 15);
   }
 }
 
