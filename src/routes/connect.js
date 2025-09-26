@@ -1066,6 +1066,7 @@ router.get("/", async (req, res, next) => {
           linkToken: null,
           error: "Your session expired. Please start again.",
           userId: null,
+          selectedPlan: plan || null
         })
       );
     }
