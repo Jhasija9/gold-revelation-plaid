@@ -6,8 +6,9 @@ class TransferController {
   // Create Transfer
   async createTransfer(req, res) {
     try {
-      console.log("=== CREATE TRANSFER CALLED ===");
-      console.log("req.body:", req.body);
+      console.log("🎯 === CREATE TRANSFER CALLED ===");
+      console.log("🎯 req.body:", JSON.stringify(req.body, null, 2));
+      console.log("🎯 Transfer creation timestamp:", new Date().toISOString());
 
       const { user_id, account_id, amount, description } = req.body;
 
@@ -105,6 +106,16 @@ class TransferController {
       }
       const user = userResult.data[0];
 
+      // Add logging before calling Plaid
+      console.log("🎯 About to call Plaid createTransferUI");
+      console.log("🎯 Transfer parameters:", {
+        access_token: decryptedAccessToken ? "***ENCRYPTED***" : "MISSING",
+        account_id: account.plaid_account_id,
+        amount: parseFloat(amount).toFixed(2),
+        description: description,
+        user_legal_name: user.first_name + " " + user.last_name
+      });
+
       const transferResult = await plaidService.createTransferUI({
         access_token: decryptedAccessToken,
         account_id: account.plaid_account_id,
@@ -114,6 +125,8 @@ class TransferController {
         user_legal_name: `${user.first_name} ${user.last_name}`,
         user_email: user.email,
       });
+
+      console.log("🎯 Plaid transfer result:", JSON.stringify(transferResult, null, 2));
 
       // Verify user ownership
       if (item.user_id !== user_id) {
@@ -170,7 +183,7 @@ class TransferController {
         message: "Transfer created successfully",
       });
     } catch (error) {
-      console.error("Transfer controller error:", error);
+      console.error("🎯 Error in createTransfer:", error);
       res.status(500).json({
         success: false,
         error: "Internal server error",

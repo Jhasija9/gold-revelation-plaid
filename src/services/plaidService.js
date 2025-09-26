@@ -143,14 +143,19 @@ class PlaidService {
     language = "en",
   } = {}) {
     try {
+      console.log("🎯 PLAID SERVICE: createLinkToken called");
+      console.log("�� PLAID SERVICE: Webhook URL:", webhook);
+      console.log("🎯 PLAID SERVICE: Products:", products);
+      
       const req = {
         user: { client_user_id: String(userId) },
         client_name: clientName,
         products,
         country_codes: countryCodes,
         language,
+        webhook:webhook
       };
-
+      
       // Only add webhook if it's provided and not undefined
       if (webhook && webhook !== 'undefined') {
         req.webhook = webhook;
@@ -160,6 +165,7 @@ class PlaidService {
       }
 
       const resp = await this.client.linkTokenCreate(req);
+      console.log("🎯 PLAID SERVICE: Link token response:", JSON.stringify(resp.data, null, 2));
       // return the raw token for convenience in /connect
       return resp.data.link_token;
     } catch (error) {
@@ -277,66 +283,65 @@ class PlaidService {
     user_email,
   }) {
     try {
-      console.log("Creating transfer with Plaid");
+      console.log("🎯 PLAID SERVICE: createTransferUI called");
+      console.log("🎯 PLAID SERVICE: Parameters:", {
+        access_token: access_token ? "***ENCRYPTED***" : "MISSING",
+        account_id: account_id,
+        amount: amount,
+        description: description,
+        user_legal_name: user_legal_name,
+        user_email: user_email
+      });
+
       // Step 1: Create transfer authorization
+      console.log("🎯 PLAID SERVICE: Creating transfer authorization...");
       const authRequest = {
         access_token: access_token,
         account_id: account_id,
-        type: "debit",
+        type: 'debit',
         amount: parseFloat(amount).toFixed(2),
-        network: "ach", // ACH is the standard for US bank transfers
-        ach_class: "ppd",
+        network: 'ach',
+        ach_class: 'ppd',
         user: {
-          legal_name: user_legal_name || "John Doe",
-          // client_user_id: String(user_id)
-        },
+          legal_name: user_legal_name || 'John Doe'
+        }
       };
-
-      console.log("Creating transfer authorization:", authRequest);
-      const authResponse = await this.client.transferAuthorizationCreate(
-        authRequest
-      );
-      console.log("Authorization response:", authResponse.data);
-
-      if (
-        !authResponse.data.authorization ||
-        !authResponse.data.authorization.id
-      ) {
-        throw new Error("Failed to create transfer authorization");
+      
+      console.log("🎯 PLAID SERVICE: Auth request:", JSON.stringify(authRequest, null, 2));
+      
+      const authResponse = await this.client.transferAuthorizationCreate(authRequest);
+      console.log("🎯 PLAID SERVICE: Auth response:", JSON.stringify(authResponse.data, null, 2));
+      
+      if (!authResponse.data.authorization || !authResponse.data.authorization.id) {
+        throw new Error('Failed to create transfer authorization');
       }
 
-      // Step 2: Create transfer using authorization
+      // Step 2: Create transfer
+      console.log("🎯 PLAID SERVICE: Creating transfer...");
       const transferRequest = {
         access_token: access_token,
         account_id: account_id,
         authorization_id: authResponse.data.authorization.id,
         amount: parseFloat(amount).toFixed(2),
-        description: this.getShortDescription(description), // Use abbreviated description
+        description: description.substring(0, 15)
       };
-
-      console.log("Creating transfer:", transferRequest);
-      const transferResponse = await this.client.transferCreate(
-        transferRequest
-      );
-      console.log("Transfer response:", transferResponse.data);
-
+      
+      console.log("🎯 PLAID SERVICE: Transfer request:", JSON.stringify(transferRequest, null, 2));
+      
+      const transferResponse = await this.client.transferCreate(transferRequest);
+      console.log("🎯 PLAID SERVICE: Transfer response:", JSON.stringify(transferResponse.data, null, 2));
+      
       return {
         success: true,
         transfer_id: transferResponse.data.transfer.id,
-        // transfer_url: transferResponse.data.transfer_url,
-        status: transferResponse.data.status,
+        status: transferResponse.data.status
       };
     } catch (error) {
-      const request_id = error?.response?.data?.request_id;
-      console.error(
-        "Error creating transfer:",
-        request_id || error?.message,
-        error?.response?.data || ""
-      );
-      throw Object.assign(new Error("PLAID_TRANSFER_CREATE_FAILED"), {
-        cause: error,
-        request_id,
-      });
+      console.error("🎯 PLAID SERVICE: Error creating transfer:", error);
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
   // Add this method to plaidService.js
