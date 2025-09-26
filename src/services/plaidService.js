@@ -149,15 +149,13 @@ class PlaidService {
         products,
         country_codes: countryCodes,
         language,
+        webhook: webhook
       };
 
       // Only add webhook if it's provided and not undefined
-      if (webhook && webhook !== 'undefined') {
-        req.webhook = webhook;
-        console.log('🔗 Setting webhook URL:', webhook);
-      } else {
-        console.warn('⚠️ No webhook URL provided - webhooks will not work!');
-      }
+      
+      console.log('🔗 Setting webhook URL:', webhook);
+      
 
       const resp = await this.client.linkTokenCreate(req);
       // return the raw token for convenience in /connect
