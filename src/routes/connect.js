@@ -1044,7 +1044,7 @@ router.get("/", async (req, res, next) => {
   try {
     const cookies = parseCookies(req);
     const sessionId = cookies["rg_link_session"];
-    const { plan } = req.query;
+    const { selected_plan } = req.query;
 
     if (!sessionId) {
       return res.status(200).send(
@@ -1052,7 +1052,7 @@ router.get("/", async (req, res, next) => {
           linkToken: null,
           error: "Your session expired. Please start again.",
           userId: null,
-          selectedPlan: plan || null
+          selectedPlan: selected_plan || null
         })
       );
     }
@@ -1066,7 +1066,7 @@ router.get("/", async (req, res, next) => {
           linkToken: null,
           error: "Your session expired. Please start again.",
           userId: null,
-          selectedPlan: plan || null
+          selectedPlan: selected_plan || null
         })
       );
     }
@@ -1085,7 +1085,7 @@ router.get("/", async (req, res, next) => {
         linkToken,
         error: null,
         userId: session.user_id,
-      selectedPlan: plan || null
+      selectedPlan: selected_plan || null
     }));
   } catch (err) {
     next(err);
