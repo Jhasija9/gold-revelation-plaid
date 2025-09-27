@@ -1,6 +1,6 @@
 const express = require("express");
 const plaidController = require("../controllers/plaidController");
-const verifyPlaidWebhook = require("../middleware/web_hook_verification");
+// const verifyPlaidWebhook = require("../middleware/web_hook_verification");
 
 const router = express.Router();
 
