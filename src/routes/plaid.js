@@ -54,11 +54,6 @@ router.post("/webhook", verifyPlaidWebhook, (req, res) => {
       if (webhook_type === "TRANSFER") {
         await plaidController.handleTransferWebhook(req.body);
       }
-      
-      // Handle TRANSFER_EVENTS_UPDATE
-      if (webhook_type === 'TRANSFER' && webhook_code === 'TRANSFER_EVENTS_UPDATE') {
-        await plaidController.handleTransferEventsUpdate();
-      }
     } catch (error) {
       console.error("Error processing webhook:", error);
     }
@@ -69,54 +64,6 @@ router.post("/webhook", verifyPlaidWebhook, (req, res) => {
 router.post("/webhook-test", (req, res) => {
   console.log("🧪 WEBHOOK TEST RECEIVED:", req.body);
   res.status(200).json({ message: "Test received" });
-});
-
-// Add these routes before module.exports = router;
-
-// Test webhook firing
-router.post("/test-webhook", async (req, res) => {
-  try {
-    console.log("🧪 Testing webhook firing...");
-    const plaidService = require('../services/plaidService');
-    
-    const response = await plaidService.client.sandboxTransferFireWebhook({
-      webhook: process.env.PLAID_WEBHOOK_URL
-    });
-    
-    console.log("✅ Webhook fired:", response.data);
-    res.json({ 
-      success: true, 
-      message: 'Webhook fired',
-      response: response.data 
-    });
-  } catch (error) {
-    console.error("❌ Error firing webhook:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
-});
-
-// Test manual sync
-router.post("/test-sync", async (req, res) => {
-  try {
-    console.log("🧪 Testing transfer event sync...");
-    const plaidService = require('../services/plaidService');
-    
-    await plaidService.syncTransferEvents();
-    
-    res.json({ 
-      success: true, 
-      message: 'Transfer event sync completed' 
-    });
-  } catch (error) {
-    console.error("❌ Error in sync test:", error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
-  }
 });
 
 module.exports = router;

@@ -305,17 +305,6 @@ async handleTransferWebhook(webhookData) {
   }
 }
 
-  // Add this method INSIDE the class (before the closing })
-  async handleTransferEventsUpdate() {
-    try {
-      console.log('🎯 Handling TRANSFER_EVENTS_UPDATE webhook');
-      const plaidService = require('../services/plaidService');
-      await plaidService.syncTransferEvents();
-    } catch (error) {
-      console.error('Error handling transfer events update:', error);
-    }
-  }
-
   // Get Balance
   async getBalance(req, res) {
     try {
