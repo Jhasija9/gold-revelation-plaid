@@ -54,6 +54,8 @@ async function verifyPlaidWebhook(req, res, next) {
       // Verify the JWT
       const decodedJwt = jwt.verify(jwtToken, publicKey, {
         algorithms: ["ES256"],
+        // Add this line to handle the key format
+        complete: false
       });
 
       // Verify the request body hash matches

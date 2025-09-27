@@ -466,6 +466,9 @@ class PlaidService {
       }
       
       // Persist final cursor
+      if (afterId === undefined) {
+        afterId = 0; // Default to 0 if undefined
+      }
       await this.updateTransferEventCursor(afterId);
       console.log('✅ Transfer event sync completed');
       
@@ -533,7 +536,8 @@ class PlaidService {
         'posted': 'posted', 
         'settled': 'settled',
         'failed': 'failed',
-        'returned': 'returned'
+        'returned': 'returned',
+        'funds_available': 'funds_available' // Add this line
       };
       
       const newStatus = statusMap[event_type];
