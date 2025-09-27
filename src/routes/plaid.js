@@ -54,6 +54,11 @@ router.post("/webhook", verifyPlaidWebhook, (req, res) => {
       if (webhook_type === "TRANSFER") {
         await plaidController.handleTransferWebhook(req.body);
       }
+      
+      // Handle TRANSFER_EVENTS_UPDATE
+      if (webhook_type === 'TRANSFER' && webhook_code === 'TRANSFER_EVENTS_UPDATE') {
+        await plaidController.handleTransferEventsUpdate();
+      }
     } catch (error) {
       console.error("Error processing webhook:", error);
     }

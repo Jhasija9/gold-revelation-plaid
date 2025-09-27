@@ -433,6 +433,136 @@ class PlaidService {
     // Return mapped description or truncate if not found
     return shortDescriptions[description] || description.substring(0, 15);
   }
+
+  // Add Transfer Event Sync Methods
+  async syncTransferEvents() {
+    try {
+      console.log('🔄 Starting transfer event sync...');
+      
+      // Get current cursor
+      const cursor = await this.getTransferEventCursor();
+      console.log(`📊 Current cursor: ${cursor}`);
+      
+      let hasMore = true;
+      let afterId = cursor;
+      
+      while (hasMore) {
+        const response = await this.client.transferEventSync({
+          after_id: afterId
+        });
+        
+        console.log(`📥 Fetched ${response.data.transfer_events.length} events`);
+        
+        // Process each event
+        for (const event of response.data.transfer_events) {
+          await this.processTransferEvent(event);
+        }
+        
+        // Update cursor
+        afterId = response.data.after_id;
+        hasMore = response.data.has_more;
+        
+        console.log(`📊 New cursor: ${afterId}, has_more: ${hasMore}`);
+      }
+      
+      // Persist final cursor
+      await this.updateTransferEventCursor(afterId);
+      console.log('✅ Transfer event sync completed');
+      
+    } catch (error) {
+      console.error('❌ Transfer event sync failed:', error);
+      throw error;
+    }
+  }
+
+  async getTransferEventCursor() {
+    try {
+      const databaseService = require('./databaseService');
+      const result = await databaseService.query(
+        'plaid_transfer_event_cursor',
+        'select',
+        { where: { id: 'transfer' } }
+      );
+      
+      return result.data?.[0]?.after_id ?? 0;
+    } catch (error) {
+      console.error('Error getting cursor:', error);
+      return 0;
+    }
+  }
+
+  async updateTransferEventCursor(afterId) {
+    try {
+      const databaseService = require('./databaseService');
+      
+      // Try to update first
+      const updateResult = await databaseService.query(
+        'plaid_transfer_event_cursor',
+        'update',
+        {
+          where: { id: 'transfer' },
+          data: { after_id: afterId, updated_at: new Date().toISOString() }
+        }
+      );
+      
+      // If no rows were updated, insert new row
+      if (!updateResult.data || updateResult.data.length === 0) {
+        await databaseService.query(
+          'plaid_transfer_event_cursor',
+          'insert',
+          {
+            data: {
+              id: 'transfer',
+              after_id: afterId,
+              updated_at: new Date().toISOString()
+            }
+          }
+        );
+      }
+    } catch (error) {
+      console.error('Error updating cursor:', error);
+    }
+  }
+
+  async processTransferEvent(event) {
+    try {
+      const { event_type, transfer_id } = event;
+      
+      console.log(`🔄 Processing event: ${event_type} for transfer: ${transfer_id}`);
+      
+      // Map event types to internal status
+      const statusMap = {
+        'pending': 'pending',
+        'posted': 'posted', 
+        'settled': 'settled',
+        'failed': 'failed',
+        'returned': 'returned'
+      };
+      
+      const newStatus = statusMap[event_type];
+      
+      if (newStatus) {
+        // Update transaction status
+        const databaseService = require('./databaseService');
+        await databaseService.query(
+          'transactions',
+          'update',
+          {
+            where: { plaid_transfer_id: transfer_id },
+            data: { status: newStatus }
+          }
+        );
+        
+        console.log(`✅ Updated transfer ${transfer_id} to status: ${newStatus}`);
+      } else {
+        // Log unhandled event types
+        console.log(`⚠️ Unhandled event type: ${event_type} for transfer: ${transfer_id}`);
+      }
+      
+    } catch (error) {
+      console.error(`Error processing event for transfer ${event.transfer_id}:`, error);
+    }
+  }
 }
 
 module.exports = new PlaidService();
