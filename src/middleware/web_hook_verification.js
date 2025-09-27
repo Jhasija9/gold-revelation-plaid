@@ -4,31 +4,33 @@ const webhookKeyService = require("../services/webhookKeyService.js");
 
 async function verifyPlaidWebhook(req, res, next) {
   console.log("🔍 Webhook verification called");
-  console.log(
-    "🔍 SKIP_WEBHOOK_VERIFICATION:",
-    process.env.SKIP_WEBHOOK_VERIFICATION
-  );
+  console.log("🔍 SKIP_WEBHOOK_VERIFICATION:", process.env.SKIP_WEBHOOK_VERIFICATION);
 
   try {
     // Skip verification in development if needed (optional)
     if (process.env.SKIP_WEBHOOK_VERIFICATION === "true") {
-      console.warn(
-        "⚠️ Skipping webhook verification - NOT SECURE FOR PRODUCTION"
-      );
+      console.warn("⚠️ Skipping webhook verification - NOT SECURE FOR PRODUCTION");
       return next();
     }
 
     const jwtToken = req.headers["plaid-verification"];
 
     if (!jwtToken) {
-      return res
-        .status(401)
-        .json({ error: "No Plaid verification header found" });
+      return res.status(401).json({ error: "No Plaid verification header found" });
     }
 
+    // Decode JWT header to get key_id (without verification first)
+    const decodedHeader = jwt.decode(jwtToken, { complete: true });
+    const keyId = decodedHeader?.header?.kid;
+
+    if (!keyId) {
+      return res.status(401).json({ error: "No key_id found in JWT header" });
+    }
+
+    console.log("🔑 Key ID from JWT:", keyId);
+
     // Get the request body as a string - important to use the raw body
-    const requestBody =
-      typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    const requestBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
 
     // Calculate SHA256 hash of request body
     const calculatedBodyHash = crypto
@@ -37,8 +39,8 @@ async function verifyPlaidWebhook(req, res, next) {
       .digest("hex");
 
     try {
-      // Get public key for verification
-      const publicKey = await webhookKeyService.getPlaidPublicKeys();
+      // Get public key for verification using the key_id from the JWT
+      const publicKey = await webhookKeyService.getPlaidPublicKeys(keyId);
 
       // Verify the JWT
       const decodedJwt = jwt.verify(jwtToken, publicKey, {

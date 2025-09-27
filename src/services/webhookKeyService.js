@@ -7,29 +7,30 @@ const keyCache = new NodeCache({ stdTTL: 86400 });
 class WebhookKeyService {
   constructor() {
     this.keyCache = keyCache;
-    this.CACHE_KEY = 'plaid_webhook_keys';
   }
 
-  async getPlaidPublicKeys() {
+  async getPlaidPublicKeys(keyId) {
     // Try to get keys from cache first
-    const cachedKeys = this.keyCache.get(this.CACHE_KEY);
-    if (cachedKeys) {
-      return cachedKeys;
+    const cacheKey = `plaid_webhook_key_${keyId}`;
+    const cachedKey = this.keyCache.get(cacheKey);
+    if (cachedKey) {
+      return cachedKey;
     }
 
     try {
-      // If not in cache, fetch from Plaid
+      // If not in cache, fetch from Plaid using the key_id
       const response = await axios.post(
         `https://${process.env.PLAID_ENV || 'sandbox'}.plaid.com/webhook_verification_key/get`,
         {
           client_id: process.env.PLAID_CLIENT_ID,
-          secret: process.env.PLAID_SECRET
+          secret: process.env.PLAID_SECRET,
+          key_id: keyId  // Use the key_id from the JWT header
         }
       );
 
       if (response.data && response.data.key) {
         // Store in cache
-        this.keyCache.set(this.CACHE_KEY, response.data.key);
+        this.keyCache.set(cacheKey, response.data.key);
         return response.data.key;
       }
       
