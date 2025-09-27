@@ -53,13 +53,6 @@ class DatabaseService {
           result = await this.supabase.from(table).delete().match(data.where);
           break;
 
-        case "upsert":
-          result = await this.supabase
-            .from(table)
-            .upsert(data.data, { onConflict: 'id' })
-            .select();
-          break;
-
         default:
           throw new Error(`Unknown operation: ${operation}`);
       }

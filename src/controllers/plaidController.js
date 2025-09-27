@@ -305,7 +305,7 @@ async handleTransferWebhook(webhookData) {
   }
 }
 
-  // Add this method to plaidController
+  // Add this method INSIDE the class (before the closing })
   async handleTransferEventsUpdate() {
     try {
       console.log('🎯 Handling TRANSFER_EVENTS_UPDATE webhook');

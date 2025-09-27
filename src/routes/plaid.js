@@ -71,7 +71,9 @@ router.post("/webhook-test", (req, res) => {
   res.status(200).json({ message: "Test received" });
 });
 
-// Add these test endpoints
+// Add these routes before module.exports = router;
+
+// Test webhook firing
 router.post("/test-webhook", async (req, res) => {
   try {
     console.log("🧪 Testing webhook firing...");
@@ -96,6 +98,7 @@ router.post("/test-webhook", async (req, res) => {
   }
 });
 
+// Test manual sync
 router.post("/test-sync", async (req, res) => {
   try {
     console.log("🧪 Testing transfer event sync...");

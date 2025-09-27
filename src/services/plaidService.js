@@ -478,13 +478,12 @@ class PlaidService {
   async getTransferEventCursor() {
     try {
       const databaseService = require('./databaseService');
-      const result = await databaseService.query(
+      const result = await databaseService.selectOne(
         'plaid_transfer_event_cursor',
-        'select',
-        { where: { id: 'transfer' } }
+        { id: 'transfer' }
       );
       
-      return result.data?.[0]?.after_id ?? 0;
+      return result?.after_id ?? 0;
     } catch (error) {
       console.error('Error getting cursor:', error);
       return 0;
@@ -496,26 +495,24 @@ class PlaidService {
       const databaseService = require('./databaseService');
       
       // Try to update first
-      const updateResult = await databaseService.query(
+      const existing = await databaseService.selectOne(
         'plaid_transfer_event_cursor',
-        'update',
-        {
-          where: { id: 'transfer' },
-          values: { after_id: afterId, updated_at: new Date().toISOString() }  // 'values' not 'data'
-        }
+        { id: 'transfer' }
       );
       
-      // If no rows were updated, insert new row
-      if (!updateResult.data || updateResult.data.length === 0) {
-        await databaseService.query(
+      if (existing) {
+        await databaseService.updateOne(
           'plaid_transfer_event_cursor',
-          'insert',
+          { id: 'transfer' },
+          { after_id: afterId, updated_at: new Date().toISOString() }
+        );
+      } else {
+        await databaseService.insertOne(
+          'plaid_transfer_event_cursor',
           {
-            values: [{  // 'values' not 'data'
-              id: 'transfer',
-              after_id: afterId,
-              updated_at: new Date().toISOString()
-            }]
+            id: 'transfer',
+            after_id: afterId,
+            updated_at: new Date().toISOString()
           }
         );
       }
@@ -544,13 +541,10 @@ class PlaidService {
       if (newStatus) {
         // Update transaction status
         const databaseService = require('./databaseService');
-        await databaseService.query(
+        await databaseService.updateOne(
           'transactions',
-          'update',
-          {
-            where: { plaid_transfer_id: transfer_id },
-            values: { status: newStatus }  // 'values' not 'data'
-          }
+          { plaid_transfer_id: transfer_id },
+          { status: newStatus }
         );
         
         console.log(`✅ Updated transfer ${transfer_id} to status: ${newStatus}`);
