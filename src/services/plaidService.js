@@ -501,7 +501,7 @@ class PlaidService {
         'update',
         {
           where: { id: 'transfer' },
-          data: { after_id: afterId, updated_at: new Date().toISOString() }
+          values: { after_id: afterId, updated_at: new Date().toISOString() }  // 'values' not 'data'
         }
       );
       
@@ -511,11 +511,11 @@ class PlaidService {
           'plaid_transfer_event_cursor',
           'insert',
           {
-            data: {
+            values: [{  // 'values' not 'data'
               id: 'transfer',
               after_id: afterId,
               updated_at: new Date().toISOString()
-            }
+            }]
           }
         );
       }
@@ -549,7 +549,7 @@ class PlaidService {
           'update',
           {
             where: { plaid_transfer_id: transfer_id },
-            data: { status: newStatus }
+            values: { status: newStatus }  // 'values' not 'data'
           }
         );
         

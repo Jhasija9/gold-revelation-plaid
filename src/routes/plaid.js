@@ -71,4 +71,49 @@ router.post("/webhook-test", (req, res) => {
   res.status(200).json({ message: "Test received" });
 });
 
+// Add these test endpoints
+router.post("/test-webhook", async (req, res) => {
+  try {
+    console.log("🧪 Testing webhook firing...");
+    const plaidService = require('../services/plaidService');
+    
+    const response = await plaidService.client.sandboxTransferFireWebhook({
+      webhook: process.env.PLAID_WEBHOOK_URL
+    });
+    
+    console.log("✅ Webhook fired:", response.data);
+    res.json({ 
+      success: true, 
+      message: 'Webhook fired',
+      response: response.data 
+    });
+  } catch (error) {
+    console.error("❌ Error firing webhook:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
+router.post("/test-sync", async (req, res) => {
+  try {
+    console.log("🧪 Testing transfer event sync...");
+    const plaidService = require('../services/plaidService');
+    
+    await plaidService.syncTransferEvents();
+    
+    res.json({ 
+      success: true, 
+      message: 'Transfer event sync completed' 
+    });
+  } catch (error) {
+    console.error("❌ Error in sync test:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
