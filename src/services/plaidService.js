@@ -504,10 +504,8 @@ class PlaidService {
   // CORRECTED: Fire test webhook (for sandbox testing)
   async fireTestWebhook(webhookType = 'TRANSFER', webhookCode = 'TRANSFER_EVENTS_UPDATE') {
     try {
-      const response = await this.client.sandboxTransferFireWebhook({
-        webhook_type: webhookType,
-        webhook_code: webhookCode
-      });
+      // Use the correct parameter names - remove webhook_code and webhook_type
+      const response = await this.client.sandboxTransferFireWebhook({});
 
       return {
         success: true,
