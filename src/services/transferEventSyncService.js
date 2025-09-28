@@ -217,7 +217,7 @@ class TransferEventSyncService {
       });
 
       if (updateResult.success) {
-        console.log(`✅ Updated transfer ${transfer_id}: ${currentStatus} → ${newStatus}`);
+        console.log(`✅ Updated transfer ${transfer_id}: ${currentStatus} → ${newStatus} (event: ${event_id})`);
       } else {
         console.error(`❌ Failed to update transfer ${transfer_id}:`, updateResult.error);
       }

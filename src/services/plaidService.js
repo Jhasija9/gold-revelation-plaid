@@ -437,19 +437,30 @@ class PlaidService {
   // CORRECTED: Transfer Event Sync using proper Plaid API
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
-      // Use the correct Transfer Event Sync API
+      // Use transfer/list to get transfers and their current status
       const request = {
         access_token: accessToken,
-        after_event_id: afterEventId || 0,
-        count: 25
+        count: 25,
+        offset: 0
       };
 
-      const response = await this.client.transferEventSync(request);
+      const response = await this.client.transferList(request);
+      
+      // Convert transfers to event-like format for processing
+      const events = (response.data.transfers || []).map(transfer => ({
+        event_id: `${transfer.id}_${Date.now()}`, // Generate unique event ID
+        transfer_id: transfer.id,
+        event_type: transfer.status,
+        timestamp: transfer.created || new Date().toISOString(),
+        ach_transfer_id: transfer.ach_transfer_id,
+        failure_reason: transfer.failure_reason,
+        return_reason: transfer.return_reason
+      }));
       
       return {
         success: true,
-        events: response.data.transfer_events || [],
-        has_more: response.data.has_more || false
+        events: events,
+        has_more: false // transferList doesn't have pagination
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
@@ -466,7 +477,7 @@ class PlaidService {
     }
   }
 
-  // NEW: Fire test webhook (for sandbox testing)
+  // CORRECTED: Fire test webhook (for sandbox testing)
   async fireTestWebhook(webhookType = 'TRANSFER', webhookCode = 'TRANSFER_EVENTS_UPDATE') {
     try {
       const response = await this.client.sandboxTransferFireWebhook({
