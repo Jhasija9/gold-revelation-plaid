@@ -437,19 +437,20 @@ class PlaidService {
   // NEW: Transfer Event Sync (Latest Plaid Method)
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
-      // Use transfer/list instead of transferEventSync
+      // Use transfer/list with proper parameters
       const request = {
-        access_token: accessToken,
         count: 25,
         offset: 0
       };
 
+      // Note: transferList doesn't need access_token in the request body
+      // It uses the access_token from the client configuration
       const response = await this.client.transferList(request);
       
       return {
         success: true,
         events: response.data.transfers || [],
-        has_more: false // transferList doesn't have pagination like event sync
+        has_more: false
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
