@@ -437,18 +437,19 @@ class PlaidService {
   // NEW: Transfer Event Sync (Latest Plaid Method)
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
+      // Use transfer/list instead of transferEventSync
       const request = {
         access_token: accessToken,
-        after_event_id: afterEventId
+        count: 25,
+        offset: 0
       };
 
-      const response = await this.client.transferEventSync(request);
+      const response = await this.client.transferList(request);
       
       return {
         success: true,
-        events: response.data.events,
-        next_cursor: response.data.next_cursor,
-        has_more: response.data.has_more
+        events: response.data.transfers || [],
+        has_more: false // transferList doesn't have pagination like event sync
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
