@@ -49,6 +49,13 @@ class DatabaseService {
             .select();
           break;
 
+        case "upsert":
+          result = await this.supabase
+            .from(table)
+            .upsert(data.values, { onConflict: 'id' })
+            .select();
+          break;
+
         case "delete":
           result = await this.supabase.from(table).delete().match(data.where);
           break;
@@ -64,6 +71,7 @@ class DatabaseService {
       return { success: false, error: error.message };
     }
   }
+
   // src/services/databaseService.js  (add below your existing class methods)
   async selectOne(table, where = {}, columns = "*") {
     const q = this.supabase.from(table).select(columns).match(where).limit(1);

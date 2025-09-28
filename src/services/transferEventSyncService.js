@@ -103,7 +103,7 @@ class TransferEventSyncService {
   async getActiveAccessTokens() {
     try {
       const result = await databaseService.query("items", "select", {
-        where: { status: 'active' }
+        where: { is_active: true }
       });
 
       if (!result.success) {
@@ -227,31 +227,31 @@ class TransferEventSyncService {
     }
   }
 
-  // Map Plaid event type to database status
+  // Map Plaid event type to database status (update this method)
   mapEventTypeToStatus(eventType) {
     const statusMap = {
-      'pending': 'PENDING',
-      'posted': 'POSTED', 
-      'settled': 'SETTLED',
-      'funds_available': 'FUNDS_AVAILABLE',
-      'returned': 'RETURNED',
-      'failed': 'FAILED',
-      'cancelled': 'CANCELLED'
+      'pending': 'pending',
+      'posted': 'posted', 
+      'settled': 'settled',
+      'funds_available': 'funds_available',
+      'returned': 'returned',
+      'failed': 'failed',
+      'cancelled': 'cancelled'
     };
 
     return statusMap[eventType] || null;
   }
 
-  // Check if status should be updated (prevent downgrades)
+  // Check if status should be updated (prevent downgrades) - update this method
   shouldUpdateStatus(currentStatus, newStatus) {
     const statusHierarchy = {
-      'PENDING': 1,
-      'POSTED': 2,
-      'FUNDS_AVAILABLE': 3,
-      'SETTLED': 4,
-      'RETURNED': 5,
-      'FAILED': 5,
-      'CANCELLED': 5
+      'pending': 1,
+      'posted': 2,
+      'funds_available': 3,
+      'settled': 4,
+      'returned': 5,
+      'failed': 5,
+      'cancelled': 5
     };
 
     const currentLevel = statusHierarchy[currentStatus] || 0;
@@ -261,32 +261,33 @@ class TransferEventSyncService {
     return newLevel >= currentLevel;
   }
 
-  // Prepare status update data
+  // Prepare status update data (update this method)
   prepareStatusUpdate(status, event) {
     const updateData = { status };
     const timestamp = new Date().toISOString();
 
     switch (status) {
-      case 'POSTED':
+      case 'posted':
         updateData.processed_at = timestamp;
         updateData.ach_reference_id = event.ach_transfer_id || null;
         break;
 
-      case 'SETTLED':
+      case 'settled':
         updateData.completed_at = timestamp;
         break;
 
-      case 'FUNDS_AVAILABLE':
-        updateData.funds_available_at = timestamp;
+      case 'funds_available':
+        // Note: Your schema doesn't have funds_available_at column
+        // We'll just update the status
         break;
 
-      case 'RETURNED':
-      case 'FAILED':
-      case 'CANCELLED':
+      case 'returned':
+      case 'failed':
+      case 'cancelled':
         updateData.failed_at = timestamp;
         updateData.failure_reason = event.return_reason || 
                                    event.failure_reason || 
-                                   `${status.toLowerCase()} by Plaid`;
+                                   `${status} by Plaid`;
         break;
     }
 
