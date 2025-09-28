@@ -100,6 +100,25 @@ class DatabaseService {
     if (error) throw error;
     return Array.isArray(data) ? data[0] : data;
   }
+
+  // Fix the upsert method to handle arrays properly
+  async upsert(table, data) {
+    try {
+      const { data: result, error } = await this.supabase
+        .from(table)
+        .upsert(data, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        })
+        .select();
+
+      if (error) throw error;
+      return { success: true, data: result };
+    } catch (error) {
+      console.error(`Database upsert error for ${table}:`, error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 module.exports = new DatabaseService();

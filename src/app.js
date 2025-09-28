@@ -134,12 +134,6 @@ app.listen(PORT, HOST, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
 
-// REMOVED: Old polling system - now using webhooks
-// const transferStatusService = require("./services/transferStatusService");
-// const transferPollInterval = setInterval(() => {
-//   transferStatusService.pollPendingTransfers();
-// }, 1 * 60 * 1000);
-
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("SIGTERM received. Shutting down gracefully...");

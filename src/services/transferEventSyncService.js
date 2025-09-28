@@ -47,19 +47,19 @@ class TransferEventSyncService {
     }
   }
 
-  // Update the last processed event ID
+  // Update the last processed event ID using proper upsert
   async updateLastEventId(eventId) {
     try {
-      const result = await databaseService.query(this.cursorTable, "upsert", {
-        values: [{
-          id: 1,
-          last_event_id: eventId,
-          updated_at: new Date().toISOString()
-        }]
-      });
+      const result = await databaseService.upsert(this.cursorTable, [{
+        id: 1,
+        last_event_id: eventId,
+        updated_at: new Date().toISOString()
+      }]);
 
       if (!result.success) {
         console.error('Failed to update last event ID:', result.error);
+      } else {
+        console.log(`📊 Updated cursor to event ID: ${eventId}`);
       }
     } catch (error) {
       console.error('Error updating last event ID:', error);

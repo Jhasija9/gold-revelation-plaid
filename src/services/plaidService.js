@@ -434,23 +434,22 @@ class PlaidService {
     return shortDescriptions[description] || description.substring(0, 15);
   }
 
-  // NEW: Transfer Event Sync (Latest Plaid Method)
+  // CORRECTED: Transfer Event Sync using proper Plaid API
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
-      // Use transfer/list with proper parameters
+      // Use the correct Transfer Event Sync API
       const request = {
-        count: 25,
-        offset: 0
+        access_token: accessToken,
+        after_event_id: afterEventId || 0,
+        count: 25
       };
 
-      // Note: transferList doesn't need access_token in the request body
-      // It uses the access_token from the client configuration
-      const response = await this.client.transferList(request);
+      const response = await this.client.transferEventSync(request);
       
       return {
         success: true,
-        events: response.data.transfers || [],
-        has_more: false
+        events: response.data.transfer_events || [],
+        has_more: response.data.has_more || false
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
