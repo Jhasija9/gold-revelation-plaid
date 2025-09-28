@@ -504,12 +504,9 @@ class PlaidService {
   // CORRECTED: Fire test webhook (for sandbox testing)
   async fireTestWebhook(webhookType = 'TRANSFER', webhookCode = 'TRANSFER_EVENTS_UPDATE') {
     try {
-      // Use the correct parameter - webhook is required
+      // Only webhook URL is required - no webhook_type or webhook_code
       const response = await this.client.sandboxTransferFireWebhook({
-        webhook: {
-          webhook_type: webhookType,
-          webhook_code: webhookCode
-        }
+        webhook: process.env.PLAID_WEBHOOK_URL || 'https://gold-revelation-plaid.vercel.app/webhooks/plaid/transfer'
       });
 
       return {
