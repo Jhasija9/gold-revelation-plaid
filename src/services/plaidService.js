@@ -434,33 +434,57 @@ class PlaidService {
     return shortDescriptions[description] || description.substring(0, 15);
   }
 
-  // CORRECTED: Transfer Event Sync using proper Plaid API
+  // CORRECTED: Transfer Event Sync using individual transfer checks
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
-      // Use transfer/list to get transfers and their current status
-      const request = {
-        access_token: accessToken,
-        count: 25,
-        offset: 0
-      };
-
-      const response = await this.client.transferList(request);
+      // Since transferList might not be available, we'll get transfers from database
+      // and check their status individually using transferGet
+      const databaseService = require('./databaseService');
       
-      // Convert transfers to event-like format for processing
-      const events = (response.data.transfers || []).map(transfer => ({
-        event_id: `${transfer.id}_${Date.now()}`, // Generate unique event ID
-        transfer_id: transfer.id,
-        event_type: transfer.status,
-        timestamp: transfer.created || new Date().toISOString(),
-        ach_transfer_id: transfer.ach_transfer_id,
-        failure_reason: transfer.failure_reason,
-        return_reason: transfer.return_reason
-      }));
+      // Get all pending transfers from database
+      const result = await databaseService.query("transactions", "select", {
+        where: { status: 'pending' },
+        limit: 25
+      });
+
+      if (!result.success) {
+        console.error('Failed to get pending transfers:', result.error);
+        return { success: false, error: result.error, events: [] };
+      }
+
+      const transfers = result.data;
+      const events = [];
+
+      // Check each transfer's current status
+      for (const transfer of transfers) {
+        try {
+          const transferResult = await this.getTransferById(accessToken, transfer.plaid_transfer_id);
+          
+          if (transferResult.success) {
+            const plaidTransfer = transferResult.transfer;
+            
+            // Create event if status has changed
+            if (plaidTransfer.status !== transfer.status) {
+              events.push({
+                event_id: `${transfer.plaid_transfer_id}_${Date.now()}`,
+                transfer_id: transfer.plaid_transfer_id,
+                event_type: plaidTransfer.status,
+                timestamp: plaidTransfer.created || new Date().toISOString(),
+                ach_transfer_id: plaidTransfer.ach_transfer_id,
+                failure_reason: plaidTransfer.failure_reason,
+                return_reason: plaidTransfer.return_reason
+              });
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking transfer ${transfer.plaid_transfer_id}:`, error);
+        }
+      }
       
       return {
         success: true,
         events: events,
-        has_more: false // transferList doesn't have pagination
+        has_more: false
       };
     } catch (error) {
       const request_id = error?.response?.data?.request_id;
