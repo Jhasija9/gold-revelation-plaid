@@ -8,7 +8,7 @@ const plaidRoutes = require("./routes/plaid");
 const userRoutes = require("./routes/users");
 const paymentRoutes = require("./routes/payments");
 const transferRoutes = require("./routes/transfers");
-const transferStatusService = require("./services/transferStatusService");
+const webhookRoutes = require("./routes/webhooks"); // NEW
 const bodyParser = require("body-parser");
 
 // Import middleware
@@ -17,8 +17,6 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 // Security middleware
-// const helmet = require("helmet");
-
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -45,15 +43,16 @@ app.use(
     credentials: true,
   })
 );
+
+// Webhook middleware - raw body for webhook verification
 app.use(
-  "/api/plaid/webhook",
+  "/webhooks",
   bodyParser.raw({ type: "application/json" }),
   (req, res, next) => {
     if (req.body && req.body.length) {
       try {
         req.body = JSON.parse(req.body.toString());
       } catch (e) {
-        // Log parsing error but continue
         console.error("Error parsing webhook body", e);
       }
     }
@@ -89,22 +88,7 @@ app.use("/api/plaid", plaidRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/transfers", transferRoutes);
-
-// Add this route
-// app.get('/connect', (req, res) => {
-//     res.send(`//         <!DOCTYPE html>
-//         <html>
-//         <head>
-//             <title>Connect Bank - Revelation Gold Group</title>
-//         </head>
-//         <body>
-//             <h1>Bank Connection Page</h1>
-//             <p>User created successfully! This is where Plaid integration will go.</p>
-//             <p>User data has been saved to database.</p>
-//         </body>
-//         </html>
-//     `);
-// });
+app.use("/webhooks", webhookRoutes); // NEW
 
 const connectRoute = require("./routes/connect");
 app.use("/connect", connectRoute);
@@ -120,6 +104,8 @@ app.get("/", (req, res) => {
       plaid: "/api/plaid",
       users: "/api/users",
       payments: "/api/payments",
+      transfers: "/api/transfers",
+      webhooks: "/webhooks", // NEW
     },
   });
 });
@@ -142,24 +128,21 @@ const HOST = process.env.HOST || "localhost";
 
 app.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on http://${HOST}:${PORT}`);
-  console.log(`�� Health check: http://${HOST}:${PORT}/health`);
-  console.log(`�� API endpoints: http://${HOST}:${PORT}/api`);
+  console.log(`🏥 Health check: http://${HOST}:${PORT}/health`);
+  console.log(`🌐 API endpoints: http://${HOST}:${PORT}/api`);
+  console.log(`🔔 Webhook endpoints: http://${HOST}:${PORT}/webhooks`); // NEW
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
-// Set up polling for pending transfers (every hour)
-const transferPollInterval = setInterval(() => {
-  transferStatusService.pollPendingTransfers();
-}, 1 * 60 * 1000); // 1 minute
 
-// Consider adding an initial delayed poll
-setTimeout(() => {
-  transferStatusService.pollPendingTransfers();
-}, 30000); // 30 seconds after startup
+// REMOVED: Old polling system - now using webhooks
+// const transferStatusService = require("./services/transferStatusService");
+// const transferPollInterval = setInterval(() => {
+//   transferStatusService.pollPendingTransfers();
+// }, 1 * 60 * 1000);
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("SIGTERM received. Shutting down gracefully...");
-  clearInterval(transferPollInterval);
   process.exit(0);
 });
 
@@ -169,5 +152,3 @@ process.on("SIGINT", () => {
 });
 
 module.exports = app;
-
-//changes made

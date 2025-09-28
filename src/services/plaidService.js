@@ -433,6 +433,64 @@ class PlaidService {
     // Return mapped description or truncate if not found
     return shortDescriptions[description] || description.substring(0, 15);
   }
+
+  // NEW: Transfer Event Sync (Latest Plaid Method)
+  async syncTransferEvents(accessToken, afterEventId = null) {
+    try {
+      const request = {
+        access_token: accessToken,
+        after_event_id: afterEventId
+      };
+
+      const response = await this.client.transferEventSync(request);
+      
+      return {
+        success: true,
+        events: response.data.events,
+        next_cursor: response.data.next_cursor,
+        has_more: response.data.has_more
+      };
+    } catch (error) {
+      const request_id = error?.response?.data?.request_id;
+      console.error(
+        "Error syncing transfer events:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      return {
+        success: false,
+        error: error.response?.data?.error_message || error.message,
+        request_id
+      };
+    }
+  }
+
+  // NEW: Fire test webhook (for sandbox testing)
+  async fireTestWebhook(webhookType = 'TRANSFER', webhookCode = 'TRANSFER_EVENTS_UPDATE') {
+    try {
+      const response = await this.client.sandboxTransferFireWebhook({
+        webhook_type: webhookType,
+        webhook_code: webhookCode
+      });
+
+      return {
+        success: true,
+        webhook_fired: response.data.webhook_fired
+      };
+    } catch (error) {
+      const request_id = error?.response?.data?.request_id;
+      console.error(
+        "Error firing test webhook:",
+        request_id || error?.message,
+        error?.response?.data || ""
+      );
+      return {
+        success: false,
+        error: error.response?.data?.error_message || error.message,
+        request_id
+      };
+    }
+  }
 }
 
 module.exports = new PlaidService();
