@@ -1,12 +1,18 @@
-const express = require('express');
+const express = require("express");
+const paymentFormController = require("../controllers/paymentFormController");
+
 const router = express.Router();
-const paymentFormController = require('../controllers/paymentFormController');
-const sessionAuth = require('../middleware/sessionAuth'); // Use session auth instead
 
-// Generate secure payment form (iframe) - Use session auth
-router.post('/generate', sessionAuth.validateSession, paymentFormController.generatePaymentForm);
+// Generate secure payment form (iframe) - NO AUTH like Plaid
+router.post(
+  "/generate",
+  paymentFormController.generatePaymentForm.bind(paymentFormController)
+);
 
-// Handle payment form response (from iframe) - Use session auth
-router.post('/response', sessionAuth.validateSession, paymentFormController.handlePaymentFormResponse);
+// Handle payment form response (from iframe) - NO AUTH like Plaid
+router.post(
+  "/response",
+  paymentFormController.handlePaymentFormResponse.bind(paymentFormController)
+);
 
 module.exports = router;

@@ -1,13 +1,32 @@
-const express = require('express');
-const router = express.Router();
-const customerProfileController = require('../controllers/customerProfileController');
-const sessionAuth = require('../middleware/sessionAuth'); // Use session auth instead
+const express = require("express");
+const customerProfileController = require("../controllers/customerProfileController");
 
-// Customer profile routes - Use session auth
-router.post('/create', sessionAuth.validateSession, customerProfileController.createCustomerProfile);
-router.get('/:customerId', sessionAuth.validateSession, customerProfileController.getCustomerProfile);
-router.post('/:customerId/payment-profile', sessionAuth.validateSession, customerProfileController.createPaymentProfile);
-router.get('/:customerId/payment-profiles', sessionAuth.validateSession, customerProfileController.getPaymentProfiles);
-router.delete('/:customerId/payment-profile/:paymentProfileId', sessionAuth.validateSession, customerProfileController.deletePaymentProfile);
+const router = express.Router();
+
+// Customer profile routes - NO AUTH like Plaid
+router.post(
+  "/create",
+  customerProfileController.createCustomerProfile.bind(customerProfileController)
+);
+
+router.get(
+  "/:customerId",
+  customerProfileController.getCustomerProfile.bind(customerProfileController)
+);
+
+router.post(
+  "/:customerId/payment-profile",
+  customerProfileController.createPaymentProfile.bind(customerProfileController)
+);
+
+router.get(
+  "/:customerId/payment-profiles",
+  customerProfileController.getPaymentProfiles.bind(customerProfileController)
+);
+
+router.delete(
+  "/:customerId/payment-profile/:paymentProfileId",
+  customerProfileController.deletePaymentProfile.bind(customerProfileController)
+);
 
 module.exports = router;
