@@ -242,13 +242,13 @@ class TransferEventSyncService {
     return statusMap[eventType] || null;
   }
 
-  // Check if status should be updated (prevent downgrades) - update this method
+  // Check if status should be updated (prevent downgrades) - FIXED
   shouldUpdateStatus(currentStatus, newStatus) {
     const statusHierarchy = {
       'pending': 1,
       'posted': 2,
-      'funds_available': 3,
-      'settled': 4,
+      'settled': 3,        // ✅ FIXED: settled comes before funds_available
+      'funds_available': 4, // ✅ FIXED: funds_available is final
       'returned': 5,
       'failed': 5,
       'cancelled': 5

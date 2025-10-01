@@ -437,18 +437,18 @@ class PlaidService {
   // CORRECTED: Transfer Event Sync using individual transfer checks
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
-      // Since transferList might not be available, we'll get transfers from database
-      // and check their status individually using transferGet
       const databaseService = require('./databaseService');
       
-      // Get all pending transfers from database
+      // ✅ FIXED: Get all non-final status transfers (not just pending)
       const result = await databaseService.query("transactions", "select", {
-        where: { status: 'pending' },
+        where: { 
+          status: { not_in: ['funds_available', 'failed', 'cancelled', 'returned'] }
+        },
         limit: 25
       });
 
       if (!result.success) {
-        console.error('Failed to get pending transfers:', result.error);
+        console.error('Failed to get transfers:', result.error);
         return { success: false, error: result.error, events: [] };
       }
 

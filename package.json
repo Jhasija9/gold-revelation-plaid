@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
+    "authorizenet": "^1.0.10",
     "axios": "^1.12.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

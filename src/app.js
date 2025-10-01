@@ -10,6 +10,7 @@ const paymentRoutes = require("./routes/payments");
 const transferRoutes = require("./routes/transfers");
 const webhookRoutes = require("./routes/webhooks"); // NEW
 const bodyParser = require("body-parser");
+const paymentFormRoutes = require('./routes/paymentForm');
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -89,6 +90,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/transfers", transferRoutes);
 app.use("/webhooks", webhookRoutes); // NEW
+app.use('/api/payment-form', paymentFormRoutes);
 
 const connectRoute = require("./routes/connect");
 app.use("/connect", connectRoute);

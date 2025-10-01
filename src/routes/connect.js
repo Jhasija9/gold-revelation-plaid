@@ -544,12 +544,12 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <div class="method-desc">Connect your bank account securely</div>
               </div>
             </div>
-            <div class="method-option disabled" data-method="card">
-              <input type="radio" name="payment-method" value="card" class="method-radio" disabled>
+            <div class="method-option" data-method="card">
+              <input type="radio" name="payment-method" value="card" class="method-radio">
               <div class="method-icon">💳</div>
               <div class="method-content">
                 <div class="method-title">Credit/Debit card</div>
-                <div class="method-desc">Coming soon</div>
+                <div class="method-desc">Pay with your credit or debit card</div>
               </div>
             </div>
           </div>
@@ -565,6 +565,30 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               <div class="connected-text" id="connectedText">Bank connected</div>
               <a href="#" id="changeBankLink" class="change-link">Change</a>
             </div>
+          </div>
+
+          <!-- Credit Card Section with Iframe -->
+          <div id="cardSection" class="hidden">
+            <div class="section-title">Card details</div>
+            
+            <div class="form-group">
+              <label class="form-label" for="cardAmount">Amount</label>
+              <input 
+                type="text" 
+                id="cardAmount" 
+                class="form-input" 
+                placeholder="0.00" 
+                inputmode="decimal"
+                required
+              >
+            </div>
+            
+            <!-- Authorize.Net Iframe will be loaded here -->
+            <div id="authorize-net-iframe" style="width: 100%; height: 400px; border: 1px solid #ddd; border-radius: 8px; display: none;"></div>
+            
+            <button id="processCardBtn" class="pay-btn" disabled>
+              Generate secure payment form
+            </button>
           </div>
 
           <!-- Payment Details (shown after bank connection) -->
@@ -857,15 +881,15 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               if (selectedPlan) {
                 console.log('🔍 DEBUG: selectedPlan is truthy, proceeding with auto-populate');
                 var descriptionInput = document.getElementById('descriptionInput');
-                console.log('�� DEBUG: descriptionInput element =', descriptionInput);
-                console.log('�� DEBUG: descriptionInput found =', !!descriptionInput);
+                console.log('🔍 DEBUG: descriptionInput element =', descriptionInput);
+                console.log('🔍 DEBUG: descriptionInput found =', !!descriptionInput);
                 
                 if (descriptionInput) {
                   console.log('🔍 DEBUG: Setting description input value to:', selectedPlan);
                   descriptionInput.value = selectedPlan;
                   state.description = selectedPlan;
                   console.log('🔍 DEBUG: Auto-populate completed successfully');
-                  console.log('�� DEBUG: descriptionInput.value after setting =', descriptionInput.value);
+                  console.log('🔍 DEBUG: descriptionInput.value after setting =', descriptionInput.value);
                   console.log('🔍 DEBUG: state.description after setting =', state.description);
                 } else {
                   console.log('🔍 DEBUG: ERROR - descriptionInput element not found!');
@@ -1052,6 +1076,118 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             validateForm();
           });
         }
+
+        // Add this to the existing JavaScript
+        const cardSection = document.getElementById('cardSection');
+        const cardAmountInput = document.getElementById('cardAmount');
+        const processCardBtn = document.getElementById('processCardBtn');
+        const authorizeNetIframe = document.getElementById('authorize-net-iframe');
+
+        // Handle payment method selection
+        document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+          radio.addEventListener('change', function() {
+            const method = this.value;
+            
+            // Hide all sections
+            document.getElementById('bankSection').classList.add('hidden');
+            document.getElementById('cardSection').classList.add('hidden');
+            document.getElementById('paymentDetails').classList.add('hidden');
+            
+            // Show selected section
+            if (method === 'bank') {
+              document.getElementById('bankSection').classList.remove('hidden');
+            } else if (method === 'card') {
+              document.getElementById('cardSection').classList.remove('hidden');
+            }
+          });
+        });
+
+        // Format amount input
+        cardAmountInput.addEventListener('input', function(e) {
+          e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+          validateCardForm();
+        });
+
+        // Validate card form
+        function validateCardForm() {
+          const amount = cardAmountInput.value;
+          const isValid = parseFloat(amount) > 0;
+          processCardBtn.disabled = !isValid;
+        }
+
+        // Handle card payment with iframe
+        processCardBtn.addEventListener('click', async function() {
+          if (processCardBtn.disabled) return;
+          
+          const amount = cardAmountInput.value;
+          
+          processCardBtn.disabled = true;
+          processCardBtn.textContent = 'Generating secure form...';
+          
+          try {
+            const response = await fetch('/api/payment-form/generate', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                user_id: USER_ID,
+                amount: amount,
+                + description: 'Gold Purchase - $' + amount,
+
+                returnUrl: window.location.origin + '/payment/success',
+                cancelUrl: window.location.origin + '/payment/cancel'
+              })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+              // Load Authorize.Net iframe
+              const iframe = document.createElement('iframe');
+              iframe.src = result.formUrl;
+              iframe.style.width = '100%';
+              iframe.style.height = '400px';
+              iframe.style.border = 'none';
+              iframe.style.borderRadius = '8px';
+              
+              authorizeNetIframe.innerHTML = '';
+              authorizeNetIframe.appendChild(iframe);
+              authorizeNetIframe.style.display = 'block';
+              
+              processCardBtn.textContent = 'Secure payment form loaded';
+              processCardBtn.disabled = true;
+              
+              // Handle iframe response
+              window.addEventListener('message', function(event) {
+                if (event.origin !== 'https://accept.authorize.net') return;
+                
+                if (event.data.type === 'payment_success') {
+                  // Payment successful
+                  document.getElementById('successAmount').textContent = '$' + amount;
+                  document.getElementById('successAccount').textContent = 'Credit Card';
+                  document.getElementById('successDate').textContent = new Date().toLocaleDateString();
+                  
+                  document.getElementById('cardSection').classList.add('hidden');
+                  document.getElementById('successView').classList.remove('hidden');
+                } else if (event.data.type === 'payment_error') {
+                  alert('Payment failed: ' + event.data.error);
+                  processCardBtn.disabled = false;
+                  processCardBtn.textContent = 'Generate secure payment form';
+                }
+              });
+            } else {
+              alert('Error: ' + result.error);
+            }
+          } catch (error) {
+            alert('Error: ' + result.message);
+          } finally {
+            if (processCardBtn.textContent === 'Generating secure form...') {
+              processCardBtn.disabled = false;
+              processCardBtn.textContent = 'Generate secure payment form';
+            }
+          }
+        });
       });
     })();
   </script>

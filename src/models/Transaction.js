@@ -83,6 +83,116 @@ class Transaction {
       return { success: false, error: error.message };
     }
   }
+
+  // NEW METHODS FOR CREDIT CARD TRANSACTIONS
+
+  // Find by Authorize.Net transaction ID
+  async findByAuthorizeNetTransactionId(transactionId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('transactions')
+        .select('*')
+        .eq('authorize_net_transaction_id', transactionId)
+        .single();
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Transaction find by Authorize.Net ID error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Find credit card transactions by user
+  async findCreditCardTransactionsByUserId(userId, limit = 10, offset = 0) {
+    try {
+      const { data, error } = await this.supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('payment_method', 'credit_card')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Credit card transactions find error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Find bank transfer transactions by user
+  async findBankTransferTransactionsByUserId(userId, limit = 10, offset = 0) {
+    try {
+      const { data, error } = await this.supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('payment_method', 'bank_transfer')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Bank transfer transactions find error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get transaction statistics by payment method
+  async getTransactionStatsByPaymentMethod(userId) {
+    try {
+      const { data, error } = await this.supabase
+        .from('transactions')
+        .select('payment_method, amount, status')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      const stats = {
+        credit_card: { count: 0, total_amount: 0, completed: 0 },
+        bank_transfer: { count: 0, total_amount: 0, completed: 0 }
+      };
+
+      data.forEach(transaction => {
+        const method = transaction.payment_method || 'bank_transfer';
+        stats[method].count++;
+        stats[method].total_amount += parseFloat(transaction.amount);
+        if (transaction.status === 'completed') {
+          stats[method].completed++;
+        }
+      });
+
+      return { success: true, data: stats };
+    } catch (error) {
+      console.error('Transaction stats error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Update credit card transaction
+  async updateCreditCardTransaction(id, updateData) {
+    try {
+      const { data, error } = await this.supabase
+        .from('transactions')
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('payment_method', 'credit_card')
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      console.error('Credit card transaction update error:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 module.exports = new Transaction();
