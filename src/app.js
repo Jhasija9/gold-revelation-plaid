@@ -25,7 +25,11 @@ app.use(
       directives: {
         "script-src": ["'self'", "https://cdn.plaid.com", "'unsafe-inline'"],
         "connect-src": ["'self'", "https://*.plaid.com"],
-        "frame-src": ["'self'", "https://*.plaid.com"],
+        "frame-src": [
+          "'self'",                    // Your own domain
+          "https://*.plaid.com",       // For bank transfers (Plaid Link)
+          "https://*.authorize.net"    // For credit cards (Authorize.Net)
+        ],
         "img-src": ["'self'", "data:"],
         "style-src": ["'self'", "'unsafe-inline'"],
         "font-src": ["'self'", "data:"],
