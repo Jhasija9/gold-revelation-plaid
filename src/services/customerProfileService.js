@@ -1,6 +1,7 @@
-const ApiControllers = require('authorizenet').ApiControllers;
-const ApiContracts = require('authorizenet').ApiContracts;
-const Constants = require('authorizenet').Constants;
+const authorizenet = require('authorizenet');
+const ApiControllers = authorizenet.APIControllers;
+const ApiContracts = authorizenet.APIContracts;
+const Constants = authorizenet.Constants;
 const MerchantAuthenticationType = ApiContracts.MerchantAuthenticationType;
 const CreateCustomerProfileRequest = ApiContracts.CreateCustomerProfileRequest;
 const CustomerProfileType = ApiContracts.CustomerProfileType;
@@ -20,8 +21,8 @@ class CustomerProfileService {
     this.apiLoginId = process.env.AUTHORIZE_NET_API_LOGIN_ID;
     this.signatureKey = process.env.AUTHORIZE_NET_SIGNATURE_KEY;
     this.environment = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
-      ? Environment.PRODUCTION 
-      : Environment.SANDBOX;
+      ? Constants.endpoint.production
+      : Constants.endpoint.sandbox;
   }
 
   // Create merchant authentication

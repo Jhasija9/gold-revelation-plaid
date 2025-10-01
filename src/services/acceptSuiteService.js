@@ -11,8 +11,8 @@ class AcceptSuiteService {
     this.apiLoginId = process.env.AUTHORIZE_NET_API_LOGIN_ID;
     this.signatureKey = process.env.AUTHORIZE_NET_SIGNATURE_KEY;
     this.environment = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
-      ? Environment.PRODUCTION 
-      : Environment.SANDBOX;
+      ? Constants.endpoint.production
+      : Constants.endpoint.sandbox;
   }
 
   // Create merchant authentication
