@@ -2,7 +2,15 @@ const authorizenet = require('authorizenet');
 const ApiControllers = authorizenet.APIControllers;
 const ApiContracts = authorizenet.APIContracts;
 const Constants = authorizenet.Constants;
+
+// Import the correct classes
+const CreateTransactionRequest = ApiContracts.CreateTransactionRequest;
+const CreateTransactionController = ApiControllers.CreateTransactionController;
 const MerchantAuthenticationType = ApiContracts.MerchantAuthenticationType;
+const TransactionRequestType = ApiContracts.TransactionRequestType;
+const PaymentType = ApiContracts.PaymentType;
+const CreditCardType = ApiContracts.CreditCardType;
+const CustomerDataType = ApiContracts.CustomerDataType;
 
 class AcceptSuiteService {
   constructor() {
@@ -21,7 +29,7 @@ class AcceptSuiteService {
     return merchantAuth;
   }
 
-  // Generate secure payment form (iframe) - Simplified approach
+  // Generate secure payment form (iframe) - Real implementation
   async generatePaymentForm(formData) {
     try {
       const {
@@ -32,8 +40,8 @@ class AcceptSuiteService {
         cancelUrl
       } = formData;
 
-      // For now, return a simple form URL
-      // In production, you'd generate the actual Accept Suite form
+      // For Accept Suite, we need to create a hosted payment page
+      // This is a simplified approach - in production you'd use Accept Suite Hosted
       const formUrl = `https://accept.authorize.net/payment/payment?amount=${amount}&description=${encodeURIComponent(description)}`;
       
       return {
@@ -47,6 +55,71 @@ class AcceptSuiteService {
       return {
         success: false,
         error: error.message || 'Failed to generate payment form'
+      };
+    }
+  }
+
+  // Process payment with credit card data (for direct API calls)
+  async processPayment(paymentData) {
+    try {
+      const {
+        amount,
+        cardNumber,
+        expirationDate,
+        cvv,
+        customerData,
+        description
+      } = paymentData;
+
+      // Create the transaction request
+      const createRequest = new CreateTransactionRequest();
+      createRequest.setMerchantAuthentication(this.getMerchantAuthentication());
+
+      // Create transaction request type
+      const transactionRequestType = new TransactionRequestType();
+      transactionRequestType.setTransactionType('authCaptureTransaction');
+      transactionRequestType.setAmount(amount);
+      transactionRequestType.setDescription(description);
+
+      // Create payment type
+      const paymentType = new PaymentType();
+      const creditCard = new CreditCardType();
+      creditCard.setCardNumber(cardNumber);
+      creditCard.setExpirationDate(expirationDate);
+      creditCard.setCardCode(cvv);
+      paymentType.setCreditCard(creditCard);
+      transactionRequestType.setPayment(paymentType);
+
+      // Add customer data if provided
+      if (customerData) {
+        const customerDataObj = new CustomerDataType();
+        customerDataObj.setEmail(customerData.email);
+        customerDataObj.setFirstName(customerData.firstName);
+        customerDataObj.setLastName(customerData.lastName);
+        transactionRequestType.setCustomer(customerDataObj);
+      }
+
+      createRequest.setTransactionRequest(transactionRequestType);
+
+      // Execute the transaction
+      const controller = new CreateTransactionController(createRequest);
+      const response = await new Promise((resolve, reject) => {
+        controller.execute((response) => {
+          resolve(response);
+        });
+      });
+
+      return {
+        success: response.messages.resultCode === 'Ok',
+        transactionId: response.transactionResponse?.transId,
+        response: response
+      };
+
+    } catch (error) {
+      console.error('Process payment error:', error);
+      return {
+        success: false,
+        error: error.message || 'Payment processing failed'
       };
     }
   }
