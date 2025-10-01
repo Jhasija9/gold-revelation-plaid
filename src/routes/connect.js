@@ -1133,7 +1133,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               body: JSON.stringify({
                 user_id: USER_ID,
                 amount: amount,
-                + description: 'Gold Purchase - $' + amount,
+                description: 'Gold Purchase - $' + amount,
 
                 returnUrl: window.location.origin + '/payment/success',
                 cancelUrl: window.location.origin + '/payment/cancel'
