@@ -76,7 +76,7 @@ class PaymentFormController {
         cancelUrl
       } = req.body;
 
-      const user_id = req.user_id; // Get from session auth
+      const { user_id } = req.body; // Get from session auth
 
       // Validate required fields
       if (!user_id || !amount || !returnUrl || !cancelUrl) {
