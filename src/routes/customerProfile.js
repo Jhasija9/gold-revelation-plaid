@@ -1,21 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const customerProfileController = require('../controllers/customerProfileController');
-const auth = require('../middleware/auth');
+const sessionAuth = require('../middleware/sessionAuth'); // Use session auth instead
 
-// Create customer profile
-router.post('/create', auth, customerProfileController.createCustomerProfile);
-
-// Save customer card
-router.post('/save-card', auth, customerProfileController.saveCustomerCard);
-
-// Get customer profile
-router.get('/profile/:user_id', auth, customerProfileController.getCustomerProfile);
-
-// Get saved cards
-router.get('/cards/:user_id', auth, customerProfileController.getSavedCards);
-
-// Delete saved card
-router.delete('/cards/:user_id/:payment_profile_id', auth, customerProfileController.deleteSavedCard);
+// Customer profile routes - Use session auth
+router.post('/create', sessionAuth.validateSession, customerProfileController.createCustomerProfile);
+router.get('/:customerId', sessionAuth.validateSession, customerProfileController.getCustomerProfile);
+router.post('/:customerId/payment-profile', sessionAuth.validateSession, customerProfileController.createPaymentProfile);
+router.get('/:customerId/payment-profiles', sessionAuth.validateSession, customerProfileController.getPaymentProfiles);
+router.delete('/:customerId/payment-profile/:paymentProfileId', sessionAuth.validateSession, customerProfileController.deletePaymentProfile);
 
 module.exports = router;
