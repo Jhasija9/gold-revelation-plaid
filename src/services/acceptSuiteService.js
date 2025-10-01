@@ -40,9 +40,9 @@ class AcceptSuiteService {
         cancelUrl
       } = formData;
 
-      // For Accept Suite, we need to create a hosted payment page
-      // This is a simplified approach - in production you'd use Accept Suite Hosted
-      const formUrl = `https://accept.authorize.net/payment/payment?amount=${amount}&description=${encodeURIComponent(description)}`;
+      // For now, return a simple form URL that works
+      // In production, you'd use Accept Suite Hosted or create a custom form
+      const formUrl = `https://sandbox.authorize.net/payment/payment?amount=${amount}&description=${encodeURIComponent(description)}`;
       
       return {
         success: true,
