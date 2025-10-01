@@ -4,7 +4,6 @@ const ApiContracts = authorizenet.APIContracts;
 const Constants = authorizenet.Constants;
 const MerchantAuthenticationType = ApiContracts.MerchantAuthenticationType;
 const GetAcceptSuitePageRequest = ApiContracts.GetAcceptSuitePageRequest;
-const Environment = Constants.Environment;
 
 class AcceptSuiteService {
   constructor() {
