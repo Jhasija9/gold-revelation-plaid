@@ -545,14 +545,14 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <div class="method-desc">Connect your bank account securely</div>
               </div>
             </div>
-            <div class="method-option disabled" data-method="card">
-              <input type="radio" name="payment-method" value="card" class="method-radio" disabled>
-              <div class="method-icon">💳</div>
-              <div class="method-content">
-                <div class="method-title">Credit/Debit card</div>
-                <div class="method-desc">Coming soon</div>
-              </div>
-            </div>
+            <div class="method-option" data-method="card">
+  <input type="radio" name="payment-method" value="card" class="method-radio">
+  <div class="method-icon">💳</div>
+  <div class="method-content">
+    <div class="method-title">Credit/Debit card</div>
+    <div class="method-desc">Pay instantly with your credit or debit card</div>
+  </div>
+</div>
           </div>
 
           <!-- Bank Connection Section -->
@@ -631,7 +631,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
 
           <!-- Credit Card Section (kept hidden unless you show it for testing) -->
-          <div id="cardSection" class="hidden">
+          <div id="cardSection">
             <div class="section-title">Card Payment</div>
 
             <div class="form-group">
