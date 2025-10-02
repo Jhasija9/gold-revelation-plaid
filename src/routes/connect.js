@@ -986,7 +986,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         });
         
         // Create AcceptUI button with data attributes
-        container.innerHTML = `
+        container.innerHTML = \`
           <button 
             class="AcceptUI pay-btn" 
             data-billingAddressOptions='{"show":true, "required":false}'
@@ -1000,7 +1000,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           >
             Pay with Credit Card
           </button>
-        `;
+        \`;
         
         console.log('✅ Frontend: AcceptUI button created successfully');
         validateCardForm(); // Enable button if amount is valid
