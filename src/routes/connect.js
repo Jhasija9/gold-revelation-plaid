@@ -498,6 +498,31 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     100% { transform: rotate(360deg); }
   }
   
+  /* AcceptUI Button Styling */
+.AcceptUI {
+  width: 100% !important;
+  background: var(--rg-navy) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 14px rgba(15, 39, 65, 0.18) !important;
+}
+
+.AcceptUI:hover {
+  background: var(--rg-navy-600) !important;
+}
+
+.AcceptUI:disabled {
+  background: #94a3b8 !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
+  
   @media (max-width: 768px) {
     .grid { 
       grid-template-columns: 1fr; 
@@ -567,9 +592,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             </div>
           </div>
 
-          <!-- Credit Card Section with Iframe -->
+          <!-- Credit Card Section with AcceptUI -->
           <div id="cardSection" class="hidden">
-            <div class="section-title">Card details</div>
+            <div class="section-title">Card Payment</div>
             
             <div class="form-group">
               <label class="form-label" for="cardAmount">Amount</label>
@@ -583,12 +608,22 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               >
             </div>
             
-            <!-- Authorize.Net Iframe will be loaded here -->
-            <div id="authorize-net-iframe" style="width: 100%; height: 400px; border: 1px solid #ddd; border-radius: 8px; display: none;"></div>
+            <div class="form-group">
+              <label class="form-label" for="cardDescription">Description (optional)</label>
+              <input 
+                type="text" 
+                id="cardDescription" 
+                class="form-input" 
+                placeholder="Gold Investment Plan"
+              >
+            </div>
             
-            <button id="processCardBtn" class="pay-btn" disabled>
-              Generate secure payment form
-            </button>
+            <!-- AcceptUI Button Container -->
+            <div id="acceptUIContainer">
+              <button id="acceptUIButton" class="pay-btn" disabled>
+                Loading secure payment form...
+              </button>
+            </div>
           </div>
 
           <!-- Payment Details (shown after bank connection) -->
@@ -916,6 +951,176 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         }
       });
       
+      // AcceptUI Integration
+      let paymentConfig = null;
+      let acceptUILoaded = false;
+      
+      // Load payment configuration
+      async function loadPaymentConfig() {
+        try {
+          const response = await fetch('/api/payments/config');
+          const result = await response.json();
+          
+          if (result.success) {
+            paymentConfig = result.config;
+            console.log('💳 Payment config loaded:', paymentConfig);
+            loadAcceptUI();
+          } else {
+            console.error('Failed to load payment config:', result.error);
+          }
+        } catch (error) {
+          console.error('Error loading payment config:', error);
+        }
+      }
+      
+      // Load AcceptUI script dynamically
+      function loadAcceptUI() {
+        if (!paymentConfig || acceptUILoaded) return;
+        
+        const scriptUrl = paymentConfig.environment === 'production' 
+          ? 'https://js.authorize.net/v3/AcceptUI.js'
+          : 'https://jstest.authorize.net/v3/AcceptUI.js';
+          
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.onload = function() {
+          acceptUILoaded = true;
+          console.log('✅ AcceptUI loaded');
+          initializeAcceptUI();
+        };
+        script.onerror = function() {
+          console.error('❌ Failed to load AcceptUI');
+        };
+        document.head.appendChild(script);
+      }
+      
+      // Initialize AcceptUI button
+      function initializeAcceptUI() {
+        if (!paymentConfig || !window.Accept) return;
+        
+        const container = document.getElementById('acceptUIContainer');
+        if (!container) return;
+        
+        // Create AcceptUI button with data attributes
+        container.innerHTML =
+    '<button ' +
+      'class="AcceptUI pay-btn" ' +
+      'data-billingAddressOptions=\'{"show":true,"required":false}\' ' +
+      'data-apiLoginID="' + paymentConfig.apiLoginId + '" ' +
+      'data-clientKey="' + paymentConfig.clientKey + '" ' +
+      'data-paymentOptions=\'{"showCreditCard":true,"showBankAccount":false}\' ' +
+      'data-acceptUIFormBtnText="Pay Securely" ' +        // ← correct name
+      'data-acceptUIFormHeaderText="Card Information" ' + // ← correct name
+      'data-responseHandler="acceptUIResponseHandler" ' +
+      'disabled>' +
+      'Pay with Credit Card' +
+    '</button>';
+
+  console.log('✅ AcceptUI button initialized');
+  validateCardForm(); // Enable button if amount is valid
+}
+      
+      // Global response handler for AcceptUI
+      window.acceptUIResponseHandler = function(response) {
+        console.log('💳 AcceptUI Response:', response);
+        
+        if (response.messages.resultCode === "Ok") {
+          const opaqueData = response.opaqueData;
+          console.log('✅ Got opaqueData:', opaqueData.dataDescriptor);
+          
+          // Process the payment
+          processCardPayment(opaqueData);
+        } else {
+          console.error('❌ AcceptUI Error:', response.messages);
+          alert('Payment form error: ' + response.messages.message[0].text);
+        }
+      };
+      
+      // Process card payment with opaqueData
+      async function processCardPayment(opaqueData) {
+        const cardAmountInput = document.getElementById('cardAmount');
+        const cardDescriptionInput = document.getElementById('cardDescription');
+        
+        const amount = parseAmount(cardAmountInput.value);
+        const description = cardDescriptionInput.value || selectedPlan || 'Gold Investment Plan';
+        
+        if (amount <= 0) {
+          alert('Please enter a valid amount');
+          return;
+        }
+        
+        try {
+          // Disable all buttons during processing
+          const buttons = document.querySelectorAll('.AcceptUI, .pay-btn');
+          buttons.forEach(btn => {
+            btn.disabled = true;
+            btn.textContent = 'Processing payment...';
+          });
+          
+          const response = await fetch('/api/payments/charge', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              amount: amount,
+              description: description,
+              opaqueData: opaqueData,
+              user_id: USER_ID,
+              plan_name: selectedPlan
+            })
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Show success
+            showCardPaymentSuccess({
+              amount: amount,
+              transactionId: result.transactionId,
+              authCode: result.authCode,
+              description: description
+            });
+          } else {
+            console.error('❌ Payment failed:', result);
+            alert('Payment failed: ' + result.message);
+            
+            // Re-enable buttons
+            buttons.forEach(btn => {
+              btn.disabled = false;
+              btn.textContent = 'Pay with Credit Card';
+            });
+            validateCardForm(); // Re-validate form
+          }
+        } catch (error) {
+          console.error('❌ Payment processing error:', error);
+          alert('Payment processing failed. Please try again.');
+          
+          // Re-enable buttons
+          const buttons = document.querySelectorAll('.AcceptUI, .pay-btn');
+          buttons.forEach(btn => {
+            btn.disabled = false;
+            btn.textContent = 'Pay with Credit Card';
+          });
+          validateCardForm(); // Re-validate form
+        }
+      }
+      
+      // Show success for card payments
+      function showCardPaymentSuccess(paymentData) {
+        state.currentStep = 'success';
+        
+        const successAmount = document.getElementById('successAmount');
+        const successAccount = document.getElementById('successAccount');
+        const successDate = document.getElementById('successDate');
+        
+        if (successAmount) successAmount.textContent = formatCurrency(paymentData.amount);
+        if (successAccount) successAccount.textContent = 'Credit Card •••• ' + (paymentData.authCode || '****');
+        if (successDate) successDate.textContent = new Date().toLocaleDateString();
+        
+        updateUI();
+      }
+
       // Event listeners
       document.addEventListener('DOMContentLoaded', function() {
         updateUI();
@@ -1077,16 +1282,16 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           });
         }
 
-        // Add this to the existing JavaScript
-        const cardSection = document.getElementById('cardSection');
-        const cardAmountInput = document.getElementById('cardAmount');
-        const processCardBtn = document.getElementById('processCardBtn');
-        const authorizeNetIframe = document.getElementById('authorize-net-iframe');
-
         // Handle payment method selection
         document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
           radio.addEventListener('change', function() {
             const method = this.value;
+            
+            // Update method option styling
+            document.querySelectorAll('.method-option').forEach(option => {
+              option.classList.remove('selected');
+            });
+            this.closest('.method-option').classList.add('selected');
             
             // Hide all sections
             document.getElementById('bankSection').classList.add('hidden');
@@ -1099,95 +1304,65 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             } else if (method === 'card') {
               document.getElementById('cardSection').classList.remove('hidden');
             }
+            
+            updateOrderSummary();
           });
         });
 
-        // Format amount input
-        cardAmountInput.addEventListener('input', function(e) {
-          e.target.value = e.target.value.replace(/[^0-9.]/g, '');
-          validateCardForm();
-        });
+        // Card amount input handling
+        const cardAmountInput = document.getElementById('cardAmount');
+        if (cardAmountInput) {
+          cardAmountInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            updateOrderSummary();
+            validateCardForm();
+          });
+          
+          cardAmountInput.addEventListener('blur', function() {
+            const amount = parseAmount(this.value);
+            if (amount > 0) {
+              this.value = formatAmount(amount);
+            }
+          });
+        }
 
         // Validate card form
         function validateCardForm() {
-          const amount = cardAmountInput.value;
-          const isValid = parseFloat(amount) > 0;
-          processCardBtn.disabled = !isValid;
-        }
-
-        // Handle card payment with iframe
-        processCardBtn.addEventListener('click', async function() {
-          if (processCardBtn.disabled) return;
+          const cardAmountInput = document.getElementById('cardAmount');
+          const acceptUIBtn = document.querySelector('.AcceptUI');
           
-          const amount = cardAmountInput.value;
-          
-          processCardBtn.disabled = true;
-          processCardBtn.textContent = 'Generating secure form...';
-          
-          try {
-            const response = await fetch('/api/payment-form/generate', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                user_id: USER_ID,
-                amount: amount,
-                description: 'Gold Purchase - $' + amount,
-
-                returnUrl: window.location.origin + '/payment/success',
-                cancelUrl: window.location.origin + '/payment/cancel'
-              })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-              // Load Authorize.Net iframe
-              const iframe = document.createElement('iframe');
-              iframe.src = result.formUrl;
-              iframe.style.width = '100%';
-              iframe.style.height = '400px';
-              iframe.style.border = 'none';
-              iframe.style.borderRadius = '8px';
-              
-              authorizeNetIframe.innerHTML = '';
-              authorizeNetIframe.appendChild(iframe);
-              authorizeNetIframe.style.display = 'block';
-              
-              processCardBtn.textContent = 'Secure payment form loaded';
-              processCardBtn.disabled = true;
-              
-              // Handle iframe response
-              window.addEventListener('message', function(event) {
-                if (event.origin !== 'https://accept.authorize.net') return;
-                
-                if (event.data.type === 'payment_success') {
-                  // Payment successful
-                  document.getElementById('successAmount').textContent = '$' + amount;
-                  document.getElementById('successAccount').textContent = 'Credit Card';
-                  document.getElementById('successDate').textContent = new Date().toLocaleDateString();
-                  
-                  document.getElementById('cardSection').classList.add('hidden');
-                  document.getElementById('successView').classList.remove('hidden');
-                } else if (event.data.type === 'payment_error') {
-                  alert('Payment failed: ' + event.data.error);
-                  processCardBtn.disabled = false;
-                  processCardBtn.textContent = 'Generate secure payment form';
-                }
-              });
-            } else {
-              alert('Error: ' + result.error);
-            }
-          } catch (error) {
-            alert('Error: ' + result.message);
-          } finally {
-            if (processCardBtn.textContent === 'Generating secure form...') {
-              processCardBtn.disabled = false;
-              processCardBtn.textContent = 'Generate secure payment form';
-            }
+          if (cardAmountInput && acceptUIBtn) {
+            const amount = parseAmount(cardAmountInput.value);
+            acceptUIBtn.disabled = amount <= 0;
           }
-        });
+        }
+        
+        // Update order summary for both payment methods
+        function updateOrderSummary() {
+          var orderAmount = document.getElementById('orderAmount');
+          var orderTotal = document.getElementById('orderTotal');
+          
+          var amount = 0;
+          
+          // Check which payment method is selected
+          const selectedMethod = document.querySelector('input[name="payment-method"]:checked');
+          if (selectedMethod && selectedMethod.value === 'card') {
+            const cardAmountInput = document.getElementById('cardAmount');
+            if (cardAmountInput) {
+              amount = parseAmount(cardAmountInput.value);
+            }
+          } else {
+            amount = state.amount; // Bank transfer amount
+          }
+          
+          var formattedAmount = formatCurrency(amount);
+          
+          if (orderAmount) orderAmount.textContent = formattedAmount;
+          if (orderTotal) orderTotal.textContent = formattedAmount;
+        }
+        
+        // Load payment configuration when DOM is ready
+        loadPaymentConfig();
       });
     })();
   </script>

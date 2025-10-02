@@ -1,18 +1,23 @@
 const express = require("express");
-const paymentFormController = require("../controllers/paymentFormController");
-
 const router = express.Router();
 
-// Generate secure payment form (iframe) - NO AUTH like Plaid
-router.post(
-  "/generate",
-  paymentFormController.generatePaymentForm.bind(paymentFormController)
-);
+// DEPRECATED: These routes are replaced by AcceptUI integration
+// Keeping for backward compatibility but returning deprecation notices
 
-// Handle payment form response (from iframe) - NO AUTH like Plaid
-router.post(
-  "/response",
-  paymentFormController.handlePaymentFormResponse.bind(paymentFormController)
-);
+router.post("/generate", (req, res) => {
+  res.status(410).json({
+    success: false,
+    error: "This payment method has been deprecated. Please use the AcceptUI integration.",
+    code: "DEPRECATED_ENDPOINT"
+  });
+});
+
+router.post("/response", (req, res) => {
+  res.status(410).json({
+    success: false,
+    error: "This payment method has been deprecated. Please use the AcceptUI integration.",
+    code: "DEPRECATED_ENDPOINT"
+  });
+});
 
 module.exports = router;

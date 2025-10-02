@@ -23,8 +23,19 @@ app.use(
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
-        "script-src": ["'self'", "https://cdn.plaid.com", "'unsafe-inline'"],
-        "connect-src": ["'self'", "https://*.plaid.com"],
+        "script-src": [
+          "'self'", 
+          "https://cdn.plaid.com", 
+          "https://js.authorize.net",      // AcceptUI production
+          "https://jstest.authorize.net",  // AcceptUI sandbox
+          "'unsafe-inline'"
+        ],
+        "connect-src": [
+          "'self'", 
+          "https://*.plaid.com",
+          "https://api.authorize.net",     // Authorize.Net API production
+          "https://apitest.authorize.net"  // Authorize.Net API sandbox
+        ],
         "frame-src": [
           "'self'",                    // Your own domain
           "https://*.plaid.com",       // For bank transfers (Plaid Link)
