@@ -7,11 +7,21 @@ const Transaction = require('../models/Transaction');
 // Get Authorize.Net public configuration
 router.get('/config', (req, res) => {
   try {
-    const config = acceptSuiteService.getPublicConfig();
-    res.json({
-      success: true,
-      config
-    });
+    const result = acceptSuiteService.getPublicConfig();
+    
+    if (result.success) {
+      res.json({
+        success: true,
+        config: result.config
+      });
+    } else {
+      // Service not configured
+      res.status(503).json({
+        success: false,
+        code: result.code,
+        error: result.message
+      });
+    }
   } catch (error) {
     console.error('Error getting payment config:', error);
     res.status(500).json({
