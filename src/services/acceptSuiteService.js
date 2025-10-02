@@ -11,6 +11,7 @@ const TransactionRequestType = ApiContracts.TransactionRequestType;
 const PaymentType = ApiContracts.PaymentType;
 const OpaqueDataType = ApiContracts.OpaqueDataType;
 const CustomerDataType = ApiContracts.CustomerDataType;
+const OrderType = authorizenet.APIContracts.OrderType;
 
 class AcceptSuiteService {
   constructor() {
@@ -150,7 +151,9 @@ class AcceptSuiteService {
       transactionRequestType.setAmount(parseFloat(amount).toFixed(2));
       
       if (description) {
-        transactionRequestType.setDescription(description);
+        const order = new OrderType();
+        order.setDescription(description);
+        transactionRequestType.setOrder(order);
       }
 
       // Create payment type with opaqueData
