@@ -802,12 +802,20 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         var connectedBadge = document.getElementById('connectedBadge');
         var paymentDetails = document.getElementById('paymentDetails');
         var successView = document.getElementById('successView');
+        var bankSection = document.getElementById('bankSection');
+        
+        console.log('🖥️ Frontend: updateUI() called, currentStep:', state.currentStep);
         
         // Hide all sections first
         if (connectBtn) connectBtn.classList.add('hidden');
         if (connectedBadge) connectedBadge.classList.add('hidden');
         if (paymentDetails) paymentDetails.classList.add('hidden');
         if (successView) successView.classList.add('hidden');
+        
+        // Always show bank section unless we're in success state
+        if (bankSection && state.currentStep !== 'success') {
+          bankSection.classList.remove('hidden');
+        }
         
         // Show appropriate section based on step
         if (state.currentStep === 'connect') {
@@ -1219,22 +1227,29 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           radio.addEventListener('change', function() {
             const method = this.value;
             
+            console.log('🖥️ Frontend: Payment method changed to:', method);
+            
             // Update method option styling
             document.querySelectorAll('.method-option').forEach(option => {
               option.classList.remove('selected');
             });
             this.closest('.method-option').classList.add('selected');
             
-            // Hide all sections
-            document.getElementById('bankSection').classList.add('hidden');
-            document.getElementById('cardSection').classList.add('hidden');
-            document.getElementById('paymentDetails').classList.add('hidden');
+            // Show/hide sections based on selection
+            const bankSection = document.getElementById('bankSection');
+            const cardSection = document.getElementById('cardSection');
+            const paymentDetails = document.getElementById('paymentDetails');
             
-            // Show selected section
             if (method === 'bank') {
-              document.getElementById('bankSection').classList.remove('hidden');
+              console.log('🖥️ Frontend: Showing bank section');
+              if (bankSection) bankSection.classList.remove('hidden');
+              if (cardSection) cardSection.classList.add('hidden');
+              // Don't hide paymentDetails if already connected
             } else if (method === 'card') {
-              document.getElementById('cardSection').classList.remove('hidden');
+              console.log('🖥️ Frontend: Showing card section');
+              if (bankSection) bankSection.classList.add('hidden');
+              if (cardSection) cardSection.classList.remove('hidden');
+              if (paymentDetails) paymentDetails.classList.add('hidden');
             }
             
             updateOrderSummary();
