@@ -22,8 +22,12 @@ class AcceptSuiteService {
       ? Constants.endpoint.production
       : Constants.endpoint.sandbox;
 
-    if (!this.apiLoginId || !this.transactionKey) {
-      throw new Error('Missing required Authorize.Net environment variables: ANET_API_LOGIN_ID, ANET_TRANSACTION_KEY');
+    // Set service availability based on environment variables
+    this.isConfigured = !!(this.apiLoginId && this.transactionKey);
+    
+    if (!this.isConfigured) {
+      console.warn('⚠️ Authorize.Net not configured - missing ANET_API_LOGIN_ID or ANET_TRANSACTION_KEY');
+      console.warn('💳 Credit card payments will be disabled');
     }
   }
 
@@ -35,12 +39,32 @@ class AcceptSuiteService {
     return merchantAuth;
   }
 
+  // Check if service is properly configured
+  checkConfiguration() {
+    if (!this.isConfigured) {
+      return {
+        success: false,
+        code: 'SERVICE_NOT_CONFIGURED',
+        message: 'Credit card processing is not configured. Please contact support.'
+      };
+    }
+    return { success: true };
+  }
+
   // Get public configuration for frontend AcceptUI
   getPublicConfig() {
+    const configCheck = this.checkConfiguration();
+    if (!configCheck.success) {
+      return configCheck;
+    }
+
     return {
-      apiLoginId: this.apiLoginId,
-      clientKey: this.clientKey,
-      environment: process.env.ANET_ENV || 'sandbox'
+      success: true,
+      config: {
+        apiLoginId: this.apiLoginId,
+        clientKey: this.clientKey,
+        environment: process.env.ANET_ENV || 'sandbox'
+      }
     };
   }
 
