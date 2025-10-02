@@ -510,6 +510,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     }
   }
 </style>
+<script src="/js/cc-acceptui.js" defer></script>
 </head>
 <body>
   <div class="container">
@@ -688,7 +689,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     linkToken
       ? `
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
-  <script src="/js/cc-acceptui.js" defer></script>
   <script>
     (function(){
       var USER_ID = ${JSON.stringify(userId ?? null)};
