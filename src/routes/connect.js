@@ -803,6 +803,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         var paymentDetails = document.getElementById('paymentDetails');
         var successView = document.getElementById('successView');
         var bankSection = document.getElementById('bankSection');
+        var cardSection = document.getElementById('cardSection');
         
         console.log('🖥️ Frontend: updateUI() called, currentStep:', state.currentStep);
         
@@ -812,18 +813,33 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         if (paymentDetails) paymentDetails.classList.add('hidden');
         if (successView) successView.classList.add('hidden');
         
-        // Always show bank section unless we're in success state
-        if (bankSection && state.currentStep !== 'success') {
-          bankSection.classList.remove('hidden');
-        }
+        // Show appropriate sections based on selected payment method and step
+        const selectedMethod = document.querySelector('input[name="payment-method"]:checked');
+        const currentMethod = selectedMethod ? selectedMethod.value : 'bank';
         
-        // Show appropriate section based on step
-        if (state.currentStep === 'connect') {
-          if (connectBtn) connectBtn.classList.remove('hidden');
-        } else if (state.currentStep === 'details') {
-          if (connectedBadge) connectedBadge.classList.remove('hidden');
-          if (paymentDetails) paymentDetails.classList.remove('hidden');
-        } else if (state.currentStep === 'success') {
+        console.log('🖥️ Frontend: Current payment method:', currentMethod);
+        
+        // Always show the correct payment method section unless we're in success
+        if (state.currentStep !== 'success') {
+          if (currentMethod === 'bank') {
+            if (bankSection) bankSection.classList.remove('hidden');
+            if (cardSection) cardSection.classList.add('hidden');
+            
+            // Show bank-specific UI based on connection state
+            if (state.currentStep === 'connect') {
+              if (connectBtn) connectBtn.classList.remove('hidden');
+            } else if (state.currentStep === 'details') {
+              if (connectedBadge) connectedBadge.classList.remove('hidden');
+              if (paymentDetails) paymentDetails.classList.remove('hidden');
+            }
+          } else if (currentMethod === 'card') {
+            if (bankSection) bankSection.classList.add('hidden');
+            if (cardSection) cardSection.classList.remove('hidden');
+          }
+        } else {
+          // Success state - hide payment sections, show success
+          if (bankSection) bankSection.classList.add('hidden');
+          if (cardSection) cardSection.classList.add('hidden');
           if (successView) successView.classList.remove('hidden');
         }
       }
@@ -1235,23 +1251,8 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             });
             this.closest('.method-option').classList.add('selected');
             
-            // Show/hide sections based on selection
-            const bankSection = document.getElementById('bankSection');
-            const cardSection = document.getElementById('cardSection');
-            const paymentDetails = document.getElementById('paymentDetails');
-            
-            if (method === 'bank') {
-              console.log('🖥️ Frontend: Showing bank section');
-              if (bankSection) bankSection.classList.remove('hidden');
-              if (cardSection) cardSection.classList.add('hidden');
-              // Don't hide paymentDetails if already connected
-            } else if (method === 'card') {
-              console.log('🖥️ Frontend: Showing card section');
-              if (bankSection) bankSection.classList.add('hidden');
-              if (cardSection) cardSection.classList.remove('hidden');
-              if (paymentDetails) paymentDetails.classList.add('hidden');
-            }
-            
+            // Update UI to show correct sections
+            updateUI();
             updateOrderSummary();
           });
         });
