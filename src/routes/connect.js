@@ -625,6 +625,27 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               <button id="newPaymentBtn" class="btn-primary">New payment</button>
             </div>
           </div>
+
+          <!-- AcceptUI context (passes server values safely to frontend) -->
+          <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
+
+          <!-- Credit Card Section (kept hidden unless you show it for testing) -->
+          <div id="cardSection" class="hidden">
+            <div class="section-title">Card Payment</div>
+
+            <div class="form-group">
+              <label class="form-label" for="ccAmount">Amount</label>
+              <input type="text" id="ccAmount" class="form-input" placeholder="0.00" inputmode="decimal">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="ccDescription">Description (optional)</label>
+              <input type="text" id="ccDescription" class="form-input" placeholder="Gold Investment Plan">
+            </div>
+
+            <div class="cc-status" style="margin:8px 0; color:#64748b;">Loading secure payment form…</div>
+            <div id="acceptUIContainer"></div>
+          </div>
           `
           }
         </div>
@@ -667,6 +688,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     linkToken
       ? `
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+  <script src="/js/cc-acceptui.js" defer></script>
   <script>
     (function(){
       var USER_ID = ${JSON.stringify(userId ?? null)};
