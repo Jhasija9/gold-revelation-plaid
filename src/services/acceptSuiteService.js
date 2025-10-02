@@ -165,7 +165,7 @@ class AcceptSuiteService {
       paymentType.setOpaqueData(opaqueDataObj);
       transactionRequestType.setPayment(paymentType);
 
-      // Add customer data if provided
+      // Add customer data (email) and BillTo (names)
       if (customerData) {
         const customerDataObj = new CustomerDataType();
         if (customerData.email) customerDataObj.setEmail(customerData.email);
@@ -175,6 +175,11 @@ class AcceptSuiteService {
           const billTo = new CustomerAddressType();
           if (customerData.firstName) billTo.setFirstName(customerData.firstName);
           if (customerData.lastName)  billTo.setLastName(customerData.lastName);
+
+          // Avoid SDK logger null crash on sensitive fields
+          billTo.setPhoneNumber('');
+          billTo.setFaxNumber('');
+
           transactionRequestType.setBillTo(billTo);
         }
       }
