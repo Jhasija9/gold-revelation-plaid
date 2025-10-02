@@ -1347,3 +1347,64 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     })();
   </script>
   `
+  : ""
+}
+</body>
+</html>`;
+}
+
+router.get("/", async (req, res, next) => {
+try {
+  const cookies = parseCookies(req);
+  const sessionId = cookies["rg_link_session"];
+  const { selected_plan } = req.query;
+  
+  console.log('🔍 DEBUG: req.query =', req.query);
+  console.log('🔍 DEBUG: selected_plan =', selected_plan);
+
+  if (!sessionId) {
+    return res.status(200).send(
+      renderPage({
+        linkToken: null,
+        error: "Your session expired. Please start again.",
+        userId: null,
+        selectedPlan: selected_plan || null
+      })
+    );
+  }
+
+  const session = await LinkSession.getById(sessionId);
+  const now = new Date();
+
+  if (!session || session.used || new Date(session.expires_at) < now) {
+    return res.status(200).send(
+      renderPage({
+        linkToken: null,
+        error: "Your session expired. Please start again.",
+        userId: null,
+        selectedPlan: selected_plan || null
+      })
+    );
+  }
+
+  const linkToken = await plaidService.createLinkToken({
+    userId: session.user_id,
+    products: ["auth", "transfer"],
+    webhook: process.env.PLAID_WEBHOOK_URL || undefined,
+  });
+
+  await LinkSession.markUsed(session.id);
+
+  return res.status(200).send(renderPage({ 
+      linkToken,
+      error: null,
+      userId: session.user_id,
+    selectedPlan: selected_plan || null
+  }));
+} catch (err) {
+  next(err);
+}
+});
+
+module.exports = router;
+console.log("Connect route loaded");
