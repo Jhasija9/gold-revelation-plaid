@@ -544,12 +544,12 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <div class="method-desc">Connect your bank account securely</div>
               </div>
             </div>
-            <div class="method-option disabled" data-method="card">
-              <input type="radio" name="payment-method" value="card" class="method-radio" disabled>
+            <div class="method-option" data-method="card">
+              <input type="radio" name="payment-method" value="card" class="method-radio">
               <div class="method-icon">💳</div>
               <div class="method-content">
                 <div class="method-title">Credit/Debit card</div>
-                <div class="method-desc">Coming soon</div>
+                <div class="method-desc">Pay instantly with your credit or debit card</div>
               </div>
             </div>
           </div>
@@ -566,6 +566,40 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               <a href="#" id="changeBankLink" class="change-link">Change</a>
             </div>
           </div>
+
+          <!-- Credit Card Section with AcceptUI -->
+<div id="cardSection" class="hidden">
+  <div class="section-title">Card Payment</div>
+  
+  <div class="form-group">
+    <label class="form-label" for="cardAmount">Amount</label>
+    <input 
+      type="text" 
+      id="cardAmount" 
+      class="form-input" 
+      placeholder="0.00" 
+      inputmode="decimal"
+      required
+    >
+  </div>
+  
+  <div class="form-group">
+    <label class="form-label" for="cardDescription">Description (optional)</label>
+    <input 
+      type="text" 
+      id="cardDescription" 
+      class="form-input" 
+      placeholder="Gold Investment Plan"
+    >
+  </div>
+  
+  <!-- AcceptUI Button Container -->
+  <div id="acceptUIContainer">
+    <button id="acceptUIButton" class="pay-btn" disabled>
+      Loading secure payment form...
+    </button>
+  </div>
+</div>
 
           <!-- Payment Details (shown after bank connection) -->
           <div id="paymentDetails" class="hidden">
@@ -761,11 +795,25 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         return '$' + value.toFixed(2);
       }
       
-      // Update order summary
+      // Update order summary for both payment methods
       function updateOrderSummary() {
         var orderAmount = document.getElementById('orderAmount');
         var orderTotal = document.getElementById('orderTotal');
-        var formattedAmount = formatCurrency(state.amount);
+        
+        var amount = 0;
+        
+        // Check which payment method is selected
+        const selectedMethod = document.querySelector('input[name="payment-method"]:checked');
+        if (selectedMethod && selectedMethod.value === 'card') {
+          const cardAmountInput = document.getElementById('cardAmount');
+          if (cardAmountInput) {
+            amount = parseAmount(cardAmountInput.value);
+          }
+        } else {
+          amount = state.amount; // Bank transfer amount
+        }
+        
+        var formattedAmount = formatCurrency(amount);
         
         if (orderAmount) orderAmount.textContent = formattedAmount;
         if (orderTotal) orderTotal.textContent = formattedAmount;
@@ -1052,6 +1100,54 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             validateForm();
           });
         }
+
+        // Handle payment method selection
+        document.querySelectorAll('input[name="payment-method"]').forEach(radio => {
+          radio.addEventListener('change', function() {
+            const method = this.value;
+            
+            console.log('🖥️ Frontend: Payment method changed to:', method);
+            
+            // Update styling
+            document.querySelectorAll('.method-option').forEach(option => {
+              option.classList.remove('selected');
+            });
+            this.closest('.method-option').classList.add('selected');
+            
+            // Show/hide sections
+            document.getElementById('bankSection').classList.add('hidden');
+            document.getElementById('cardSection').classList.add('hidden');
+            document.getElementById('paymentDetails').classList.add('hidden');
+            
+            if (method === 'bank') {
+              document.getElementById('bankSection').classList.remove('hidden');
+            } else if (method === 'card') {
+              document.getElementById('cardSection').classList.remove('hidden');
+            }
+            
+            updateOrderSummary();
+          });
+        });
+
+        // Card amount input
+        const cardAmountInput = document.getElementById('cardAmount');
+        if (cardAmountInput) {
+          cardAmountInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9.]/g, '');
+            updateOrderSummary();
+            validateCardForm();
+          });
+          
+          cardAmountInput.addEventListener('blur', function() {
+            const amount = parseAmount(this.value);
+            if (amount > 0) {
+              this.value = formatAmount(amount);
+            }
+          });
+        }
+
+        // Load payment config when DOM is ready
+        loadPaymentConfig();
       });
     })();
   </script>
@@ -1117,6 +1213,189 @@ router.get("/", async (req, res, next) => {
     next(err);
   }
 });
+
+// AcceptUI Integration Variables
+let paymentConfig = null;
+let acceptUILoaded = false;
+
+// Load payment configuration
+async function loadPaymentConfig() {
+  console.log('🖥️ Frontend: Loading payment config...');
+  
+  try {
+    const response = await fetch('/api/payments/config');
+    const result = await response.json();
+    
+    if (result.success) {
+      paymentConfig = result.config;
+      console.log('✅ Frontend: Payment config loaded:', paymentConfig);
+      loadAcceptUI();
+    } else {
+      console.warn('⚠️ Frontend: Credit card unavailable:', result.error);
+      // Disable credit card option
+      const cardOption = document.querySelector('.method-option[data-method="card"]');
+      if (cardOption) {
+        cardOption.classList.add('disabled');
+        cardOption.querySelector('.method-desc').textContent = 'Currently unavailable';
+        const radio = cardOption.querySelector('input[type="radio"]');
+        if (radio) radio.disabled = true;
+      }
+    }
+  } catch (error) {
+    console.error('❌ Frontend: Config load error:', error);
+  }
+}
+
+// Load AcceptUI script
+function loadAcceptUI() {
+  if (!paymentConfig || acceptUILoaded) return;
+  
+  const scriptUrl = paymentConfig.environment === 'production' 
+    ? 'https://js.authorize.net/v3/AcceptUI.js'
+    : 'https://jstest.authorize.net/v3/AcceptUI.js';
+    
+  console.log('🖥️ Frontend: Loading AcceptUI from:', scriptUrl);
+    
+  const script = document.createElement('script');
+  script.src = scriptUrl;
+  script.onload = function() {
+    acceptUILoaded = true;
+    console.log('✅ Frontend: AcceptUI loaded successfully');
+    initializeAcceptUI();
+  };
+  script.onerror = function() {
+    console.error('❌ Frontend: AcceptUI load failed');
+  };
+  document.head.appendChild(script);
+}
+
+// Initialize AcceptUI button
+function initializeAcceptUI() {
+  if (!paymentConfig || !window.Accept) return;
+  
+  const container = document.getElementById('acceptUIContainer');
+  if (!container) return;
+  
+  console.log('🖥️ Frontend: Creating AcceptUI button');
+  
+  // Replace placeholder with AcceptUI button
+  container.innerHTML = 
+    '<button ' +
+    'class="AcceptUI pay-btn" ' +
+    'data-billingAddressOptions=\'{"show":true, "required":false}\' ' +
+    'data-apiLoginID="' + paymentConfig.apiLoginId + '" ' +
+    'data-clientKey="' + paymentConfig.clientKey + '" ' +
+    'data-paymentOptions=\'{"showCreditCard": true, "showBankAccount": false}\' ' +
+    'data-acceptUIFormBtnTxt="Pay Securely" ' +
+    'data-acceptUIFormHeaderTxt="Card Information" ' +
+    'data-responseHandler="acceptUIResponseHandler" ' +
+    'disabled>' +
+    'Pay with Credit Card' +
+    '</button>';
+  
+  console.log('✅ Frontend: AcceptUI button created');
+  validateCardForm();
+}
+
+// Global AcceptUI response handler
+window.acceptUIResponseHandler = function(response) {
+  console.log('💳 Frontend: AcceptUI response received');
+  
+  if (response.messages.resultCode === "Ok") {
+    const opaqueData = response.opaqueData;
+    console.log('✅ Frontend: Got opaqueData, processing payment...');
+    
+    processCardPayment(opaqueData);
+  } else {
+    console.error('❌ Frontend: AcceptUI error:', response.messages);
+    alert('Payment form error: ' + response.messages.message[0].text);
+  }
+};
+
+// Process card payment
+async function processCardPayment(opaqueData) {
+  const amount = parseAmount(document.getElementById('cardAmount').value);
+  const description = document.getElementById('cardDescription').value || selectedPlan || 'Gold Investment Plan';
+  
+  console.log('💳 Frontend: Processing payment:', { amount, description });
+  
+  if (amount <= 0) {
+    alert('Please enter a valid amount');
+    return;
+  }
+  
+  try {
+    // Disable buttons during processing
+    const buttons = document.querySelectorAll('.AcceptUI, .pay-btn');
+    buttons.forEach(btn => {
+      btn.disabled = true;
+      btn.textContent = 'Processing payment...';
+    });
+    
+    const response = await fetch('/api/payments/charge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: amount,
+        description: description,
+        opaqueData: opaqueData,
+        user_id: USER_ID,
+        plan_name: selectedPlan
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('✅ Frontend: Payment successful!');
+      
+      // Show success view
+      state.currentStep = 'success';
+      
+      const successAmount = document.getElementById('successAmount');
+      const successAccount = document.getElementById('successAccount');
+      const successDate = document.getElementById('successDate');
+      
+      if (successAmount) successAmount.textContent = formatCurrency(amount);
+      if (successAccount) successAccount.textContent = 'Credit Card •••• ' + (result.authCode || '****');
+      if (successDate) successDate.textContent = new Date().toLocaleDateString();
+      
+      updateUI();
+    } else {
+      console.error('❌ Frontend: Payment failed:', result.message);
+      alert('Payment failed: ' + result.message);
+      
+      // Re-enable buttons
+      buttons.forEach(btn => {
+        btn.disabled = false;
+        btn.textContent = 'Pay with Credit Card';
+      });
+      validateCardForm();
+    }
+  } catch (error) {
+    console.error('❌ Frontend: Payment error:', error);
+    alert('Payment processing failed. Please try again.');
+    
+    // Re-enable buttons
+    const buttons = document.querySelectorAll('.AcceptUI, .pay-btn');
+    buttons.forEach(btn => {
+      btn.disabled = false;
+      btn.textContent = 'Pay with Credit Card';
+    });
+    validateCardForm();
+  }
+}
+
+// Validate card form
+function validateCardForm() {
+  const cardAmount = document.getElementById('cardAmount');
+  const acceptUIBtn = document.querySelector('.AcceptUI');
+  
+  if (cardAmount && acceptUIBtn) {
+    const amount = parseAmount(cardAmount.value);
+    acceptUIBtn.disabled = amount <= 0;
+  }
+}
 
 module.exports = router;
 console.log("Connect route loaded");
