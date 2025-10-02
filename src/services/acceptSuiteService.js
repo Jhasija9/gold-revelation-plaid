@@ -193,7 +193,10 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      const controller = new CreateTransactionController(createRequest);
+      // const controller = new CreateTransactionController(createRequest);
+      const controller = new CreateTransactionController(createRequest, {
+        logger: { enabled: false, location: './', level: 'error' }
+      });
       
       const response = await new Promise((resolve, reject) => {
         controller.execute((response) => {
