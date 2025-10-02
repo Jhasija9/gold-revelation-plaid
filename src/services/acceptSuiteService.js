@@ -11,7 +11,8 @@ const TransactionRequestType = ApiContracts.TransactionRequestType;
 const PaymentType = ApiContracts.PaymentType;
 const OpaqueDataType = ApiContracts.OpaqueDataType;
 const CustomerDataType = ApiContracts.CustomerDataType;
-const OrderType = authorizenet.APIContracts.OrderType;
+const OrderType = ApiContracts.OrderType;
+const CustomerAddressType = ApiContracts.CustomerAddressType;
 
 class AcceptSuiteService {
   constructor() {
@@ -168,9 +169,14 @@ class AcceptSuiteService {
       if (customerData) {
         const customerDataObj = new CustomerDataType();
         if (customerData.email) customerDataObj.setEmail(customerData.email);
-        if (customerData.firstName) customerDataObj.setFirstName(customerData.firstName);
-        if (customerData.lastName) customerDataObj.setLastName(customerData.lastName);
         transactionRequestType.setCustomer(customerDataObj);
+
+        if (customerData.firstName || customerData.lastName) {
+          const billTo = new CustomerAddressType();
+          if (customerData.firstName) billTo.setFirstName(customerData.firstName);
+          if (customerData.lastName)  billTo.setLastName(customerData.lastName);
+          transactionRequestType.setBillTo(billTo);
+        }
       }
 
       // Add customer IP if provided
