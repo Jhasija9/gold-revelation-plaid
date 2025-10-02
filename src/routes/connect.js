@@ -985,22 +985,20 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           environment: paymentConfig.environment
         });
         
-        // Create AcceptUI button with data attributes
-        container.innerHTML = \`
-          <button 
-            class="AcceptUI pay-btn" 
-            data-billingAddressOptions='{"show":true, "required":false}'
-            data-apiLoginID="${paymentConfig.apiLoginId}"
-            data-clientKey="${paymentConfig.clientKey}"
-            data-paymentOptions='{"showCreditCard": true, "showBankAccount": false}'
-            data-acceptUIFormBtnTxt="Pay Securely"
-            data-acceptUIFormHeaderTxt="Card Information"
-            data-responseHandler="acceptUIResponseHandler"
-            disabled
-          >
-            Pay with Credit Card
-          </button>
-        \`;
+        // Create AcceptUI button with data attributes - NOW USING CLIENT-SIDE VARIABLES
+        container.innerHTML = 
+          '<button ' +
+          'class="AcceptUI pay-btn" ' +
+          'data-billingAddressOptions=\'{"show":true, "required":false}\' ' +
+          'data-apiLoginID="' + paymentConfig.apiLoginId + '" ' +
+          'data-clientKey="' + paymentConfig.clientKey + '" ' +
+          'data-paymentOptions=\'{"showCreditCard": true, "showBankAccount": false}\' ' +
+          'data-acceptUIFormBtnTxt="Pay Securely" ' +
+          'data-acceptUIFormHeaderTxt="Card Information" ' +
+          'data-responseHandler="acceptUIResponseHandler" ' +
+          'disabled>' +
+          'Pay with Credit Card' +
+          '</button>';
         
         console.log('✅ Frontend: AcceptUI button created successfully');
         validateCardForm(); // Enable button if amount is valid
