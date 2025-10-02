@@ -14,6 +14,8 @@ const CustomerDataType = ApiContracts.CustomerDataType;
 
 class AcceptSuiteService {
   constructor() {
+    console.log('🔧 AcceptSuiteService: Constructor called');
+    
     // Validate required environment variables
     this.apiLoginId = process.env.ANET_API_LOGIN_ID;
     this.transactionKey = process.env.ANET_TRANSACTION_KEY;
@@ -22,12 +24,22 @@ class AcceptSuiteService {
       ? Constants.endpoint.production
       : Constants.endpoint.sandbox;
 
+    console.log('🔧 AcceptSuiteService: Environment variables check:');
+    console.log('  - ANET_API_LOGIN_ID:', this.apiLoginId ? '✅ Set' : '❌ Missing');
+    console.log('  - ANET_TRANSACTION_KEY:', this.transactionKey ? '✅ Set' : '❌ Missing');
+    console.log('  - ANET_CLIENT_KEY:', this.clientKey ? '✅ Set' : '❌ Missing');
+    console.log('  - ANET_ENV:', process.env.ANET_ENV || 'sandbox (default)');
+
     // Set service availability based on environment variables
     this.isConfigured = !!(this.apiLoginId && this.transactionKey);
+    
+    console.log('🔧 AcceptSuiteService: Service configured:', this.isConfigured ? '✅ YES' : '❌ NO');
     
     if (!this.isConfigured) {
       console.warn('⚠️ Authorize.Net not configured - missing ANET_API_LOGIN_ID or ANET_TRANSACTION_KEY');
       console.warn('💳 Credit card payments will be disabled');
+    } else {
+      console.log('✅ AcceptSuiteService: Ready for credit card processing');
     }
   }
 
@@ -41,24 +53,35 @@ class AcceptSuiteService {
 
   // Check if service is properly configured
   checkConfiguration() {
+    console.log('🔧 AcceptSuiteService: checkConfiguration() called');
+    console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
+    
     if (!this.isConfigured) {
+      console.log('❌ AcceptSuiteService: Service not configured');
       return {
         success: false,
         code: 'SERVICE_NOT_CONFIGURED',
         message: 'Credit card processing is not configured. Please contact support.'
       };
     }
+    
+    console.log('✅ AcceptSuiteService: Configuration check passed');
     return { success: true };
   }
 
   // Get public configuration for frontend AcceptUI
   getPublicConfig() {
+    console.log('🔧 AcceptSuiteService: getPublicConfig() called');
+    
     const configCheck = this.checkConfiguration();
+    console.log('🔧 AcceptSuiteService: Configuration check result:', configCheck);
+    
     if (!configCheck.success) {
+      console.log('❌ AcceptSuiteService: Returning error config');
       return configCheck;
     }
 
-    return {
+    const config = {
       success: true,
       config: {
         apiLoginId: this.apiLoginId,
@@ -66,11 +89,27 @@ class AcceptSuiteService {
         environment: process.env.ANET_ENV || 'sandbox'
       }
     };
+    
+    console.log('✅ AcceptSuiteService: Returning valid config:', config);
+    return config;
   }
 
   // Process payment with opaqueData from AcceptUI
   async chargeWithOpaqueData(paymentData) {
+    console.log('🔧 AcceptSuiteService: chargeWithOpaqueData() called');
+    console.log('🔧 AcceptSuiteService: Payment data received:', {
+      amount: paymentData.amount,
+      hasOpaqueData: !!paymentData.opaqueData,
+      description: paymentData.description
+    });
+    
     try {
+      const configCheck = this.checkConfiguration();
+      if (!configCheck.success) {
+        console.log('❌ AcceptSuiteService: Configuration check failed in chargeWithOpaqueData');
+        return configCheck;
+      }
+
       const {
         amount,
         description,
@@ -81,6 +120,7 @@ class AcceptSuiteService {
 
       // Validate required fields
       if (!amount || amount <= 0) {
+        console.log('❌ AcceptSuiteService: Invalid amount:', amount);
         return {
           success: false,
           code: 'INVALID_AMOUNT',
@@ -89,12 +129,16 @@ class AcceptSuiteService {
       }
 
       if (!opaqueData || !opaqueData.dataDescriptor || !opaqueData.dataValue) {
+        console.log('❌ AcceptSuiteService: Invalid opaqueData:', opaqueData);
         return {
           success: false,
           code: 'INVALID_OPAQUE_DATA',
           message: 'Invalid payment data received'
         };
       }
+
+      console.log('✅ AcceptSuiteService: Validation passed, processing payment...');
+      console.log('🔧 AcceptSuiteService: Creating transaction request');
 
       // Create the transaction request
       const createRequest = new CreateTransactionRequest();
@@ -134,7 +178,7 @@ class AcceptSuiteService {
       createRequest.setTransactionRequest(transactionRequestType);
 
       // Execute the transaction
-      console.log('🔄 Processing Authorize.Net transaction...');
+      console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
       const controller = new CreateTransactionController(createRequest);
       
       const response = await new Promise((resolve, reject) => {
@@ -143,12 +187,18 @@ class AcceptSuiteService {
         });
       });
 
+      console.log('🔧 AcceptSuiteService: Authorize.Net response received');
+      console.log('🔧 AcceptSuiteService: Response messages result code:', response.messages?.resultCode);
+
       // Parse response
       const isSuccess = response.messages.resultCode === 'Ok';
       const transactionResponse = response.transactionResponse;
 
       if (isSuccess && transactionResponse) {
-        console.log('✅ Transaction successful:', transactionResponse.transId);
+        console.log('✅ AcceptSuiteService: Transaction successful');
+        console.log('🔧 AcceptSuiteService: Transaction ID:', transactionResponse.transId);
+        console.log('🔧 AcceptSuiteService: Auth Code:', transactionResponse.authCode);
+        
         return {
           success: true,
           transactionId: transactionResponse.transId,
@@ -170,7 +220,10 @@ class AcceptSuiteService {
           errorCode = response.messages.message[0].code;
         }
 
-        console.error('❌ Transaction failed:', errorCode, errorMessage);
+        console.error('❌ AcceptSuiteService: Transaction failed');
+        console.error('🔧 AcceptSuiteService: Error code:', errorCode);
+        console.error('🔧 AcceptSuiteService: Error message:', errorMessage);
+        
         return {
           success: false,
           code: errorCode,
@@ -180,7 +233,8 @@ class AcceptSuiteService {
       }
 
     } catch (error) {
-      console.error('❌ Charge with opaqueData error:', error);
+      console.error('❌ AcceptSuiteService: Exception in chargeWithOpaqueData:', error);
+      console.error('🔧 AcceptSuiteService: Error stack:', error.stack);
       
       // Don't expose internal errors to client
       return {

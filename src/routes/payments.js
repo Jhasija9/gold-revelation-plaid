@@ -6,16 +6,23 @@ const Transaction = require('../models/Transaction');
 
 // Get Authorize.Net public configuration
 router.get('/config', (req, res) => {
+  console.log('🌐 Payments Route: /config endpoint called');
+  
   try {
+    console.log('🌐 Payments Route: Calling acceptSuiteService.getPublicConfig()');
     const result = acceptSuiteService.getPublicConfig();
     
+    console.log('🌐 Payments Route: getPublicConfig result:', result);
+    
     if (result.success) {
+      console.log('✅ Payments Route: Returning successful config');
       res.json({
         success: true,
         config: result.config
       });
     } else {
       // Service not configured
+      console.log('❌ Payments Route: Service not configured, returning 503');
       res.status(503).json({
         success: false,
         code: result.code,
@@ -23,7 +30,8 @@ router.get('/config', (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error getting payment config:', error);
+    console.error('❌ Payments Route: Exception in /config:', error);
+    console.error('🌐 Payments Route: Error stack:', error.stack);
     res.status(500).json({
       success: false,
       error: 'Failed to get payment configuration'
@@ -33,6 +41,14 @@ router.get('/config', (req, res) => {
 
 // Charge with opaqueData from AcceptUI
 router.post('/charge', async (req, res) => {
+  console.log('🌐 Payments Route: /charge endpoint called');
+  console.log('🌐 Payments Route: Request body:', {
+    amount: req.body.amount,
+    user_id: req.body.user_id,
+    hasOpaqueData: !!req.body.opaqueData,
+    description: req.body.description
+  });
+  
   try {
     const {
       amount,
@@ -44,6 +60,13 @@ router.post('/charge', async (req, res) => {
 
     // Validate required fields
     if (!amount || !opaqueData || !user_id) {
+      console.log('❌ Payments Route: Missing required fields');
+      console.log('🌐 Payments Route: Validation failed:', {
+        hasAmount: !!amount,
+        hasOpaqueData: !!opaqueData,
+        hasUserId: !!user_id
+      });
+      
       return res.status(400).json({
         success: false,
         code: 'MISSING_FIELDS',
@@ -51,12 +74,16 @@ router.post('/charge', async (req, res) => {
       });
     }
 
+    console.log('✅ Payments Route: Validation passed');
+
     // Get user details for customer data
+    console.log('🌐 Payments Route: Fetching user details for ID:', user_id);
     const userResult = await databaseService.query('users', 'select', {
       where: { id: user_id }
     });
 
     if (!userResult.success || userResult.data.length === 0) {
+      console.log('❌ Payments Route: User not found:', user_id);
       return res.status(404).json({
         success: false,
         code: 'USER_NOT_FOUND',
@@ -65,6 +92,7 @@ router.post('/charge', async (req, res) => {
     }
 
     const user = userResult.data[0];
+    console.log('✅ Payments Route: User found:', user.email);
 
     // Prepare payment data
     const paymentData = {
@@ -79,10 +107,22 @@ router.post('/charge', async (req, res) => {
       customerIP: req.ip || req.connection.remoteAddress
     };
 
+    console.log('🌐 Payments Route: Prepared payment data:', {
+      amount: paymentData.amount,
+      description: paymentData.description,
+      customerEmail: paymentData.customerData.email,
+      customerIP: paymentData.customerIP
+    });
+
     // Process the payment
+    console.log('🌐 Payments Route: Calling acceptSuiteService.chargeWithOpaqueData()');
     const chargeResult = await acceptSuiteService.chargeWithOpaqueData(paymentData);
+    
+    console.log('🌐 Payments Route: Charge result:', chargeResult);
 
     if (chargeResult.success) {
+      console.log('✅ Payments Route: Payment successful, storing transaction');
+      
       // Store transaction record
       const transactionRecord = {
         user_id: user_id,
@@ -98,15 +138,24 @@ router.post('/charge', async (req, res) => {
         completed_at: new Date().toISOString()
       };
 
+      console.log('🌐 Payments Route: Storing transaction record:', {
+        transactionId: chargeResult.transactionId,
+        authCode: chargeResult.authCode,
+        amount: transactionRecord.amount
+      });
+
       const dbResult = await databaseService.query('transactions', 'insert', {
         values: [transactionRecord]
       });
 
       if (!dbResult.success) {
-        console.error('Failed to store transaction record:', dbResult.error);
+        console.error('❌ Payments Route: Failed to store transaction record:', dbResult.error);
         // Don't fail the response since payment was successful
+      } else {
+        console.log('✅ Payments Route: Transaction record stored successfully');
       }
 
+      console.log('✅ Payments Route: Returning successful response');
       res.json({
         success: true,
         transactionId: chargeResult.transactionId,
@@ -121,6 +170,12 @@ router.post('/charge', async (req, res) => {
       const statusCode = chargeResult.code === 'INVALID_AMOUNT' || 
                         chargeResult.code === 'INVALID_OPAQUE_DATA' ? 400 : 402;
       
+      console.log('❌ Payments Route: Payment failed, returning status:', statusCode);
+      console.log('🌐 Payments Route: Failure details:', {
+        code: chargeResult.code,
+        message: chargeResult.message
+      });
+      
       res.status(statusCode).json({
         success: false,
         code: chargeResult.code,
@@ -129,7 +184,8 @@ router.post('/charge', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Charge endpoint error:', error);
+    console.error('❌ Payments Route: Exception in /charge:', error);
+    console.error('🌐 Payments Route: Error stack:', error.stack);
     res.status(500).json({
       success: false,
       code: 'INTERNAL_ERROR',

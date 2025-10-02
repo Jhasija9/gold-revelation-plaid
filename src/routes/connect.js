@@ -896,19 +896,28 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       
       // Load payment configuration
       async function loadPaymentConfig() {
+        console.log('🖥️ Frontend: loadPaymentConfig() called');
+        
         try {
+          console.log('🖥️ Frontend: Fetching /api/payments/config');
           const response = await fetch('/api/payments/config');
+          console.log('🖥️ Frontend: Config response status:', response.status);
+          
           const result = await response.json();
+          console.log('🖥️ Frontend: Config response data:', result);
           
           if (result.success) {
             paymentConfig = result.config;
-            console.log('💳 Payment config loaded:', paymentConfig);
+            console.log('✅ Frontend: Payment config loaded successfully:', paymentConfig);
             loadAcceptUI();
           } else {
-            console.warn('⚠️ Credit card payments unavailable:', result.error);
+            console.warn('⚠️ Frontend: Credit card payments unavailable:', result.error);
+            console.warn('🖥️ Frontend: Error code:', result.code);
+            
             // Disable credit card option
             const cardOption = document.querySelector('.method-option[data-method="card"]');
             if (cardOption) {
+              console.log('🖥️ Frontend: Disabling credit card option');
               cardOption.classList.add('disabled');
               cardOption.querySelector('.method-desc').textContent = 'Currently unavailable';
               const radio = cardOption.querySelector('input[type="radio"]');
@@ -916,45 +925,73 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             }
           }
         } catch (error) {
-          console.error('Error loading payment config:', error);
+          console.error('❌ Frontend: Error loading payment config:', error);
+          console.error('🖥️ Frontend: Error details:', error.message);
         }
       }
       
       // Load AcceptUI script dynamically
       function loadAcceptUI() {
-        if (!paymentConfig || acceptUILoaded) return;
+        console.log('🖥️ Frontend: loadAcceptUI() called');
+        console.log('🖥️ Frontend: paymentConfig:', paymentConfig);
+        console.log('��️ Frontend: acceptUILoaded:', acceptUILoaded);
+        
+        if (!paymentConfig || acceptUILoaded) {
+          console.log('🖥️ Frontend: Skipping AcceptUI load - already loaded or no config');
+          return;
+        }
         
         const scriptUrl = paymentConfig.environment === 'production' 
           ? 'https://js.authorize.net/v3/AcceptUI.js'
           : 'https://jstest.authorize.net/v3/AcceptUI.js';
           
+        console.log('🖥️ Frontend: Loading AcceptUI script from:', scriptUrl);
+            
         const script = document.createElement('script');
         script.src = scriptUrl;
         script.onload = function() {
           acceptUILoaded = true;
-          console.log('✅ AcceptUI loaded');
+          console.log('✅ Frontend: AcceptUI script loaded successfully');
+          console.log('🖥️ Frontend: window.Accept available:', !!window.Accept);
           initializeAcceptUI();
         };
         script.onerror = function() {
-          console.error('❌ Failed to load AcceptUI');
+          console.error('❌ Frontend: Failed to load AcceptUI script');
+          console.error('🖥️ Frontend: Script URL was:', scriptUrl);
         };
         document.head.appendChild(script);
       }
       
       // Initialize AcceptUI button
       function initializeAcceptUI() {
-        if (!paymentConfig || !window.Accept) return;
+        console.log('🖥️ Frontend: initializeAcceptUI() called');
+        console.log('🖥️ Frontend: paymentConfig:', paymentConfig);
+        console.log('🖥️ Frontend: window.Accept:', !!window.Accept);
+        
+        if (!paymentConfig || !window.Accept) {
+          console.log('❌ Frontend: Cannot initialize AcceptUI - missing config or Accept object');
+          return;
+        }
         
         const container = document.getElementById('acceptUIContainer');
-        if (!container) return;
+        if (!container) {
+          console.log('❌ Frontend: acceptUIContainer element not found');
+          return;
+        }
+        
+        console.log('🖥️ Frontend: Creating AcceptUI button with config:', {
+          apiLoginID: paymentConfig.apiLoginId,
+          clientKey: paymentConfig.clientKey ? 'SET' : 'MISSING',
+          environment: paymentConfig.environment
+        });
         
         // Create AcceptUI button with data attributes
-        container.innerHTML = \`
+        container.innerHTML = `
           <button 
             class="AcceptUI pay-btn" 
             data-billingAddressOptions='{"show":true, "required":false}'
-            data-apiLoginID="\${paymentConfig.apiLoginId}"
-            data-clientKey="\${paymentConfig.clientKey}"
+            data-apiLoginID="${paymentConfig.apiLoginId}"
+            data-clientKey="${paymentConfig.clientKey}"
             data-paymentOptions='{"showCreditCard": true, "showBankAccount": false}'
             data-acceptUIFormBtnTxt="Pay Securely"
             data-acceptUIFormHeaderTxt="Card Information"
@@ -963,37 +1000,52 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           >
             Pay with Credit Card
           </button>
-        \`;
+        `;
         
-        console.log('✅ AcceptUI button initialized');
+        console.log('✅ Frontend: AcceptUI button created successfully');
         validateCardForm(); // Enable button if amount is valid
       }
       
       // Global response handler for AcceptUI
       window.acceptUIResponseHandler = function(response) {
-        console.log('💳 AcceptUI Response:', response);
+        console.log('🖥️ Frontend: AcceptUI response received');
+        console.log('🖥️ Frontend: Response:', response);
+        console.log('🖥️ Frontend: Result code:', response.messages?.resultCode);
         
         if (response.messages.resultCode === "Ok") {
           const opaqueData = response.opaqueData;
-          console.log('✅ Got opaqueData:', opaqueData.dataDescriptor);
+          console.log('✅ Frontend: AcceptUI success - got opaqueData');
+          console.log('🖥️ Frontend: Data descriptor:', opaqueData.dataDescriptor);
+          console.log('🖥️ Frontend: Data value length:', opaqueData.dataValue?.length);
           
           // Process the payment
           processCardPayment(opaqueData);
         } else {
-          console.error('❌ AcceptUI Error:', response.messages);
+          console.error('❌ Frontend: AcceptUI error');
+          console.error('🖥️ Frontend: Error messages:', response.messages);
           alert('Payment form error: ' + response.messages.message[0].text);
         }
       };
       
       // Process card payment with opaqueData
       async function processCardPayment(opaqueData) {
+        console.log('🖥️ Frontend: processCardPayment() called');
+        
         const cardAmountInput = document.getElementById('cardAmount');
         const cardDescriptionInput = document.getElementById('cardDescription');
         
         const amount = parseAmount(cardAmountInput.value);
         const description = cardDescriptionInput.value || selectedPlan || 'Gold Investment Plan';
         
+        console.log('🖥️ Frontend: Payment details:', {
+          amount: amount,
+          description: description,
+          userId: USER_ID,
+          planName: selectedPlan
+        });
+        
         if (amount <= 0) {
+          console.log('❌ Frontend: Invalid amount:', amount);
           alert('Please enter a valid amount');
           return;
         }
@@ -1006,23 +1058,35 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             btn.textContent = 'Processing payment...';
           });
           
+          console.log('🖥️ Frontend: Sending charge request to /api/payments/charge');
+          
+          const requestBody = {
+            amount: amount,
+            description: description,
+            opaqueData: opaqueData,
+            user_id: USER_ID,
+            plan_name: selectedPlan
+          };
+          
+          console.log('🖥️ Frontend: Request body:', requestBody);
+          
           const response = await fetch('/api/payments/charge', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-              amount: amount,
-              description: description,
-              opaqueData: opaqueData,
-              user_id: USER_ID,
-              plan_name: selectedPlan
-            })
+            body: JSON.stringify(requestBody)
           });
           
+          console.log('🖥️ Frontend: Charge response status:', response.status);
+          
           const result = await response.json();
+          console.log('🖥️ Frontend: Charge response data:', result);
           
           if (result.success) {
+            console.log('✅ Frontend: Payment successful');
+            console.log('🖥️ Frontend: Transaction ID:', result.transactionId);
+            
             // Show success
             showCardPaymentSuccess({
               amount: amount,
@@ -1031,7 +1095,10 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               description: description
             });
           } else {
-            console.error('❌ Payment failed:', result);
+            console.error('❌ Frontend: Payment failed');
+            console.error('🖥️ Frontend: Error code:', result.code);
+            console.error('🖥️ Frontend: Error message:', result.message);
+            
             alert('Payment failed: ' + result.message);
             
             // Re-enable buttons
@@ -1042,7 +1109,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             validateCardForm(); // Re-validate form
           }
         } catch (error) {
-          console.error('❌ Payment processing error:', error);
+          console.error('❌ Frontend: Exception in processCardPayment:', error);
+          console.error('🖥️ Frontend: Error details:', error.message);
+          
           alert('Payment processing failed. Please try again.');
           
           // Re-enable buttons
