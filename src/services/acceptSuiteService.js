@@ -169,7 +169,7 @@ class AcceptSuiteService {
       if (customerData) {
         const customerDataObj = new CustomerDataType();
         if (customerData.email) customerDataObj.setEmail(customerData.email);
-        transactionRequestType.setCustomer(customerDataObj);
+        // transactionRequestType.setCustomer(customerDataObj);
 
         if (customerData.firstName || customerData.lastName) {
           const billTo = new CustomerAddressType();
@@ -180,7 +180,7 @@ class AcceptSuiteService {
           billTo.setPhoneNumber('');
           billTo.setFaxNumber('');
 
-          transactionRequestType.setBillTo(billTo);
+          // transactionRequestType.setBillTo(billTo);
         }
       }
 
