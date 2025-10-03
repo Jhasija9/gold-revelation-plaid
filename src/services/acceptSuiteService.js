@@ -172,11 +172,11 @@ class AcceptSuiteService {
         transactionRequestType.setCustomer(customerDataObj);
 
         if (customerData.firstName || customerData.lastName) {
-          const billTo = new CustomerAddressType();
-          if (customerData.firstName) billTo.setFirstName(String(customerData.firstName));
-          if (customerData.lastName)  billTo.setLastName(String(customerData.lastName));
-          // do NOT set phone/fax unless you have values (leaving them unset avoids null keys)
-          transactionRequestType.setBillTo(billTo);
+      //     const billTo = new CustomerAddressType();
+      //     if (customerData.firstName) billTo.setFirstName(String(customerData.firstName));
+      //     if (customerData.lastName)  billTo.setLastName(String(customerData.lastName));
+      //     // do NOT set phone/fax unless you have values (leaving them unset avoids null keys)
+      //     transactionRequestType.setBillTo(billTo);
         }
       }
 
