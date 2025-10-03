@@ -168,19 +168,16 @@ class AcceptSuiteService {
       // Add customer data (email) and BillTo (names)
       if (customerData) {
         const customerDataObj = new CustomerDataType();
-        if (customerData.email) customerDataObj.setEmail(customerData.email);
-        // transactionRequestType.setCustomer(customerDataObj);
+        customerDataObj.setEmail((customerData && customerData.email) ? customerData.email : '');
+        transactionRequestType.setCustomer(customerDataObj);
 
-        if (customerData.firstName || customerData.lastName) {
+        if (customerData && (customerData.firstName || customerData.lastName)) {
           const billTo = new CustomerAddressType();
-          if (customerData.firstName) billTo.setFirstName(customerData.firstName);
-          if (customerData.lastName)  billTo.setLastName(customerData.lastName);
-
-          // Avoid SDK logger null crash on sensitive fields
-          billTo.setPhoneNumber('');
+          billTo.setFirstName(customerData.firstName || '');
+          billTo.setLastName(customerData.lastName || '');
+          billTo.setPhoneNumber(''); // avoid null in SDK logger
           billTo.setFaxNumber('');
-
-          // transactionRequestType.setBillTo(billTo);
+          transactionRequestType.setBillTo(billTo);
         }
       }
 
@@ -193,37 +190,44 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      // const controller = new CreateTransactionController(createRequest);
       const controller = new CreateTransactionController(createRequest, {
-        logger: { enabled: true, location: './', level: 'info' },  // or false to suppress
-        proxy:  { setProxy: false, proxyUrl: '' },                 // no proxy
-        timeout: 120000,                                           // 120s
+        logger: { enabled: true, location: '/tmp', level: 'error' }, // avoid EROFS
+        proxy:  { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
         clientId: 'sdk-node-custom'
       });
       
-      const response = await new Promise((resolve, reject) => {
-        controller.execute((response) => {
-          resolve(response);
+      const apiResponse = await new Promise((resolve, reject) => {
+        controller.execute(() => {
+          try {
+            const raw = controller.getResponse();
+            resolve(raw);
+          } catch (e) { reject(e); }
         });
       });
+
+      // Prefer typed response parsing
+      const response = new ApiContracts.CreateTransactionResponse(apiResponse);
+      const isSuccess =
+        response &&
+        response.getMessages() &&
+        response.getMessages().getResultCode() === ApiContracts.MessageTypeEnum.OK;
+      const tr = response ? response.getTransactionResponse() : null;
 
       console.log('🔧 AcceptSuiteService: Authorize.Net response received');
       console.log('🔧 AcceptSuiteService: Response messages result code:', response.messages?.resultCode);
 
       // Parse response
-      const isSuccess = response.messages.resultCode === 'Ok';
-      const transactionResponse = response.transactionResponse;
-
-      if (isSuccess && transactionResponse) {
+      if (isSuccess && tr) {
         console.log('✅ AcceptSuiteService: Transaction successful');
-        console.log('🔧 AcceptSuiteService: Transaction ID:', transactionResponse.transId);
-        console.log('🔧 AcceptSuiteService: Auth Code:', transactionResponse.authCode);
+        console.log('🔧 AcceptSuiteService: Transaction ID:', tr.transId);
+        console.log('🔧 AcceptSuiteService: Auth Code:', tr.authCode);
         
         return {
           success: true,
-          transactionId: transactionResponse.transId,
-          authCode: transactionResponse.authCode,
-          responseCode: transactionResponse.responseCode,
+          transactionId: tr.transId,
+          authCode: tr.authCode,
+          responseCode: tr.responseCode,
           message: 'Payment processed successfully'
         };
       } else {
@@ -231,8 +235,8 @@ class AcceptSuiteService {
         let errorMessage = 'Payment processing failed';
         let errorCode = 'PROCESSING_ERROR';
 
-        if (transactionResponse && transactionResponse.errors) {
-          const error = transactionResponse.errors[0];
+        if (tr && tr.errors) {
+          const error = tr.errors[0];
           errorMessage = error.errorText;
           errorCode = error.errorCode;
         } else if (response.messages && response.messages.message) {
@@ -248,7 +252,7 @@ class AcceptSuiteService {
           success: false,
           code: errorCode,
           message: errorMessage,
-          responseCode: transactionResponse?.responseCode
+          responseCode: tr?.responseCode
         };
       }
 
