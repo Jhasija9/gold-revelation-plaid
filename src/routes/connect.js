@@ -758,6 +758,28 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       function isAmountValid() {
         return state.amount > 0;
       }
+              
+      // Initialize AcceptUI when card method is selected
+      function initializeAcceptUI() {
+        if (state.selectedMethod === 'card' && !state.cardFormReady) {
+          var acceptContainer = document.getElementById('acceptUIContainer');
+          var loadingIndicator = document.getElementById('loading-indicator');
+          
+          if (acceptContainer && loadingIndicator) {
+            // Show loading indicator
+            loadingIndicator.classList.remove('hidden');
+            
+            // Show AcceptUI container
+            acceptContainer.classList.remove('hidden');
+            
+            // Trigger AcceptUI initialization if not already done
+            if (window.initializeAcceptUI) {
+              window.initializeAcceptUI();
+            }
+          }
+        }
+      }
+
       
       // Update dynamic action button
       function updateDynamicAction() {
@@ -787,8 +809,8 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           if (!state.cardFormReady) {
             btn.textContent = 'Pay with Credit Card';
             btn.disabled = true;
-            if (loadingIndicator) loadingIndicator.classList.remove('hidden');
-            if (acceptContainer) acceptContainer.classList.remove('hidden');
+            // Initialize AcceptUI
+            initializeAcceptUI();
           } else {
             btn.textContent = 'Pay with Credit Card';
             btn.disabled = !isAmountValid();
@@ -925,7 +947,12 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               }
             } else if (state.selectedMethod === 'card') {
               // Card payment will be handled by AcceptUI
-              console.log('Card payment initiated via AcceptUI');
+              var acceptBtn = document.querySelector('.AcceptUI');
+              if (acceptBtn) {
+                acceptBtn.click();
+              } else {
+                showError('Card payment form not ready. Please try again.');
+              }
             }
           });
         }
