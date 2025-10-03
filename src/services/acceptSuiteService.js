@@ -189,7 +189,7 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      const controller = new CreateTransactionController(createRequest);
+      const controller = new CreateTransactionController(createRequest.getJSON());
       
       // defensive: make sure request has only the proper root
       if ('clientId' in createRequest) delete createRequest.clientId;
