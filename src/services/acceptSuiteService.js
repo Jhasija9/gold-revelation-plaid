@@ -13,6 +13,8 @@ const OpaqueDataType = ApiContracts.OpaqueDataType;
 const CustomerDataType = ApiContracts.CustomerDataType;
 const OrderType = ApiContracts.OrderType;
 const CustomerAddressType = ApiContracts.CustomerAddressType;
+const AuthenticateTestRequest = ApiContracts.AuthenticateTestRequest;
+const AuthenticateTestController = ApiControllers.AuthenticateTestController;
 
 class AcceptSuiteService {
   constructor() {
@@ -96,6 +98,34 @@ class AcceptSuiteService {
     return config;
   }
 
+  mask(v) { return v ? String(v).slice(0,2) + '***' + String(v).slice(-2) : 'null'; }
+
+  async testAuth() {
+    try {
+      const req = new AuthenticateTestRequest();
+      req.setMerchantAuthentication(this.getMerchantAuthentication());
+
+      const ctrl = new AuthenticateTestController(req.getJSON(), {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy:  { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        environment: this.environment
+      });
+
+      const raw = await new Promise((resolve, reject) => {
+        ctrl.execute(() => { try { resolve(ctrl.getResponse()); } catch (e) { reject(e); } });
+      });
+
+      const resultCode = raw?.messages?.resultCode;
+      const msg = raw?.messages?.message?.[0]?.text;
+      console.log('🔑 Auth test →', resultCode, msg);
+      return resultCode === 'Ok';
+    } catch (e) {
+      console.error('🔑 Auth test exception:', e);
+      return false;
+    }
+  }
+
   // Process payment with opaqueData from AcceptUI
   async chargeWithOpaqueData(paymentData) {
     console.log('🔧 AcceptSuiteService: chargeWithOpaqueData() called');
@@ -136,6 +166,18 @@ class AcceptSuiteService {
           success: false,
           code: 'INVALID_OPAQUE_DATA',
           message: 'Invalid payment data received'
+        };
+      }
+
+      console.log('🔧 Using env:', process.env.ANET_ENV, 'endpoint:', this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production');
+      console.log('🔧 API Login ID:', this.mask(this.apiLoginId), 'TxnKey set:', !!this.transactionKey);
+
+      const authOk = await this.testAuth();
+      if (!authOk) {
+        return {
+          success: false,
+          code: 'E00007',
+          message: 'User authentication failed (auth test). Check ANET_API_LOGIN_ID / ANET_TRANSACTION_KEY and environment.'
         };
       }
 
@@ -189,12 +231,14 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      const controller = new CreateTransactionController(createRequest.getJSON(), {
+      const reqJson = createRequest.getJSON();
+      console.log('📦 Request root keys:', Object.keys(reqJson)); // expect ['createTransactionRequest']
+
+      const controller = new CreateTransactionController(reqJson, {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
         timeout: 120000,
-        clientId: undefined ,
-        environment: Constants.endpoint.sandbox  // prevent SDK from adding clientId to the body
+        environment: Constants.endpoint.sandbox
       });
       
       // defensive: make sure request has only the proper root
