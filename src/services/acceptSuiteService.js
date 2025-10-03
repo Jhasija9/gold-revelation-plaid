@@ -194,7 +194,7 @@ class AcceptSuiteService {
       // defensive: make sure request has only the proper root
       if ('clientId' in createRequest) delete createRequest.clientId;
 
-      if ('refId' in createRequest) delete createRequest.refId; 
+      if ('refId' in createRequest) delete createRequest.refId;
 
       const raw = await new Promise((resolve, reject) => {
         controller.execute(() => {
