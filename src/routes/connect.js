@@ -1078,82 +1078,87 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     })();
   </script>
   <script>
-// Method toggle + summary sync (frontend only)
+// Shared Amount/Description + dynamic action row
 document.addEventListener('DOMContentLoaded', function () {
+  // Radios
   const bankRadio = document.querySelector('.method-option[data-method="bank"] input[type="radio"]');
   const cardRadio = document.querySelector('.method-option[data-method="card"] input[type="radio"]');
 
-  const bankCard = document.querySelector('.method-option[data-method="bank"]');
-  const cardCard = document.querySelector('.method-option[data-method="card"]');
+  // Shared inputs (use these as the single source of truth)
+  const amountInput = document.getElementById('amountInput');       // shared amount
+  const descInput   = document.getElementById('descriptionInput');  // shared description
 
-  const bankSection = document.getElementById('bankSection');   // Plaid area
-  const cardSection = document.getElementById('cardSection');   // AcceptUI area
+  // Card-only hidden mirrors (kept for AcceptUI script compatibility)
+  const ccAmount = document.getElementById('ccAmount');
+  const ccDesc   = document.getElementById('ccDescription');
 
+  // Action areas
+  const connectBtn = document.getElementById('connectBtn');                   // Plaid button
+  const acceptContainer = document.getElementById('acceptUIContainer');       // AcceptUI container
+
+  // Summary
   const orderAmount = document.getElementById('orderAmount');
   const orderTotal  = document.getElementById('orderTotal');
-
-  const bankAmountInput = document.getElementById('amountInput'); // bank amount
-  const cardAmountInput = document.getElementById('ccAmount');    // card amount
 
   function parseAmount(v) {
     const n = parseFloat(String(v || '').replace(/[^\d.]/g, ''));
     return Number.isFinite(n) ? n : 0;
   }
   function formatUSD(n) { return '$' + n.toFixed(2); }
-  function activeAmount() {
-    return bankRadio?.checked ? parseAmount(bankAmountInput?.value)
-                              : parseAmount(cardAmountInput?.value);
-  }
-  function setSelected(cardEl) {
-    document.querySelectorAll('.method-option').forEach(el => el.classList.remove('selected'));
-    cardEl?.classList.add('selected');
-  }
-  function updateSummary() {
-    const amt = activeAmount();
-    if (orderAmount) orderAmount.textContent = formatUSD(amt);
-    if (orderTotal)  orderTotal.textContent  = formatUSD(amt);
 
-    // Enable/disable action buttons by amount
-    const connectBtn = document.getElementById('connectBtn');
+  function syncCardMirrors() {
+    if (ccAmount) ccAmount.value = amountInput?.value || '';
+    if (ccDesc)   ccDesc.value   = descInput?.value   || '';
+  }
+
+  function enableStates() {
+    const amt = parseAmount(amountInput?.value);
+    // Enable shared CTA based on selected method
     if (connectBtn) connectBtn.disabled = !(bankRadio?.checked && amt > 0);
 
-    // AcceptUI button may be injected after load; guard both possibilities
+    // AcceptUI button might be injected dynamically; check both possibilities
     const acceptBtn = document.querySelector('#acceptUIContainer .AcceptUI') ||
                       document.getElementById('acceptUIButton');
     if (acceptBtn) acceptBtn.disabled = !(cardRadio?.checked && amt > 0);
+
+    // Update summary from the shared amount
+    if (orderAmount) orderAmount.textContent = formatUSD(amt);
+    if (orderTotal)  orderTotal.textContent  = formatUSD(amt);
   }
-  function showBank() {
-    if (bankSection) bankSection.classList.remove('hidden');
-    if (cardSection) cardSection.classList.add('hidden');
-    setSelected(bankCard);
-    updateSummary();
+
+  function showBankAction() {
+    if (connectBtn) connectBtn.classList.remove('hidden');
+    if (acceptContainer) acceptContainer.classList.add('hidden');
+    enableStates();
   }
-  function showCard() {
-    if (cardSection) cardSection.classList.remove('hidden');
-    if (bankSection) bankSection.classList.add('hidden');
-    setSelected(cardCard);
-    // Notify AcceptUI lazy loader that Card is visible
+
+  function showCardAction() {
+    if (acceptContainer) acceptContainer.classList.remove('hidden');
+    if (connectBtn) connectBtn.classList.add('hidden');
+
+    // Ensure AcceptUI is initialized lazily when Card is chosen
     window.dispatchEvent(new CustomEvent('cc:cardSelected'));
-    updateSummary();
+    // Keep card mirrors in sync for any code that still reads ccAmount/ccDescription
+    syncCardMirrors();
+    enableStates();
   }
 
-  // Radios behave like tabs
-  bankRadio?.addEventListener('change', showBank);
-  cardRadio?.addEventListener('change', showCard);
+  // Wire radio change
+  bankRadio?.addEventListener('change', showBankAction);
+  cardRadio?.addEventListener('change', showCardAction);
 
-  // Live amount sync
-  bankAmountInput?.addEventListener('input', updateSummary);
-  cardAmountInput?.addEventListener('input', updateSummary);
+  // Wire shared inputs
+  amountInput?.addEventListener('input', () => { syncCardMirrors(); enableStates(); });
+  descInput?.addEventListener('input',   () => { syncCardMirrors(); });
 
-  // Initial state
-  if (cardRadio?.checked) showCard(); else showBank();
-
-  // When AcceptUI button is injected later, resync disabled/enabled
-  const acceptContainer = document.getElementById('acceptUIContainer');
+  // If AcceptUI button is injected later, re-evaluate disabled state
   if (acceptContainer && 'MutationObserver' in window) {
-    new MutationObserver(() => updateSummary())
+    new MutationObserver(() => enableStates())
       .observe(acceptContainer, { childList: true, subtree: true });
   }
+
+  // Initial view: use current radio selection
+  if (cardRadio?.checked) showCardAction(); else showBankAction();
 });
 </script>
   `
