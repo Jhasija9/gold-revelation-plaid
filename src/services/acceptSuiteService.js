@@ -195,7 +195,10 @@ class AcceptSuiteService {
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
       // const controller = new CreateTransactionController(createRequest);
       const controller = new CreateTransactionController(createRequest, {
-        logger: { enabled: false, location: './', level: 'error' }
+        logger: { enabled: true, location: './', level: 'info' },  // or false to suppress
+        proxy:  { setProxy: false, proxyUrl: '' },                 // no proxy
+        timeout: 120000,                                           // 120s
+        clientId: 'sdk-node-custom'
       });
       
       const response = await new Promise((resolve, reject) => {
