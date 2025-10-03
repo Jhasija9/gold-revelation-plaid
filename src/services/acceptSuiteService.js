@@ -193,7 +193,8 @@ class AcceptSuiteService {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
         timeout: 120000,
-        clientId: undefined   // prevent SDK from adding clientId to the body
+        clientId: undefined ,
+        environment: Constants.endpoint.sandbox  // prevent SDK from adding clientId to the body
       });
       
       // defensive: make sure request has only the proper root
