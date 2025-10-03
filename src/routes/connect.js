@@ -612,7 +612,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           </div>
 
           <!-- Hidden AcceptUI Container (for card initialization) -->
-          <div id="acceptUIContainer" class="hidden"></div>
+          <div id="acceptUIContainer"></div>
           <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
 
           <!-- Success View (shown after successful payment) -->
@@ -760,7 +760,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       }
               
       // Initialize AcceptUI when card method is selected
-      function initializeAcceptUI() {
+            function initializeAcceptUI() {
         if (state.selectedMethod === 'card' && !state.cardFormReady) {
           var acceptContainer = document.getElementById('acceptUIContainer');
           var loadingIndicator = document.getElementById('loading-indicator');
@@ -805,7 +805,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             if (bankAccountSelect) bankAccountSelect.classList.remove('hidden');
             if (connectedBadge) connectedBadge.classList.remove('hidden');
           }
-        } else if (state.selectedMethod === 'card') {
+                } else if (state.selectedMethod === 'card') {
           if (!state.cardFormReady) {
             btn.textContent = 'Pay with Credit Card';
             btn.disabled = true;
@@ -945,13 +945,27 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 // Process bank payment
                 processBankPayment();
               }
-            } else if (state.selectedMethod === 'card') {
-              // Card payment will be handled by AcceptUI
+                        } else if (state.selectedMethod === 'card') {
+              // Trigger AcceptUI form
               var acceptBtn = document.querySelector('.AcceptUI');
               if (acceptBtn) {
                 acceptBtn.click();
               } else {
-                showError('Card payment form not ready. Please try again.');
+                // AcceptUI not ready, try to initialize and retry
+                if (window.initializeAcceptUI) {
+                  window.initializeAcceptUI();
+                  // Wait for initialization and try again
+                  setTimeout(() => {
+                    var retryBtn = document.querySelector('.AcceptUI');
+                    if (retryBtn) {
+                      retryBtn.click();
+                    } else {
+                      showError('Card payment form not ready. Please try again.');
+                    }
+                  }, 1000);
+                } else {
+                  showError('Card payment form not available. Please try again.');
+                }
               }
             }
           });
