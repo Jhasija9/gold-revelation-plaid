@@ -191,6 +191,9 @@ class AcceptSuiteService {
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
       const controller = new CreateTransactionController(createRequest);
       
+      // defensive: make sure request has only the proper root
+      if ('clientId' in createRequest) delete createRequest.clientId;
+
       const raw = await new Promise((resolve, reject) => {
         controller.execute(() => {
           try { resolve(controller.getResponse()); }
