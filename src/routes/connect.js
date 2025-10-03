@@ -1077,6 +1077,85 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       });
     })();
   </script>
+  <script>
+// Method toggle + summary sync (frontend only)
+document.addEventListener('DOMContentLoaded', function () {
+  const bankRadio = document.querySelector('.method-option[data-method="bank"] input[type="radio"]');
+  const cardRadio = document.querySelector('.method-option[data-method="card"] input[type="radio"]');
+
+  const bankCard = document.querySelector('.method-option[data-method="bank"]');
+  const cardCard = document.querySelector('.method-option[data-method="card"]');
+
+  const bankSection = document.getElementById('bankSection');   // Plaid area
+  const cardSection = document.getElementById('cardSection');   // AcceptUI area
+
+  const orderAmount = document.getElementById('orderAmount');
+  const orderTotal  = document.getElementById('orderTotal');
+
+  const bankAmountInput = document.getElementById('amountInput'); // bank amount
+  const cardAmountInput = document.getElementById('ccAmount');    // card amount
+
+  function parseAmount(v) {
+    const n = parseFloat(String(v || '').replace(/[^\d.]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  }
+  function formatUSD(n) { return '$' + n.toFixed(2); }
+  function activeAmount() {
+    return bankRadio?.checked ? parseAmount(bankAmountInput?.value)
+                              : parseAmount(cardAmountInput?.value);
+  }
+  function setSelected(cardEl) {
+    document.querySelectorAll('.method-option').forEach(el => el.classList.remove('selected'));
+    cardEl?.classList.add('selected');
+  }
+  function updateSummary() {
+    const amt = activeAmount();
+    if (orderAmount) orderAmount.textContent = formatUSD(amt);
+    if (orderTotal)  orderTotal.textContent  = formatUSD(amt);
+
+    // Enable/disable action buttons by amount
+    const connectBtn = document.getElementById('connectBtn');
+    if (connectBtn) connectBtn.disabled = !(bankRadio?.checked && amt > 0);
+
+    // AcceptUI button may be injected after load; guard both possibilities
+    const acceptBtn = document.querySelector('#acceptUIContainer .AcceptUI') ||
+                      document.getElementById('acceptUIButton');
+    if (acceptBtn) acceptBtn.disabled = !(cardRadio?.checked && amt > 0);
+  }
+  function showBank() {
+    if (bankSection) bankSection.classList.remove('hidden');
+    if (cardSection) cardSection.classList.add('hidden');
+    setSelected(bankCard);
+    updateSummary();
+  }
+  function showCard() {
+    if (cardSection) cardSection.classList.remove('hidden');
+    if (bankSection) bankSection.classList.add('hidden');
+    setSelected(cardCard);
+    // Notify AcceptUI lazy loader that Card is visible
+    window.dispatchEvent(new CustomEvent('cc:cardSelected'));
+    updateSummary();
+  }
+
+  // Radios behave like tabs
+  bankRadio?.addEventListener('change', showBank);
+  cardRadio?.addEventListener('change', showCard);
+
+  // Live amount sync
+  bankAmountInput?.addEventListener('input', updateSummary);
+  cardAmountInput?.addEventListener('input', updateSummary);
+
+  // Initial state
+  if (cardRadio?.checked) showCard(); else showBank();
+
+  // When AcceptUI button is injected later, resync disabled/enabled
+  const acceptContainer = document.getElementById('acceptUIContainer');
+  if (acceptContainer && 'MutationObserver' in window) {
+    new MutationObserver(() => updateSummary())
+      .observe(acceptContainer, { childList: true, subtree: true });
+  }
+});
+</script>
   `
       : ""
   }
