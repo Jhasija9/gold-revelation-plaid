@@ -205,6 +205,8 @@ class AcceptSuiteService {
 
       console.log('�� AcceptSuiteService: Authorize.Net response received');
       console.log('🔧 AcceptSuiteService: Response messages result code:', apiResp?.messages?.resultCode);
+      const resultCode = apiResp?.getMessages?.()?.getResultCode?.();
+console.log('🔧 AcceptSuiteService: Result code:', resultCode);
 
       // Parse response
       if (ok && tr) {
