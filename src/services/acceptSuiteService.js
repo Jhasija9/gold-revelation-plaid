@@ -189,7 +189,12 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      const controller = new CreateTransactionController(createRequest.getJSON());
+      const controller = new CreateTransactionController(createRequest, {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy:  { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        clientId: undefined   // prevent SDK from adding clientId to the body
+      });
       
       // defensive: make sure request has only the proper root
       if ('clientId' in createRequest) delete createRequest.clientId;
