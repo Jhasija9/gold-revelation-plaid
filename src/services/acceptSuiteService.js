@@ -165,18 +165,17 @@ class AcceptSuiteService {
       paymentType.setOpaqueData(opaqueDataObj);
       transactionRequestType.setPayment(paymentType);
 
-      // Add customer data (email) and BillTo (names)
+      // Safe customer + bill-to (no nulls)
       if (customerData) {
         const customerDataObj = new CustomerDataType();
-        customerDataObj.setEmail((customerData && customerData.email) ? customerData.email : '');
+        customerDataObj.setEmail((customerData.email && String(customerData.email)) || '');
         transactionRequestType.setCustomer(customerDataObj);
 
-        if (customerData && (customerData.firstName || customerData.lastName)) {
+        if (customerData.firstName || customerData.lastName) {
           const billTo = new CustomerAddressType();
-          billTo.setFirstName(customerData.firstName || '');
-          billTo.setLastName(customerData.lastName || '');
-          billTo.setPhoneNumber(''); // avoid null in SDK logger
-          billTo.setFaxNumber('');
+          if (customerData.firstName) billTo.setFirstName(String(customerData.firstName));
+          if (customerData.lastName)  billTo.setLastName(String(customerData.lastName));
+          // do NOT set phone/fax unless you have values (leaving them unset avoids null keys)
           transactionRequestType.setBillTo(billTo);
         }
       }
@@ -190,35 +189,25 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      const controller = new CreateTransactionController(createRequest, {
-        logger: { enabled: true, location: '/tmp', level: 'error' }, // avoid EROFS
-        proxy:  { setProxy: false, proxyUrl: '' },
-        timeout: 120000,
-        clientId: 'sdk-node-custom'
-      });
+      const controller = new CreateTransactionController(createRequest);
       
-      const apiResponse = await new Promise((resolve, reject) => {
+      const raw = await new Promise((resolve, reject) => {
         controller.execute(() => {
-          try {
-            const raw = controller.getResponse();
-            resolve(raw);
-          } catch (e) { reject(e); }
+          try { resolve(controller.getResponse()); }
+          catch (e) { reject(e); }
         });
       });
 
-      // Prefer typed response parsing
-      const response = new ApiContracts.CreateTransactionResponse(apiResponse);
-      const isSuccess =
-        response &&
-        response.getMessages() &&
-        response.getMessages().getResultCode() === ApiContracts.MessageTypeEnum.OK;
-      const tr = response ? response.getTransactionResponse() : null;
+      // Parse typed response
+      const apiResp = new ApiContracts.CreateTransactionResponse(raw);
+      const ok = apiResp?.getMessages()?.getResultCode() === ApiContracts.MessageTypeEnum.OK;
+      const tr  = apiResp?.getTransactionResponse();
 
-      console.log('🔧 AcceptSuiteService: Authorize.Net response received');
-      console.log('🔧 AcceptSuiteService: Response messages result code:', response.messages?.resultCode);
+      console.log('�� AcceptSuiteService: Authorize.Net response received');
+      console.log('🔧 AcceptSuiteService: Response messages result code:', apiResp?.messages?.resultCode);
 
       // Parse response
-      if (isSuccess && tr) {
+      if (ok && tr) {
         console.log('✅ AcceptSuiteService: Transaction successful');
         console.log('🔧 AcceptSuiteService: Transaction ID:', tr.transId);
         console.log('🔧 AcceptSuiteService: Auth Code:', tr.authCode);
@@ -239,9 +228,9 @@ class AcceptSuiteService {
           const error = tr.errors[0];
           errorMessage = error.errorText;
           errorCode = error.errorCode;
-        } else if (response.messages && response.messages.message) {
-          errorMessage = response.messages.message[0].text;
-          errorCode = response.messages.message[0].code;
+        } else if (apiResp.messages && apiResp.messages.message) {
+          errorMessage = apiResp.messages.message[0].text;
+          errorCode = apiResp.messages.message[0].code;
         }
 
         console.error('❌ AcceptSuiteService: Transaction failed');
