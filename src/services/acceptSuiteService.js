@@ -189,7 +189,7 @@ class AcceptSuiteService {
 
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
-      const controller = new CreateTransactionController(createRequest, {
+      const controller = new CreateTransactionController(createRequest.getJSON(), {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
         timeout: 120000,
