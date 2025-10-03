@@ -690,388 +690,418 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       ? `
   <script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
   <script>
-    (function(){
-      var USER_ID = ${JSON.stringify(userId ?? null)};
-      var linkToken = ${JSON.stringify(linkToken)};
+    (function () {
+      // ----- Boot vars from server -----
+      var USER_ID      = ${JSON.stringify(userId ?? null)};
+      var linkToken    = ${JSON.stringify(linkToken)};
       var selectedPlan = ${JSON.stringify(selectedPlan || '')};
-      console.log('🔍 DEBUG: selectedPlan variable =', selectedPlan);
-      console.log('🔍 DEBUG: selectedPlan type =', typeof selectedPlan);
-      console.log('🔍 DEBUG: selectedPlan length =', selectedPlan ? selectedPlan.length : 'null/undefined');
-      
-      // State management - single source of truth
+
+      // ----- State (bank only; card handled locally) -----
       var state = {
         isConnected: false,
-        isSubmitting: false,
-        currentStep: 'connect', // connect, details, success
-        accounts: [], // Array of account objects
-        selectedAccountId: null, // Currently selected account ID
-        amount: 0, // Amount as decimal number
+        accounts: [],
+        selectedAccountId: null,
+        amount: 0,
         description: ''
       };
-      
-      // Get currently selected account
-      function getSelectedAccount() {
-        if (!state.selectedAccountId || state.accounts.length === 0) return null;
-        return state.accounts.find(function(acc) {
-          return acc.id === state.selectedAccountId;
-        });
-      }
-      
-      // Update connected badge text based on selected account
-      function updateConnectedBadge() {
-        var selected = getSelectedAccount();
-        var connectedText = document.getElementById('connectedText');
-        if (connectedText && selected) {
-          var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
-          connectedText.textContent = 'Connected — ' + accountName + ' ••••' + selected.mask;
-        }
-      }
-      
-      // Format amount for display
-      function formatAmount(amount) {
-        return amount.toFixed(2);
-      }
-      
-      // Parse amount input to decimal
-      function parseAmount(value) {
-        if (!value || value.trim() === '') return 0;
-        
-        // Remove any non-numeric characters except decimal point
-        var cleaned = value.replace(/[^0-9.]/g, '');
-        if (cleaned === '') return 0;
-        
-        // Ensure only one decimal point
+
+      // ----- DOM helpers -----
+      function $(sel) { return document.querySelector(sel); }
+      function $all(sel) { return document.querySelectorAll(sel); }
+
+      // ----- Formatting helpers -----
+      function parseAmount(v) {
+        if (!v) return 0;
+        var cleaned = String(v).replace(/[^0-9.]/g, '');
+        if (!cleaned) return 0;
         var parts = cleaned.split('.');
-        if (parts.length > 2) {
-          cleaned = parts[0] + '.' + parts.slice(1).join('');
-        }
-        
-        // Limit to 2 decimal places
-        if (parts[1] && parts[1].length > 2) {
-          cleaned = parts[0] + '.' + parts[1].substring(0, 2);
-        }
-        
+        if (parts.length > 2) cleaned = parts[0] + '.' + parts.slice(1).join('');
+        if (parts[1] && parts[1].length > 2) cleaned = parts[0] + '.' + parts[1].slice(0, 2);
         return parseFloat(cleaned) || 0;
       }
-      
-      // State management
-      function updateUI() {
-        var connectBtn = document.getElementById('connectBtn');
-        var connectedBadge = document.getElementById('connectedBadge');
-        var paymentDetails = document.getElementById('paymentDetails');
-        var successView = document.getElementById('successView');
-        
-        // Hide all sections first
-        if (connectBtn) connectBtn.classList.add('hidden');
-        if (connectedBadge) connectedBadge.classList.add('hidden');
-        if (paymentDetails) paymentDetails.classList.add('hidden');
-        if (successView) successView.classList.add('hidden');
-        
-        // Show appropriate section based on step
-        if (state.currentStep === 'connect') {
-          if (connectBtn) connectBtn.classList.remove('hidden');
-        } else if (state.currentStep === 'details') {
-          if (connectedBadge) connectedBadge.classList.remove('hidden');
-          if (paymentDetails) paymentDetails.classList.remove('hidden');
-        } else if (state.currentStep === 'success') {
-          if (successView) successView.classList.remove('hidden');
+      function fmtUsd(n) { return '$' + (Number(n || 0).toFixed(2)); }
+
+      // ----- Order summary sync -----
+      function setSummaryFromActive() {
+        var method = document.querySelector('input[name="payment-method"]:checked')?.value || 'bank';
+        var amt = method === 'card' ? parseAmount($('#ccAmount')?.value) : parseAmount($('#amountInput')?.value);
+        var orderAmount = $('#orderAmount');
+        var orderTotal  = $('#orderTotal');
+        if (orderAmount) orderAmount.textContent = fmtUsd(amt);
+        if (orderTotal)  orderTotal.textContent  = fmtUsd(amt);
+      }
+
+      // =======================================================================
+      // Payment method UI (tabs) + AcceptUI lazy loading
+      // =======================================================================
+
+      var methodRadios = $all('input[name="payment-method"]');
+      var bankSection  = $('#bankSection');
+      var cardSection  = $('#cardSection');
+      var connectBtn   = $('#connectBtn');
+      var bankAmountEl = $('#amountInput');
+      var cardAmountEl = $('#ccAmount');
+
+      // AcceptUI config/script state
+      var paymentConfig   = null;
+      var acceptUILoaded  = false;
+      var configRequested = false;
+
+      function disableCardOption(msg) {
+        var cardOption = document.querySelector('.method-option[data-method="card"]');
+        if (!cardOption) return;
+        cardOption.classList.add('disabled');
+        var radio = cardOption.querySelector('input[type="radio"]');
+        if (radio) radio.disabled = true;
+        var desc = cardOption.querySelector('.method-desc');
+        if (desc && msg) desc.textContent = msg;
+      }
+
+      function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+          if ([...document.scripts].some(function (s) { return s.src === src; })) return resolve();
+          var el = document.createElement('script');
+          el.src = src;
+          el.onload = resolve;
+          el.onerror = reject;
+          document.head.appendChild(el);
+        });
+      }
+
+      function gateButtons() {
+        var active = document.querySelector('input[name="payment-method"]:checked')?.value || 'bank';
+        var bankAmt = parseAmount(bankAmountEl?.value);
+        var cardAmt = parseAmount(cardAmountEl?.value);
+        if (connectBtn) connectBtn.disabled = !(active === 'bank' && bankAmt > 0);
+        var acceptBtn = document.querySelector('.AcceptUI.pay-btn');
+        if (acceptBtn) acceptBtn.disabled = !(active === 'card' && cardAmt > 0);
+      }
+
+      function createAcceptUIButton() {
+        var container = $('#acceptUIContainer');
+        if (!container || !paymentConfig || !window.Accept) return;
+
+        container.innerHTML =
+          '<button ' +
+          'class="AcceptUI pay-btn" ' +
+          'data-billingAddressOptions=\'{"show":true,"required":false}\' ' +
+          'data-apiLoginID="' + paymentConfig.apiLoginId + '" ' +
+          'data-clientKey="' + paymentConfig.clientKey + '" ' +
+          'data-paymentOptions=\'{"showCreditCard":true,"showBankAccount":false}\' ' +
+          'data-acceptUIFormBtnTxt="Pay Securely" ' +
+          'data-acceptUIFormHeaderTxt="Card Information" ' +
+          'data-responseHandler="acceptUIResponseHandler" ' +
+          'disabled>' +
+          'Pay with Credit Card' +
+          '</button>';
+
+        gateButtons();
+      }
+
+      async function ensureCardReady() {
+        if (acceptUILoaded) return;
+        if (configRequested) return;
+        configRequested = true;
+
+        try {
+          var r = await fetch('/api/payments/config');
+          var j = await r.json();
+          if (!j.success) {
+            disableCardOption('Card temporarily unavailable');
+            return;
+          }
+          paymentConfig = j.config;
+          var src = paymentConfig.environment === 'production'
+            ? 'https://js.authorize.net/v3/AcceptUI.js'
+            : 'https://jstest.authorize.net/v3/AcceptUI.js';
+          await loadScript(src);
+          acceptUILoaded = true;
+          createAcceptUIButton();
+        } catch (e) {
+          disableCardOption('Unable to load card form');
         }
       }
-      
-      // Currency formatting for display
-      function formatCurrency(value) {
-        return '$' + value.toFixed(2);
-      }
-      
-      // Update order summary
-      function updateOrderSummary() {
-        var orderAmount = document.getElementById('orderAmount');
-        var orderTotal = document.getElementById('orderTotal');
-        var formattedAmount = formatCurrency(state.amount);
-        
-        if (orderAmount) orderAmount.textContent = formattedAmount;
-        if (orderTotal) orderTotal.textContent = formattedAmount;
-      }
-      
-      // Validate form
-      function validateForm() {
-        var payBtn = document.getElementById('payBtn');
-        var isValid = state.isConnected && 
-                     state.selectedAccountId && 
-                     state.amount > 0;
-        
-        if (payBtn) {
-          payBtn.disabled = !isValid;
+
+      function applyMethodUI() {
+        var active = document.querySelector('input[name="payment-method"]:checked')?.value || 'bank';
+
+        // visual selected card
+        $all('.method-option').forEach(function (opt) { opt.classList.remove('selected'); });
+        var card = document.querySelector('.method-option[data-method="' + active + '"]');
+        if (card) card.classList.add('selected');
+
+        if (active === 'bank') {
+          if (bankSection) bankSection.classList.remove('hidden');
+          if (cardSection) cardSection.classList.add('hidden');
+        } else {
+          if (cardSection) cardSection.classList.remove('hidden');
+          if (bankSection) bankSection.classList.add('hidden');
+          ensureCardReady();
         }
-        
-        return isValid;
+        setSummaryFromActive();
+        gateButtons();
       }
-      
-      // Update review row
-      function updateReviewRow() {
-        var reviewRow = document.getElementById('reviewRow');
-        var reviewAmount = document.getElementById('reviewAmount');
-        var reviewAccount = document.getElementById('reviewAccount');
-        
+
+      methodRadios.forEach(function (radio) {
+        radio.addEventListener('change', applyMethodUI);
+      });
+
+      if (bankAmountEl) {
+        bankAmountEl.addEventListener('input', function () { setSummaryFromActive(); gateButtons(); });
+        bankAmountEl.addEventListener('blur',  function () {
+          var v = parseAmount(this.value);
+          if (v > 0) this.value = v.toFixed(2);
+        });
+      }
+      if (cardAmountEl) {
+        cardAmountEl.addEventListener('input', function () { setSummaryFromActive(); gateButtons(); });
+        cardAmountEl.addEventListener('blur',  function () {
+          var v = parseAmount(this.value);
+          if (v > 0) this.value = v.toFixed(2);
+        });
+      }
+
+      // Initial UI setup
+      applyMethodUI();
+      setSummaryFromActive();
+      gateButtons();
+
+      // =======================================================================
+      // AcceptUI response handler (backend charge call)
+      // =======================================================================
+      window.acceptUIResponseHandler = async function (response) {
+        try {
+          if (response?.messages?.resultCode !== 'Ok') {
+            var msg = response?.messages?.message?.[0]?.text || 'Payment form error';
+            alert('Payment form error: ' + msg);
+            return;
+          }
+          var opaqueData   = response.opaqueData;
+          var amount       = parseAmount($('#ccAmount')?.value);
+          var description  = ($('#ccDescription')?.value || selectedPlan || 'Gold Investment Plan');
+
+          if (!(amount > 0)) {
+            alert('Please enter a valid amount');
+            return;
+          }
+
+          // disable buttons during charge
+          $all('.AcceptUI.pay-btn, .pay-btn').forEach(function (b) { b.disabled = true; b.textContent = 'Processing…'; });
+
+          var res = await fetch('/api/payments/charge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              amount: amount,
+              description: description,
+              opaqueData: opaqueData,
+              user_id: USER_ID,
+              plan_name: selectedPlan || null
+            })
+          }).then(function (r) { return r.json(); });
+
+          if (res?.success) {
+            // success screen
+            state.isConnected = false;
+            var successView    = $('#successView');
+            var paymentDetails = $('#paymentDetails');
+            if (paymentDetails) paymentDetails.classList.add('hidden');
+            if (bankSection) bankSection.classList.add('hidden');
+            if (cardSection) cardSection.classList.add('hidden');
+
+            if ($('#successAmount'))  $('#successAmount').textContent = fmtUsd(amount);
+            if ($('#successAccount')) $('#successAccount').textContent = 'Credit Card';
+            if ($('#successDate'))    $('#successDate').textContent = new Date().toLocaleDateString();
+            if (successView) successView.classList.remove('hidden');
+          } else {
+            alert('Payment failed: ' + (res?.message || 'Unknown error'));
+          }
+        } catch (e) {
+          alert('Payment processing failed. Please try again.');
+        } finally {
+          // re-enable
+          $all('.AcceptUI.pay-btn, .pay-btn').forEach(function (b) { b.disabled = false; b.textContent = 'Pay with Credit Card'; });
+          gateButtons();
+        }
+      };
+
+      // =======================================================================
+      // Bank (Plaid) flow — existing behavior retained
+      // =======================================================================
+
+      function getSelectedAccount() {
+        if (!state.selectedAccountId || state.accounts.length === 0) return null;
+        return state.accounts.find(function (acc) { return acc.id === state.selectedAccountId; });
+      }
+      function updateConnectedBadge() {
         var selected = getSelectedAccount();
-        
+        var connectedText = $('#connectedText');
+        if (connectedText && selected) {
+          var name = selected.name || selected.official_name || selected.subtype || 'Account';
+          connectedText.textContent = 'Connected — ' + name + ' ••••' + selected.mask;
+        }
+      }
+      function updateReviewRow() {
+        var reviewRow    = $('#reviewRow');
+        var reviewAmount = $('#reviewAmount');
+        var reviewAccount= $('#reviewAccount');
+        var selected     = getSelectedAccount();
         if (state.amount > 0 && selected) {
-          if (reviewRow) reviewRow.classList.remove('hidden');
-          if (reviewAmount) reviewAmount.textContent = formatCurrency(state.amount);
+          if (reviewRow)    reviewRow.classList.remove('hidden');
+          if (reviewAmount) reviewAmount.textContent = fmtUsd(state.amount);
           if (reviewAccount) {
-            var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
-            reviewAccount.textContent = accountName + ' ••••' + selected.mask;
+            var name = selected.name || selected.official_name || selected.subtype || 'Account';
+            reviewAccount.textContent = name + ' ••••' + selected.mask;
           }
         } else {
           if (reviewRow) reviewRow.classList.add('hidden');
         }
       }
-      
+
+      if (selectedPlan) {
+        var descInput = $('#descriptionInput');
+        if (descInput) {
+          descInput.value = selectedPlan;
+          state.description = selectedPlan;
+        }
+      }
+
       // Initialize Plaid Link
       var handler = Plaid.create({
         token: linkToken,
-        onSuccess: function(public_token, metadata) {
-          console.log('Plaid Link success:', public_token, metadata);
-          
-          // Exchange token
+        onSuccess: function (public_token, metadata) {
           fetch('/api/plaid/exchange-token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              public_token: public_token,
-              user_id: USER_ID
-            })
+            body: JSON.stringify({ public_token: public_token, user_id: USER_ID })
           })
-          .then(response => response.json())
-          .then(data => {
-            console.log('Exchange result:', data);
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
             if (data.success) {
               state.isConnected = true;
-              state.accounts = data.accounts;
-              
-              // Initialize selectedAccountId only if null
-              if (state.selectedAccountId === null && data.accounts.length > 0) {
-                state.selectedAccountId = data.accounts[0].id;
+              state.accounts    = data.accounts || [];
+              if (state.selectedAccountId === null && state.accounts.length > 0) {
+                state.selectedAccountId = state.accounts[0].id;
               }
-              
-              state.currentStep = 'details';
-              
-              // Populate account dropdown
-              var accountSelect = document.getElementById('accountSelect');
-              if (accountSelect && state.accounts.length > 0) {
+              // populate account dropdown
+              var accountSelect = $('#accountSelect');
+              if (accountSelect) {
                 accountSelect.innerHTML = '<option value="">Choose an account...</option>';
-                state.accounts.forEach(function(account) {
-                  var option = document.createElement('option');
-                  option.value = account.id;
-                  option.textContent = account.name + ' (' + account.type + ') ••••' + account.mask;
-                  accountSelect.appendChild(option);
+                state.accounts.forEach(function (a) {
+                  var opt    = document.createElement('option');
+                  opt.value  = a.id;
+                  opt.textContent = (a.name + ' (' + a.type + ') ••••' + a.mask);
+                  accountSelect.appendChild(opt);
                 });
-                
-                // Set selected value
                 accountSelect.value = state.selectedAccountId;
               }
-              
-              // AUTO-POPULATE DESCRIPTION HERE (after payment details are visible)
-              console.log('🔍 DEBUG: About to check selectedPlan for auto-populate');
-              console.log('🔍 DEBUG: selectedPlan value =', selectedPlan);
-              console.log('🔍 DEBUG: selectedPlan truthy =', !!selectedPlan);
-
-              if (selectedPlan) {
-                console.log('🔍 DEBUG: selectedPlan is truthy, proceeding with auto-populate');
-                var descriptionInput = document.getElementById('descriptionInput');
-                console.log('�� DEBUG: descriptionInput element =', descriptionInput);
-                console.log('�� DEBUG: descriptionInput found =', !!descriptionInput);
-                
-                if (descriptionInput) {
-                  console.log('🔍 DEBUG: Setting description input value to:', selectedPlan);
-                  descriptionInput.value = selectedPlan;
-                  state.description = selectedPlan;
-                  console.log('🔍 DEBUG: Auto-populate completed successfully');
-                  console.log('�� DEBUG: descriptionInput.value after setting =', descriptionInput.value);
-                  console.log('🔍 DEBUG: state.description after setting =', state.description);
-                } else {
-                  console.log('🔍 DEBUG: ERROR - descriptionInput element not found!');
-                }
-              } else {
-                console.log('🔍 DEBUG: selectedPlan is falsy, skipping auto-populate');
-                console.log('🔍 DEBUG: selectedPlan value was:', selectedPlan);
-              }
-              
+              $('#connectedBadge')?.classList.remove('hidden');
+              $('#paymentDetails')?.classList.remove('hidden');
               updateConnectedBadge();
-              updateUI();
-              validateForm();
             } else {
               alert('Bank connection failed: ' + (data.error || 'Unknown error'));
             }
           })
-          .catch(function(error) {
-            console.error('Exchange error:', error);
-            alert('Bank connection failed. Please try again.');
-          });
+          .catch(function () { alert('Bank connection failed. Please try again.'); });
         },
-        onExit: function(err, metadata) {
-          console.log('Plaid Link exited:', err, metadata);
-        }
+        onExit: function (err, metadata) { /* no-op */ }
       });
-      
-      // Event listeners
-      document.addEventListener('DOMContentLoaded', function() {
-        updateUI();
-        
-        // Connect button
-        var connectBtn = document.getElementById('connectBtn');
+
+      document.addEventListener('DOMContentLoaded', function () {
+        // connect button
         if (connectBtn) {
-          connectBtn.addEventListener('click', function() {
+          connectBtn.addEventListener('click', function () {
             handler.open();
           });
         }
-        
-        // Change bank link
-        var changeBankLink = document.getElementById('changeBankLink');
-        if (changeBankLink) {
-          changeBankLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            handler.open();
-          });
-        }
-        
-        // Amount input - normal text input
-        var amountInput = document.getElementById('amountInput');
-        if (amountInput) {
-          // Prevent wheel events
-          amountInput.addEventListener('wheel', function(e) {
-            e.preventDefault();
-          });
-          
-          amountInput.addEventListener('input', function() {
-            var value = this.value;
-            var parsedAmount = parseAmount(value);
-            
-            // Update state
-            state.amount = parsedAmount;
-            
-            // Don't reformat the input while typing - let user type naturally
-            // Only format on blur (when user leaves the field)
-            
-            updateOrderSummary();
-            updateReviewRow();
-            validateForm();
-          });
-          
-          // Format on blur (when user leaves the field)
-          amountInput.addEventListener('blur', function() {
-            if (state.amount > 0) {
-              this.value = formatAmount(state.amount);
-            }
-          });
-          
-          // Allow user to clear the field
-          amountInput.addEventListener('focus', function() {
-            if (this.value === '0.00') {
-              this.value = '';
-            }
-          });
-        }
-        
-        // Account select - controlled select
-        var accountSelect = document.getElementById('accountSelect');
+        // account select
+        var accountSelect = $('#accountSelect');
         if (accountSelect) {
-          accountSelect.addEventListener('change', function() {
+          accountSelect.addEventListener('change', function () {
             state.selectedAccountId = this.value;
-            updateConnectedBadge();
-            updateReviewRow();
-            validateForm();
+            updateConnectedBadge(); updateReviewRow();
           });
         }
-        
-        // Description input
-        var descriptionInput = document.getElementById('descriptionInput');
+        // bank amount input
+        if (bankAmountEl) {
+          bankAmountEl.addEventListener('input', function () {
+            state.amount = parseAmount(this.value);
+            setSummaryFromActive();
+            updateReviewRow();
+            gateButtons();
+          });
+          bankAmountEl.addEventListener('blur', function () {
+            if (state.amount > 0) this.value = state.amount.toFixed(2);
+          });
+        }
+        // description input
+        var descriptionInput = $('#descriptionInput');
         if (descriptionInput) {
-          descriptionInput.addEventListener('input', function() {
+          descriptionInput.addEventListener('input', function () {
             state.description = this.value;
             updateReviewRow();
           });
         }
-        
-        // Pay button
-        var payBtn = document.getElementById('payBtn');
+        // pay (ACH) button
+        var payBtn = $('#payBtn');
         if (payBtn) {
-          payBtn.addEventListener('click', function() {
-            if (state.isSubmitting || !validateForm()) return;
-            
-            state.isSubmitting = true;
+          payBtn.addEventListener('click', function () {
+            if (!(state.isConnected && state.selectedAccountId && state.amount > 0)) return;
             payBtn.disabled = true;
             payBtn.innerHTML = '<span class="spinner"></span>Processing...';
-            
             var description = state.description || 'Gold purchase';
-            
+
             fetch('/api/transfers/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 user_id: USER_ID,
-                account_id: state.selectedAccountId, // Use selected account ID
-                amount: state.amount, // Send as decimal number
+                account_id: state.selectedAccountId,
+                amount: state.amount,
                 description: description
               })
             })
-            .then(response => response.json())
-            .then(function(result) {
+            .then(function (r) { return r.json(); })
+            .then(function (result) {
               if (result.success) {
-                // Show success view
-                state.currentStep = 'success';
-                
-                var successAmount = document.getElementById('successAmount');
-                var successAccount = document.getElementById('successAccount');
-                var successDate = document.getElementById('successDate');
-                // Remove successReference references
-                
-                var selected = getSelectedAccount();
-                var accountName = selected ? (selected.name + ' ••••' + selected.mask) : 'Account';
-                
-                if (successAmount) successAmount.textContent = formatCurrency(state.amount);
-                if (successAccount) successAccount.textContent = accountName;
-                if (successDate) successDate.textContent = new Date().toLocaleDateString();
-                // Remove reference ID display
-                
-                updateUI();
+                var successView = $('#successView');
+                if ($('#successAmount'))  $('#successAmount').textContent = fmtUsd(state.amount);
+                if ($('#successAccount')) $('#successAccount').textContent =
+                  (getSelectedAccount()?.name || 'Account') + ' ••••' + (getSelectedAccount()?.mask || '****');
+                if ($('#successDate'))    $('#successDate').textContent = new Date().toLocaleDateString();
+                // hide sections, show success
+                if (bankSection) bankSection.classList.add('hidden');
+                if (cardSection) cardSection.classList.add('hidden');
+                if (successView) successView.classList.remove('hidden');
               } else {
                 alert('Payment failed: ' + (result.error || 'Unknown error'));
-                state.isSubmitting = false;
-                payBtn.disabled = false;
-                payBtn.textContent = 'Complete payment';
               }
             })
-            .catch(function(error) {
-              console.error('Payment error:', error);
-              alert('Payment failed. Please try again.');
-              state.isSubmitting = false;
+            .catch(function () { alert('Payment failed. Please try again.'); })
+            .finally(function () {
               payBtn.disabled = false;
               payBtn.textContent = 'Complete payment';
             });
           });
         }
-        
-        // New payment button
-        var newPaymentBtn = document.getElementById('newPaymentBtn');
+
+        // new payment resets
+        var newPaymentBtn = $('#newPaymentBtn');
         if (newPaymentBtn) {
-          newPaymentBtn.addEventListener('click', function() {
-            // Reset state
+          newPaymentBtn.addEventListener('click', function () {
             state.isConnected = false;
-            state.currentStep = 'connect';
             state.accounts = [];
             state.selectedAccountId = null;
             state.amount = 0;
             state.description = '';
-            
-            // Reset form
-            if (amountInput) amountInput.value = '';
-            if (descriptionInput) descriptionInput.value = '';
-            if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
-            
-            updateOrderSummary();
-            updateUI();
-            validateForm();
+            if (bankAmountEl) bankAmountEl.value = '';
+            if ($('#descriptionInput')) $('#descriptionInput').value = selectedPlan || '';
+            if ($('#accountSelect')) $('#accountSelect').innerHTML = '<option value="">Choose an account...</option>';
+            $('#successView')?.classList.add('hidden');
+            // default back to bank tab
+            var bankRadio = document.querySelector('input[name="payment-method"][value="bank"]');
+            if (bankRadio) bankRadio.checked = true;
+            applyMethodUI(); setSummaryFromActive(); gateButtons();
           });
         }
       });
