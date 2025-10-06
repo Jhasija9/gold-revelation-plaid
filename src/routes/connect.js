@@ -702,9 +702,37 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         // Show appropriate button based on method and state
         if (state.method === 'bank') {
           if (state.isConnected) {
-            // Hide the original account dropdown since we're creating a new one
+            // Hide the original elements since we're creating new ones
             var bankAccountSelect = document.getElementById('bankAccountSelect');
+            var bankConnectedBadge = document.getElementById('bankConnectedBadge');
             if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
+            if (bankConnectedBadge) bankConnectedBadge.classList.add('hidden');
+            
+            // Create connected badge within primary action area
+            var connectedBadge = document.createElement('div');
+            connectedBadge.className = 'connected-badge';
+                        connectedBadge.innerHTML = 
+              '<div class="connected-icon">✓</div>' +
+              '<div class="connected-text" id="connectedText">Bank connected</div>' +
+              '<a href="#" id="changeBankLink" class="change-link">Change</a>';
+            primaryActionArea.appendChild(connectedBadge);
+            
+            // Update connected badge text
+            var selected = getSelectedAccount();
+            var connectedText = connectedBadge.querySelector('#connectedText');
+            if (connectedText && selected) {
+              var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
+              connectedText.textContent = 'Connected — ' + accountName + ' ••••' + selected.mask;
+            }
+            
+            // Add change link event listener
+            var changeLink = connectedBadge.querySelector('#changeBankLink');
+            if (changeLink) {
+              changeLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (window.handler) window.handler.open();
+              });
+            }
             
             // Create account dropdown within primary action area
             var accountDropdown = document.createElement('div');
@@ -734,7 +762,13 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             var select = accountDropdown.querySelector('select');
             select.addEventListener('change', function() {
               state.selectedAccountId = this.value;
-              updateConnectedBadge();
+              // Update connected badge text when account changes
+              var selected = getSelectedAccount();
+              var connectedText = connectedBadge.querySelector('#connectedText');
+              if (connectedText && selected) {
+                var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
+                connectedText.textContent = 'Connected — ' + accountName + ' ••••' + selected.mask;
+              }
               updatePrimaryAction();
             });
             
@@ -1149,7 +1183,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     })();
   </script>
   
-  `
+     `
       : ""
   }
   <!-- Static AcceptUI button (hidden by default) -->
@@ -1164,7 +1198,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
   data-responseHandler="acceptUIResponseHandler">
   Pay with Credit Card
 </button>
-
 </body>
 </html>`;
 }
