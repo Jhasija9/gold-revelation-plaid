@@ -140,6 +140,14 @@
     // Make config available globally
     window.acceptUIConfig = cfg;
 
+    // Set up the static button with config immediately
+    const staticButton = document.getElementById('staticAcceptUIButton');
+    if (staticButton) {
+      staticButton.setAttribute('data-apiLoginID', cfg.apiLoginId);
+      staticButton.setAttribute('data-clientKey', cfg.clientKey);
+      console.log('✅ AcceptUI: Static button configured');
+    }
+
     const src = cfg.environment === 'production'
       ? 'https://js.authorize.net/v3/AcceptUI.js'
       : 'https://jstest.authorize.net/v3/AcceptUI.js';

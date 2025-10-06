@@ -910,19 +910,30 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           }
                } else if (state.method === 'card') {
   if (state.cardFormReady) {
+  console.log('🔧 Card method selected, showing static button');
     // Hide the primary action area and show the static AcceptUI button
     primaryActionArea.style.display = 'none';
     
     // Update the static button's attributes with current config
     const staticButton = document.getElementById('staticAcceptUIButton');
     if (staticButton && window.acceptUIConfig) {
+          console.log('🔧 Static button found, updating attributes');
+
       staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
       staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
       staticButton.disabled = !state.isAmountValid || state.loading;
       staticButton.style.display = 'block';
-    }
-  } else {
+      staticButton.addEventListener('click', function() {
+        console.log('🔧 Static AcceptUI button clicked!');
+      });
+    }else {
+      console.error('❌ Static button or config not found:', {
+        staticButton: !!staticButton,
+        config: !!window.acceptUIConfig
+      });}
+   } else {
     // Show loading state
+    console.log('🔧 Card method not ready, showing loading state');
     var loadingDiv = document.createElement('div');
     loadingDiv.style.cssText = 'margin:8px 0; color:#64748b; text-align:center;';
     loadingDiv.innerHTML = '<span class="spinner"></span>Loading secure payment form…';
