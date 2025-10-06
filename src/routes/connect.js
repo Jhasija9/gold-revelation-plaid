@@ -718,14 +718,19 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             button.addEventListener('click', handleBankConnect);
             primaryActionArea.appendChild(button);
           }
-        } else if (state.method === 'card') {
+                } else if (state.method === 'card') {
           if (state.cardFormReady) {
             // Show card payment button
             var button = document.createElement('button');
-            button.className = 'primary-action-btn AcceptUI';
+            button.className = 'primary-action-btn';
             button.textContent = 'Pay with Credit Card';
             button.disabled = !state.isAmountValid || state.loading;
-            // AcceptUI will handle the click event
+            
+            // Add AcceptUI attributes if available
+            if (window.addAcceptUIAttributes) {
+              window.addAcceptUIAttributes(button);
+            }
+            
             primaryActionArea.appendChild(button);
           } else {
             // Show loading state
