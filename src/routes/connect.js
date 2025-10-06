@@ -44,17 +44,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     font-size: 15px;
     min-height: 100vh;
   }
-  
-  
-
-  
-
-  
-  
   .font-serif {
     font-family: 'Playfair Display', Georgia, serif;
   }
-  
   .container { 
     max-width: 1200px; 
     margin: 0 auto; 
@@ -456,7 +448,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
  
 </head>
 <body>
-
   <div class="container">
     <div class="grid">
       <!-- Left Column: Payment Flow -->
@@ -524,14 +515,10 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                     data-testid="description-input"
                   >
                 </div>
-
                <!-- Dynamic Primary Action Area -->
 <div id="primaryActionArea" data-testid="primary-action">
   <!-- Content will be dynamically inserted here -->
 </div>
-
-
-
                 <!-- Inline Error Area -->
                 <div id="inlineError" class="error-message hidden" data-testid="inline-error"></div>
 
