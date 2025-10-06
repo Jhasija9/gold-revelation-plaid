@@ -517,10 +517,23 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                   >
                 </div>
 
-                <!-- Dynamic Primary Action Area -->
-                <div id="primaryActionArea" data-testid="primary-action">
-                  <!-- Content will be dynamically inserted here -->
-                </div>
+               <!-- Dynamic Primary Action Area -->
+<div id="primaryActionArea" data-testid="primary-action">
+  <!-- Content will be dynamically inserted here -->
+</div>
+
+<!-- Static AcceptUI button (hidden by default) -->
+<button 
+  id="staticAcceptUIButton" 
+  class="AcceptUI primary-action-btn" 
+  style="display: none;"
+  data-billingAddressOptions='{"show":true,"required":false}'
+  data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
+  data-acceptUIFormBtnTxt="Pay Securely"
+  data-acceptUIFormHeaderTxt="Card Information"
+  data-responseHandler="acceptUIResponseHandler">
+  Pay with Credit Card
+</button>
 
                 <!-- Inline Error Area -->
                 <div id="inlineError" class="error-message hidden" data-testid="inline-error"></div>
@@ -556,6 +569,183 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <!-- AcceptUI context (passes server values safely to frontend) -->
                 <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
                 <div id="acceptUIContainer"></div>
+                // public/js/cc-acceptui.js
+(function () {
+  let cfg = null;
+
+  function $(sel) { return document.querySelector(sel); }
+
+  async function fetchConfig() {
+    try {
+      const r = await fetch('/api/payments/config');
+      const j = await r.json();
+      if (j && j.success) return j.config;
+      console.warn('AcceptUI config unavailable:', j?.error || 'unknown');
+      return null;
+    } catch (e) {
+      console.error('AcceptUI config fetch failed:', e);
+      return null;
+    }
+  }
+
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      if ([...document.scripts].some(s => s.src === src)) return res();
+      const el = document.createElement('script');
+      el.src = src;
+      el.onload = res;
+      el.onerror = rej;
+      document.head.appendChild(el);
+    });
+  }
+
+  async function charge(amount, description, opaqueData) {
+    const body = {
+      amount,
+      description,
+      opaqueData,
+      user_id: $('#ccRoot')?.dataset.userId || null,
+      plan_name: $('#ccRoot')?.dataset.selectedPlan || null
+    };
+    const r = await fetch('/api/payments/charge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return r.json();
+  }
+
+  function formatCurrency(v) {
+    const n = Number(v || 0);
+    return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
+  }
+
+  // Global response handler
+  window.acceptUIResponseHandler = async function (response) {
+    console.log('🔧 AcceptUI Response Handler called:', response);
+    
+    try {
+      if (response?.messages?.resultCode !== 'Ok') {
+        const msg = response?.messages?.message?.[0]?.text || 'Payment form error';
+        const inlineError = document.getElementById('inlineError');
+        if (inlineError) {
+          inlineError.textContent = 'Payment form error: ' + msg;
+          inlineError.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const opaqueData = response.opaqueData;
+      const amountEl = $('#amountInput');
+      const descEl = $('#descriptionInput');
+      const amount = Number((amountEl?.value || '0').replace(/[^0-9.]/g, ''));
+      const description = (descEl?.value || 'Gold Investment');
+
+      if (!amount || amount <= 0) {
+        const inlineError = document.getElementById('inlineError');
+        if (inlineError) {
+          inlineError.textContent = 'Please enter a valid amount';
+          inlineError.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const btns = document.querySelectorAll('.AcceptUI, .primary-action-btn');
+      btns.forEach(b => { b.disabled = true; b.textContent = 'Processing...'; });
+
+      const res = await charge(amount, description, opaqueData);
+
+      if (res?.success) {
+        const successView = document.getElementById('successView');
+        const successAmount = document.getElementById('successAmount');
+        const successAccount = document.getElementById('successAccount');
+        const successDate = document.getElementById('successDate');
+
+        if (successAmount) successAmount.textContent = formatCurrency(amount);
+        if (successAccount) successAccount.textContent = 'Credit Card';
+        if (successDate) successDate.textContent = new Date().toLocaleDateString();
+
+        if (successView) {
+          successView.classList.remove('hidden');
+          const primaryActionArea = document.getElementById('primaryActionArea');
+          if (primaryActionArea) primaryActionArea.style.display = 'none';
+        }
+      } else {
+        const inlineError = document.getElementById('inlineError');
+        if (inlineError) {
+          inlineError.textContent = 'Payment failed: ' + (res?.message || 'Unknown error');
+          inlineError.classList.remove('hidden');
+        }
+      }
+    } catch (err) {
+      console.error('AcceptUI handler error:', err);
+      const inlineError = document.getElementById('inlineError');
+      if (inlineError) {
+        inlineError.textContent = 'Payment processing failed. Please try again.';
+        inlineError.classList.remove('hidden');
+      }
+    } finally {
+      const btns = document.querySelectorAll('.AcceptUI, .primary-action-btn');
+      btns.forEach(b => { b.disabled = false; b.textContent = 'Pay with Credit Card'; });
+    }
+  };
+
+  // Initialize AcceptUI
+  async function initializeAcceptUI() {
+    console.log('🔧 AcceptUI: Initializing...');
+    
+    // Fetch config first
+    cfg = await fetchConfig();
+    if (!cfg) {
+      console.error('❌ AcceptUI: Config fetch failed');
+      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
+      return;
+    }
+
+    console.log('✅ AcceptUI: Config loaded:', { 
+      apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
+      clientKey: cfg.clientKey ? 'Set' : 'Missing',
+      environment: cfg.environment 
+    });
+
+    // Make config available globally
+    window.acceptUIConfig = cfg;
+
+    const src = cfg.environment === 'production'
+      ? 'https://js.authorize.net/v3/AcceptUI.js'
+      : 'https://jstest.authorize.net/v3/AcceptUI.js';
+
+    try {
+      console.log('🔧 AcceptUI: Loading script from:', src);
+      await loadScript(src);
+      
+      // Wait for AcceptUI to initialize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('✅ AcceptUI: Script loaded and ready');
+      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
+      
+    } catch (e) {
+      console.error('❌ AcceptUI: Script load failed:', e);
+      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
+    }
+  }
+
+  // Start initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAcceptUI);
+  } else {
+    initializeAcceptUI();
+  }
+
+  // Function to show/hide the static AcceptUI button
+  window.toggleAcceptUIButton = function(show) {
+    const acceptButton = document.getElementById('staticAcceptUIButton');
+    if (acceptButton) {
+      acceptButton.style.display = show ? 'block' : 'none';
+    }
+  };
+})();
               `
           }
         </div>
@@ -718,34 +908,19 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             button.addEventListener('click', handleBankConnect);
             primaryActionArea.appendChild(button);
           }
-                } else if (state.method === 'card') {
+               } else if (state.method === 'card') {
   if (state.cardFormReady) {
-    // Show card payment button
-    var button = document.createElement('button');
-    button.className = 'primary-action-btn';
-    button.textContent = 'Pay with Credit Card';
-    button.disabled = !state.isAmountValid || state.loading;
+    // Hide the primary action area and show the static AcceptUI button
+    primaryActionArea.style.display = 'none';
     
-    console.log('🔧 Creating card button, addAcceptUIAttributes available:', !!window.addAcceptUIAttributes);
-    
-    // Add AcceptUI attributes if available
-    if (window.addAcceptUIAttributes) {
-      var success = window.addAcceptUIAttributes(button);
-      console.log('🔧 AcceptUI attributes added:', success);
-      button.addEventListener('click', function(e) {
-        console.log('🔧 Button clicked!', {
-          hasAcceptUIClass: this.classList.contains('AcceptUI'),
-          dataAttributes: {
-            apiLoginID: this.getAttribute('data-apiLoginID'),
-            clientKey: this.getAttribute('data-clientKey'),
-            responseHandler: this.getAttribute('data-responseHandler')
-          }});
-      });
-    } else {
-      console.warn('⚠️ addAcceptUIAttributes function not available');
+    // Update the static button's attributes with current config
+    const staticButton = document.getElementById('staticAcceptUIButton');
+    if (staticButton && window.acceptUIConfig) {
+      staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
+      staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
+      staticButton.disabled = !state.isAmountValid || state.loading;
+      staticButton.style.display = 'block';
     }
-    
-    primaryActionArea.appendChild(button);
   } else {
     // Show loading state
     var loadingDiv = document.createElement('div');
@@ -754,6 +929,13 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     loadingDiv.setAttribute('data-testid', 'loading-indicator');
     primaryActionArea.appendChild(loadingDiv);
   }
+} else {
+  // For non-card methods, hide static button and show primary action area
+  const staticButton = document.getElementById('staticAcceptUIButton');
+  if (staticButton) {
+    staticButton.style.display = 'none';
+  }
+  primaryActionArea.style.display = 'block';
 }
         // If method === 'none', no button is shown
       }

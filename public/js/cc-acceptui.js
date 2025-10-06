@@ -149,7 +149,7 @@
       await loadScript(src);
       
       // Wait for AcceptUI to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       console.log('✅ AcceptUI: Script loaded and ready');
       window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
@@ -167,20 +167,11 @@
     initializeAcceptUI();
   }
 
-  // Simple function to add AcceptUI attributes
-  window.addAcceptUIAttributes = function(button) {
-    if (!cfg) return false;
-    
-    button.classList.add('AcceptUI');
-    button.setAttribute('data-billingAddressOptions', '{"show":true,"required":false}');
-    button.setAttribute('data-apiLoginID', cfg.apiLoginId);
-    button.setAttribute('data-clientKey', cfg.clientKey);
-    button.setAttribute('data-paymentOptions', '{"showCreditCard":true,"showBankAccount":false}');
-    button.setAttribute('data-acceptUIFormBtnTxt', 'Pay Securely');
-    button.setAttribute('data-acceptUIFormHeaderTxt', 'Card Information');
-    button.setAttribute('data-responseHandler', 'acceptUIResponseHandler');
-    
-    console.log('✅ AcceptUI attributes added to button');
-    return true;
+  // Function to show/hide the static AcceptUI button
+  window.toggleAcceptUIButton = function(show) {
+    const acceptButton = document.getElementById('staticAcceptUIButton');
+    if (acceptButton) {
+      acceptButton.style.display = show ? 'block' : 'none';
+    }
   };
 })();
