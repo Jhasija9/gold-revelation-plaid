@@ -522,18 +522,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
   <!-- Content will be dynamically inserted here -->
 </div>
 
-<!-- Static AcceptUI button (hidden by default) -->
-<button 
-  id="staticAcceptUIButton" 
-  class="AcceptUI primary-action-btn" 
-  style="display: none;"
-  data-billingAddressOptions='{"show":true,"required":false}'
-  data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
-  data-acceptUIFormBtnTxt="Pay Securely"
-  data-acceptUIFormHeaderTxt="Card Information"
-  data-responseHandler="acceptUIResponseHandler">
-  Pay with Credit Card
-</button>
+
 
                 <!-- Inline Error Area -->
                 <div id="inlineError" class="error-message hidden" data-testid="inline-error"></div>
@@ -713,9 +702,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         // Show appropriate button based on method and state
         if (state.method === 'bank') {
           if (state.isConnected) {
-            // Show account selection and pay button in correct order
+            // Hide the original account dropdown since we're creating a new one
             var bankAccountSelect = document.getElementById('bankAccountSelect');
-            if (bankAccountSelect) bankAccountSelect.classList.remove('hidden');
+            if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
             
             // Create account dropdown within primary action area
             var accountDropdown = document.createElement('div');
@@ -1163,6 +1152,19 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
   `
       : ""
   }
+  <!-- Static AcceptUI button (hidden by default) -->
+<button 
+  id="staticAcceptUIButton" 
+  class="AcceptUI primary-action-btn" 
+  style="display: none;"
+  data-billingAddressOptions='{"show":true,"required":false}'
+  data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
+  data-acceptUIFormBtnTxt="Pay Securely"
+  data-acceptUIFormHeaderTxt="Card Information"
+  data-responseHandler="acceptUIResponseHandler">
+  Pay with Credit Card
+</button>
+
 </body>
 </html>`;
 }
