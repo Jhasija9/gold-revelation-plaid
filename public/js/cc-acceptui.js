@@ -132,17 +132,25 @@
     }
   };
 
+  // Initialize AcceptUI when DOM is ready
   document.addEventListener('DOMContentLoaded', async function () {
-    const root = document.getElementById('ccRoot');
-    const acceptContainer = document.getElementById('acceptUIContainer');
-    if (!root || !acceptContainer) return;
-
+    console.log('🔧 AcceptUI: Initializing...');
+    
+    // Fetch config first
     cfg = await fetchConfig();
     if (!cfg) {
+      console.error('❌ AcceptUI: Config fetch failed');
       window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
       return;
     }
 
+    console.log('✅ AcceptUI: Config loaded:', { 
+      apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
+      clientKey: cfg.clientKey ? 'Set' : 'Missing',
+      environment: cfg.environment 
+    });
+
+    // Make config available globally
     window.acceptUIConfig = cfg;
 
     const src = cfg.environment === 'production'
@@ -150,11 +158,17 @@
       : 'https://jstest.authorize.net/v3/AcceptUI.js';
 
     try {
+      console.log('🔧 AcceptUI: Loading script from:', src);
       await loadScript(src);
       acceptLoaded = true;
+      console.log('✅ AcceptUI: Script loaded successfully');
+      
+      // Dispatch event to notify that card form is ready
       window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
+      
     } catch (e) {
-      console.error('AcceptUI script load failed:', e);
+      console.error('❌ AcceptUI: Script load failed:', e);
+      // Dispatch event to notify that card form failed to load
       window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
     }
   });
