@@ -49,11 +49,7 @@ body {
   overflow-x: hidden;
 }
 
-.container { 
-  transform: none !important; 
-  max-width: 1200px !important;
-  padding: 48px 32px !important;
-}
+
   
   * { 
     box-sizing: border-box; 
