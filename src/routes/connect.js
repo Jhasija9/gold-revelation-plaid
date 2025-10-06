@@ -30,6 +30,25 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     --rg-card: #ffffff;
     --rg-gold: #d4af37;
   }
+    html, body { 
+  height: 100%; 
+  margin: 0; 
+  padding: 0;
+  transform: none !important; 
+  zoom: 1 !important;
+  font-size: 16px !important;
+}
+
+body { 
+  min-height: 100vh; 
+  overflow-x: hidden;
+}
+
+.container { 
+  transform: none !important; 
+  max-width: 1200px !important;
+  padding: 48px 32px !important;
+}
   
   * { 
     box-sizing: border-box; 
@@ -1198,7 +1217,8 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
   : ""
 }
 </body>
-</html>`;}
+</html>`;
+}
 router.get("/", async (req, res, next) => {
   try {
     const cookies = parseCookies(req);
