@@ -995,7 +995,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             var bankConnectedBadge = document.getElementById('bankConnectedBadge');
             
             if (method === 'bank') {
-              if (bankAccountSelect) bankAccountSelect.classList.remove('hidden');
               if (bankConnectedBadge && state.isConnected) bankConnectedBadge.classList.remove('hidden');
             } else {
               if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
