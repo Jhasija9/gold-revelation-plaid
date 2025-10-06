@@ -596,19 +596,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       </div>
     </div>
   </div>
-   <!-- Static AcceptUI button (hidden by default) -->
-<button 
-  id="staticAcceptUIButton" 
-  class="AcceptUI primary-action-btn" 
-  style="display: none;"
-  data-billingAddressOptions='{"show":true,"required":false}'
-  data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
-  data-acceptUIFormBtnTxt="Pay Securely"
-  data-acceptUIFormHeaderTxt="Card Information"
-  data-responseHandler="acceptUIResponseHandler">
-  Pay with Credit Card
-</button>
-
+   
   ${
     linkToken
       ? `
@@ -1198,6 +1186,19 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
      `
       : ""
   }
+  <!-- Static AcceptUI button (hidden by default) -->
+<button 
+  id="staticAcceptUIButton" 
+  class="AcceptUI primary-action-btn" 
+  style="display: none;"
+  data-billingAddressOptions='{"show":true,"required":false}'
+  data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
+  data-acceptUIFormBtnTxt="Pay Securely"
+  data-acceptUIFormHeaderTxt="Card Information"
+  data-responseHandler="acceptUIResponseHandler">
+  Pay with Credit Card
+</button>
+
  
 </body>
 </html>`;
