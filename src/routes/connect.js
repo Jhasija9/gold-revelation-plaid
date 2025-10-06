@@ -30,6 +30,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     --rg-card: #ffffff;
     --rg-gold: #d4af37;
   }
+  
   * { 
     box-sizing: border-box; 
     margin: 0;
@@ -44,9 +45,11 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     font-size: 15px;
     min-height: 100vh;
   }
+  
   .font-serif {
     font-family: 'Playfair Display', Georgia, serif;
   }
+  
   .container { 
     max-width: 1200px; 
     margin: 0 auto; 
@@ -445,7 +448,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
   }
 </style>
 <script src="/js/cc-acceptui.js" defer></script>
- 
 </head>
 <body>
   <div class="container">
@@ -515,10 +517,12 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                     data-testid="description-input"
                   >
                 </div>
-               <!-- Dynamic Primary Action Area -->
-<div id="primaryActionArea" data-testid="primary-action">
-  <!-- Content will be dynamically inserted here -->
-</div>
+
+                <!-- Dynamic Primary Action Area -->
+                <div id="primaryActionArea" data-testid="primary-action">
+                  <!-- Content will be dynamically inserted here -->
+                </div>
+
                 <!-- Inline Error Area -->
                 <div id="inlineError" class="error-message hidden" data-testid="inline-error"></div>
 
@@ -591,7 +595,20 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       </div>
     </div>
   </div>
-   
+
+  <!-- Static AcceptUI button (hidden by default) -->
+  <button 
+    id="staticAcceptUIButton" 
+    class="AcceptUI primary-action-btn" 
+    style="display: none;"
+    data-billingAddressOptions='{"show":true,"required":false}'
+    data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
+    data-acceptUIFormBtnTxt="Pay Securely"
+    data-acceptUIFormHeaderTxt="Card Information"
+    data-responseHandler="acceptUIResponseHandler">
+    Pay with Credit Card
+  </button>
+
   ${
     linkToken
       ? `
@@ -706,7 +723,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             // Create connected badge within primary action area
             var connectedBadge = document.createElement('div');
             connectedBadge.className = 'connected-badge';
-                        connectedBadge.innerHTML = 
+            connectedBadge.innerHTML = 
               '<div class="connected-icon">✓</div>' +
               '<div class="connected-text" id="connectedText">Bank connected</div>' +
               '<a href="#" id="changeBankLink" class="change-link">Change</a>';
@@ -1176,19 +1193,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       });
     })();
   </script>
-
-  <!-- Static AcceptUI button (hidden by default) -->
-  <button 
-    id="staticAcceptUIButton" 
-    class="AcceptUI primary-action-btn" 
-    style="display: none;"
-    data-billingAddressOptions='{"show":true,"required":false}'
-    data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
-    data-acceptUIFormBtnTxt="Pay Securely"
-    data-acceptUIFormHeaderTxt="Card Information"
-    data-responseHandler="acceptUIResponseHandler">
-    Pay with Credit Card
-  </button>
   `
   : ""
 }
