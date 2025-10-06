@@ -466,6 +466,8 @@ body {
   }
 </style>
 <script src="/js/cc-acceptui.js" defer></script>
+ window.scrollTo(0, 0);
+  document.documentElement.style.zoom = '1';
 </head>
 <body>
   <div class="container">
@@ -1035,6 +1037,7 @@ body {
       
       // Event listeners
       document.addEventListener('DOMContentLoaded', function() {
+      window.scrollTo(0, 0);
         // Auto-populate description if selectedPlan exists
         if (selectedPlan) {
           var descriptionInput = document.getElementById('descriptionInput');
