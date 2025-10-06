@@ -719,28 +719,33 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             primaryActionArea.appendChild(button);
           }
                 } else if (state.method === 'card') {
-          if (state.cardFormReady) {
-            // Show card payment button
-            var button = document.createElement('button');
-            button.className = 'primary-action-btn';
-            button.textContent = 'Pay with Credit Card';
-            button.disabled = !state.isAmountValid || state.loading;
-            
-            // Add AcceptUI attributes if available
-            if (window.addAcceptUIAttributes) {
-              window.addAcceptUIAttributes(button);
-            }
-            
-            primaryActionArea.appendChild(button);
-          } else {
-            // Show loading state
-            var loadingDiv = document.createElement('div');
-            loadingDiv.style.cssText = 'margin:8px 0; color:#64748b; text-align:center;';
-            loadingDiv.innerHTML = '<span class="spinner"></span>Loading secure payment form…';
-            loadingDiv.setAttribute('data-testid', 'loading-indicator');
-            primaryActionArea.appendChild(loadingDiv);
-          }
-        }
+  if (state.cardFormReady) {
+    // Show card payment button
+    var button = document.createElement('button');
+    button.className = 'primary-action-btn';
+    button.textContent = 'Pay with Credit Card';
+    button.disabled = !state.isAmountValid || state.loading;
+    
+    console.log('🔧 Creating card button, addAcceptUIAttributes available:', !!window.addAcceptUIAttributes);
+    
+    // Add AcceptUI attributes if available
+    if (window.addAcceptUIAttributes) {
+      var success = window.addAcceptUIAttributes(button);
+      console.log('🔧 AcceptUI attributes added:', success);
+    } else {
+      console.warn('⚠️ addAcceptUIAttributes function not available');
+    }
+    
+    primaryActionArea.appendChild(button);
+  } else {
+    // Show loading state
+    var loadingDiv = document.createElement('div');
+    loadingDiv.style.cssText = 'margin:8px 0; color:#64748b; text-align:center;';
+    loadingDiv.innerHTML = '<span class="spinner"></span>Loading secure payment form…';
+    loadingDiv.setAttribute('data-testid', 'loading-indicator');
+    primaryActionArea.appendChild(loadingDiv);
+  }
+}
         // If method === 'none', no button is shown
       }
       

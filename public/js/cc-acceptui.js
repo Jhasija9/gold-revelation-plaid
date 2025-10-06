@@ -2,6 +2,7 @@
 (function () {
   let cfg = null;
   let acceptLoaded = false;
+  let acceptUIReady = false;
 
   function $(sel) { return document.querySelector(sel); }
 
@@ -31,17 +32,27 @@
 
   // Function to add AcceptUI attributes to any button
   function addAcceptUIAttributes(button) {
-    if (!cfg) return false;
+    if (!cfg || !acceptUIReady) {
+      console.warn('AcceptUI not ready, cannot add attributes');
+      return false;
+    }
     
-    button.classList.add('AcceptUI');
-    button.setAttribute('data-billingAddressOptions', '{"show":true,"required":false}');
-    button.setAttribute('data-apiLoginID', cfg.apiLoginId);
-    button.setAttribute('data-clientKey', cfg.clientKey);
-    button.setAttribute('data-paymentOptions', '{"showCreditCard":true,"showBankAccount":false}');
-    button.setAttribute('data-acceptUIFormBtnTxt', 'Pay Securely');
-    button.setAttribute('data-acceptUIFormHeaderTxt', 'Card Information');
-    button.setAttribute('data-responseHandler', 'acceptUIResponseHandler');
-    return true;
+    try {
+      button.classList.add('AcceptUI');
+      button.setAttribute('data-billingAddressOptions', '{"show":true,"required":false}');
+      button.setAttribute('data-apiLoginID', cfg.apiLoginId);
+      button.setAttribute('data-clientKey', cfg.clientKey);
+      button.setAttribute('data-paymentOptions', '{"showCreditCard":true,"showBankAccount":false}');
+      button.setAttribute('data-acceptUIFormBtnTxt', 'Pay Securely');
+      button.setAttribute('data-acceptUIFormHeaderTxt', 'Card Information');
+      button.setAttribute('data-responseHandler', 'acceptUIResponseHandler');
+      
+      console.log('✅ AcceptUI attributes added to button');
+      return true;
+    } catch (e) {
+      console.error('❌ Failed to add AcceptUI attributes:', e);
+      return false;
+    }
   }
 
   async function charge(amount, description, opaqueData) {
@@ -65,7 +76,10 @@
     return n.toLocaleString(undefined, { style: 'currency', currency: 'USD' });
   }
 
+  // Global response handler
   window.acceptUIResponseHandler = async function (response) {
+    console.log('🔧 AcceptUI Response Handler called:', response);
+    
     try {
       if (response?.messages?.resultCode !== 'Ok') {
         const msg = response?.messages?.message?.[0]?.text || 'Payment form error';
@@ -81,7 +95,7 @@
       const amountEl = $('#amountInput');
       const descEl = $('#descriptionInput');
       const amount = Number((amountEl?.value || '0').replace(/[^0-9.]/g, ''));
-      const description = (descEl?.value || $('#ccRoot')?.dataset.selectedPlan || 'Gold Investment');
+      const description = (descEl?.value || 'Gold Investment');
 
       if (!amount || amount <= 0) {
         const inlineError = document.getElementById('inlineError');
@@ -132,8 +146,8 @@
     }
   };
 
-  // Initialize AcceptUI when DOM is ready
-  document.addEventListener('DOMContentLoaded', async function () {
+  // Initialize AcceptUI
+  async function initializeAcceptUI() {
     console.log('🔧 AcceptUI: Initializing...');
     
     // Fetch config first
@@ -161,17 +175,32 @@
       console.log('🔧 AcceptUI: Loading script from:', src);
       await loadScript(src);
       acceptLoaded = true;
-      console.log('✅ AcceptUI: Script loaded successfully');
       
-      // Dispatch event to notify that card form is ready
-      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
+      // Wait a bit for the script to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Check if AcceptUI is available globally
+      if (window.AcceptUI) {
+        acceptUIReady = true;
+        console.log('✅ AcceptUI: Script loaded and ready');
+        window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
+      } else {
+        console.warn('⚠️ AcceptUI: Script loaded but AcceptUI object not found');
+        window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
+      }
       
     } catch (e) {
       console.error('❌ AcceptUI: Script load failed:', e);
-      // Dispatch event to notify that card form failed to load
       window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
     }
-  });
+  }
+
+  // Start initialization when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAcceptUI);
+  } else {
+    initializeAcceptUI();
+  }
 
   // Expose the addAcceptUIAttributes function globally
   window.addAcceptUIAttributes = addAcceptUIAttributes;
