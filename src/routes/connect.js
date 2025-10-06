@@ -31,12 +31,17 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     --rg-gold: #d4af37;
   }
     html, body { 
-  height: 100%; 
-  margin: 0; 
-  padding: 0;
+  height: 100% !important; 
+  margin: 0 !important; 
+  padding: 0 !important;
   transform: none !important; 
   zoom: 1 !important;
   font-size: 16px !important;
+  overflow-x: hidden !important;
+}
+
+* {
+  box-sizing: border-box !important;
 }
 
 body { 
@@ -466,10 +471,13 @@ body {
   }
 </style>
 <script src="/js/cc-acceptui.js" defer></script>
- window.scrollTo(0, 0);
-  document.documentElement.style.zoom = '1';
+ 
 </head>
 <body>
+<script>
+  window.scrollTo(0, 0);
+  document.documentElement.style.zoom = '1';
+</script>
   <div class="container">
     <div class="grid">
       <!-- Left Column: Payment Flow -->
