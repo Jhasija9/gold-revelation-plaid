@@ -713,10 +713,43 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         // Show appropriate button based on method and state
         if (state.method === 'bank') {
           if (state.isConnected) {
-            // Show account selection and pay button
+            // Show account selection and pay button in correct order
             var bankAccountSelect = document.getElementById('bankAccountSelect');
             if (bankAccountSelect) bankAccountSelect.classList.remove('hidden');
             
+            // Create account dropdown within primary action area
+            var accountDropdown = document.createElement('div');
+            accountDropdown.className = 'form-group';
+            accountDropdown.innerHTML = 
+              '<label class="form-label" for="accountSelect">Account</label>' +
+              '<select id="accountSelect" class="form-select" required>' +
+                '<option value="">Choose an account...</option>' +
+              '</select>';
+            
+            // Populate dropdown with accounts
+            if (state.accounts.length > 0) {
+              state.accounts.forEach(function(account) {
+                var option = document.createElement('option');
+                option.value = account.id;
+                option.textContent = account.name + ' (' + account.type + ') ••••' + account.mask;
+                accountDropdown.querySelector('select').appendChild(option);
+              });
+              
+              // Set selected value
+              accountDropdown.querySelector('select').value = state.selectedAccountId;
+            }
+            
+            primaryActionArea.appendChild(accountDropdown);
+            
+            // Add event listener for account selection
+            var select = accountDropdown.querySelector('select');
+            select.addEventListener('change', function() {
+              state.selectedAccountId = this.value;
+              updateConnectedBadge();
+              updatePrimaryAction();
+            });
+            
+            // Then add the complete payment button
             var button = document.createElement('button');
             button.className = 'primary-action-btn';
             button.textContent = 'Complete payment';
@@ -732,46 +765,47 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             button.addEventListener('click', handleBankConnect);
             primaryActionArea.appendChild(button);
           }
-               } else if (state.method === 'card') {
-  if (state.cardFormReady) {
-  console.log('🔧 Card method selected, showing static button');
-    // Hide the primary action area and show the static AcceptUI button
-    primaryActionArea.style.display = 'none';
-    
-    // Update the static button's attributes with current config
-    const staticButton = document.getElementById('staticAcceptUIButton');
-    if (staticButton && window.acceptUIConfig) {
-          console.log('🔧 Static button found, updating attributes');
+        } else if (state.method === 'card') {
+          if (state.cardFormReady) {
+            console.log('🔧 Card method selected, showing static button');
+            // Hide the primary action area and show the static AcceptUI button
+            primaryActionArea.style.display = 'none';
+            
+            // Update the static button's attributes with current config
+            const staticButton = document.getElementById('staticAcceptUIButton');
+            if (staticButton && window.acceptUIConfig) {
+              console.log('🔧 Static button found, updating attributes');
 
-      staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
-      staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
-      staticButton.disabled = !state.isAmountValid || state.loading;
-      staticButton.style.display = 'block';
-      staticButton.addEventListener('click', function() {
-        console.log('🔧 Static AcceptUI button clicked!');
-      });
-    }else {
-      console.error('❌ Static button or config not found:', {
-        staticButton: !!staticButton,
-        config: !!window.acceptUIConfig
-      });}
-   } else {
-    // Show loading state
-    console.log('🔧 Card method not ready, showing loading state');
-    var loadingDiv = document.createElement('div');
-    loadingDiv.style.cssText = 'margin:8px 0; color:#64748b; text-align:center;';
-    loadingDiv.innerHTML = '<span class="spinner"></span>Loading secure payment form…';
-    loadingDiv.setAttribute('data-testid', 'loading-indicator');
-    primaryActionArea.appendChild(loadingDiv);
-  }
-} else {
-  // For non-card methods, hide static button and show primary action area
-  const staticButton = document.getElementById('staticAcceptUIButton');
-  if (staticButton) {
-    staticButton.style.display = 'none';
-  }
-  primaryActionArea.style.display = 'block';
-}
+              staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
+              staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
+              staticButton.disabled = !state.isAmountValid || state.loading;
+              staticButton.style.display = 'block';
+              staticButton.addEventListener('click', function() {
+                console.log('🔧 Static AcceptUI button clicked!');
+              });
+            } else {
+              console.error('❌ Static button or config not found:', {
+                staticButton: !!staticButton,
+                config: !!window.acceptUIConfig
+              });
+            }
+          } else {
+            // Show loading state
+            console.log('🔧 Card method not ready, showing loading state');
+            var loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'margin:8px 0; color:#64748b; text-align:center;';
+            loadingDiv.innerHTML = '<span class="spinner"></span>Loading secure payment form…';
+            loadingDiv.setAttribute('data-testid', 'loading-indicator');
+            primaryActionArea.appendChild(loadingDiv);
+          }
+        } else {
+          // For non-card methods, hide static button and show primary action area
+          const staticButton = document.getElementById('staticAcceptUIButton');
+          if (staticButton) {
+            staticButton.style.display = 'none';
+          }
+          primaryActionArea.style.display = 'block';
+        }
         // If method === 'none', no button is shown
       }
       
