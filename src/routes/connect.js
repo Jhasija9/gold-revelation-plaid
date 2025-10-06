@@ -1179,16 +1179,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         state.cardFormReady = event.detail.ready;
         updatePrimaryAction();
       });
-      
     })();
   </script>
-  
-     `
-      : ""
-  }
-  
-  </script>
-  
+
   <!-- Static AcceptUI button (hidden by default) -->
   <button 
     id="staticAcceptUIButton" 
@@ -1201,14 +1194,11 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     data-responseHandler="acceptUIResponseHandler">
     Pay with Credit Card
   </button>
-
-
-
- 
-</body>
-</html>`;
+  `
+  : ""
 }
-
+</body>
+</html>`;}
 router.get("/", async (req, res, next) => {
   try {
     const cookies = parseCookies(req);
