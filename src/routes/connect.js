@@ -30,30 +30,26 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     --rg-card: #ffffff;
     --rg-gold: #d4af37;
   }
+  * { 
+    box-sizing: border-box; 
+    margin: 0;
+    padding: 0;
+  }
   
-  html, body { 
-    height: 100% !important; 
-    margin: 0 !important; 
-    padding: 0 !important;
-    transform: none !important; 
-    zoom: 1 !important;
-    font-size: 16px !important;
-    overflow-x: hidden !important;
-  }
-
-  * {
-    box-sizing: border-box !important;
-  }
-
   body { 
-    min-height: 100vh; 
-    overflow-x: hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f8fafc; 
     color: var(--rg-body);
     line-height: 1.6;
     font-size: 15px;
+    min-height: 100vh;
   }
+  
+  
+
+  
+
+  
   
   .font-serif {
     font-family: 'Playfair Display', Georgia, serif;
@@ -460,10 +456,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
  
 </head>
 <body>
-<script>
-  window.scrollTo(0, 0);
-  document.documentElement.style.zoom = '1';
-</script>
+
   <div class="container">
     <div class="grid">
       <!-- Left Column: Payment Flow -->
@@ -1031,7 +1024,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       
       // Event listeners
       document.addEventListener('DOMContentLoaded', function() {
-      window.scrollTo(0, 0);
         // Auto-populate description if selectedPlan exists
         if (selectedPlan) {
           var descriptionInput = document.getElementById('descriptionInput');
