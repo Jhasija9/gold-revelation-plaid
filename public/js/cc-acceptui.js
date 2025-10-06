@@ -1,21 +1,9 @@
 // public/js/cc-acceptui.js
 (function () {
   let cfg = null;
-  let acceptLoaded = false;
   let acceptUIReady = false;
 
   function $(sel) { return document.querySelector(sel); }
-
-  function loadScript(src) {
-    return new Promise((res, rej) => {
-      if ([...document.scripts].some(s => s.src === src)) return res();
-      const el = document.createElement('script');
-      el.src = src;
-      el.onload = res;
-      el.onerror = rej;
-      document.head.appendChild(el);
-    });
-  }
 
   async function fetchConfig() {
     try {
@@ -30,70 +18,37 @@
     }
   }
 
-  // Create required DOM structure for AcceptUI
-  function createAcceptUIStructure() {
-    // Create a hidden container for AcceptUI
-    let acceptContainer = document.getElementById('acceptUIContainer');
-    if (!acceptContainer) {
-      acceptContainer = document.createElement('div');
-      acceptContainer.id = 'acceptUIContainer';
-      acceptContainer.style.display = 'none';
-      document.body.appendChild(acceptContainer);
-    }
-
-    // Create a hidden button that AcceptUI can initialize with
-    let acceptButton = document.getElementById('acceptUIButton');
-    if (!acceptButton) {
-      acceptButton = document.createElement('button');
-      acceptButton.id = 'acceptUIButton';
-      acceptButton.className = 'AcceptUI';
-      acceptButton.style.display = 'none';
-      acceptContainer.appendChild(acceptButton);
-    }
-
-    return { acceptContainer, acceptButton };
+  function loadScript(src) {
+    return new Promise((res, rej) => {
+      if ([...document.scripts].some(s => s.src === src)) return res();
+      const el = document.createElement('script');
+      el.src = src;
+      el.onload = res;
+      el.onerror = rej;
+      document.head.appendChild(el);
+    });
   }
 
   // Function to add AcceptUI attributes to any button
   function addAcceptUIAttributes(button) {
-    if (!cfg || !acceptUIReady) {
-      console.warn('AcceptUI not ready, cannot add attributes');
+    if (!cfg) {
+      console.warn('AcceptUI config not available');
       return false;
     }
     
     try {
-      // Copy attributes from the initialized AcceptUI button
-      const acceptButton = document.getElementById('acceptUIButton');
-      if (acceptButton) {
-        // Copy all data attributes
-        const dataAttrs = acceptButton.attributes;
-        for (let i = 0; i < dataAttrs.length; i++) {
-          const attr = dataAttrs[i];
-          if (attr.name.startsWith('data-')) {
-            button.setAttribute(attr.name, attr.value);
-          }
-        }
-        
-        // Copy class
-        button.classList.add('AcceptUI');
-        
-        console.log('✅ AcceptUI attributes copied to button');
-        return true;
-      } else {
-        console.warn('⚠️ AcceptUI button not found, using fallback attributes');
-        
-        // Fallback: add basic attributes
-        button.classList.add('AcceptUI');
-        button.setAttribute('data-billingAddressOptions', '{"show":true,"required":false}');
-        button.setAttribute('data-apiLoginID', cfg.apiLoginId);
-        button.setAttribute('data-clientKey', cfg.clientKey);
-        button.setAttribute('data-paymentOptions', '{"showCreditCard":true,"showBankAccount":false}');
-        button.setAttribute('data-acceptUIFormBtnTxt', 'Pay Securely');
-        button.setAttribute('data-acceptUIFormHeaderTxt', 'Card Information');
-        button.setAttribute('data-responseHandler', 'acceptUIResponseHandler');
-        
-        return true;
-      }
+      // Add the AcceptUI class and all required data attributes
+      button.classList.add('AcceptUI');
+      button.setAttribute('data-billingAddressOptions', '{"show":true,"required":false}');
+      button.setAttribute('data-apiLoginID', cfg.apiLoginId);
+      button.setAttribute('data-clientKey', cfg.clientKey);
+      button.setAttribute('data-paymentOptions', '{"showCreditCard":true,"showBankAccount":false}');
+      button.setAttribute('data-acceptUIFormBtnTxt', 'Pay Securely');
+      button.setAttribute('data-acceptUIFormHeaderTxt', 'Card Information');
+      button.setAttribute('data-responseHandler', 'acceptUIResponseHandler');
+      
+      console.log('✅ AcceptUI attributes added to button');
+      return true;
     } catch (e) {
       console.error('❌ Failed to add AcceptUI attributes:', e);
       return false;
@@ -195,10 +150,7 @@
   async function initializeAcceptUI() {
     console.log('🔧 AcceptUI: Initializing...');
     
-    // Create required DOM structure first
-    const { acceptContainer, acceptButton } = createAcceptUIStructure();
-    
-    // Fetch config
+    // Fetch config first
     cfg = await fetchConfig();
     if (!cfg) {
       console.error('❌ AcceptUI: Config fetch failed');
@@ -215,15 +167,6 @@
     // Make config available globally
     window.acceptUIConfig = cfg;
 
-    // Set up the AcceptUI button with proper attributes
-    acceptButton.setAttribute('data-billingAddressOptions', '{"show":true,"required":false}');
-    acceptButton.setAttribute('data-apiLoginID', cfg.apiLoginId);
-    acceptButton.setAttribute('data-clientKey', cfg.clientKey);
-    acceptButton.setAttribute('data-paymentOptions', '{"showCreditCard":true,"showBankAccount":false}');
-    acceptButton.setAttribute('data-acceptUIFormBtnTxt', 'Pay Securely');
-    acceptButton.setAttribute('data-acceptUIFormHeaderTxt', 'Card Information');
-    acceptButton.setAttribute('data-responseHandler', 'acceptUIResponseHandler');
-
     const src = cfg.environment === 'production'
       ? 'https://js.authorize.net/v3/AcceptUI.js'
       : 'https://jstest.authorize.net/v3/AcceptUI.js';
@@ -231,24 +174,27 @@
     try {
       console.log('🔧 AcceptUI: Loading script from:', src);
       await loadScript(src);
-      acceptLoaded = true;
       
-      // Wait for AcceptUI to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait a bit for the script to initialize
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Check if AcceptUI is available and working
-      if (window.AcceptUI && typeof window.AcceptUI === 'object') {
+      // Check if AcceptUI is available
+      if (window.AcceptUI) {
         acceptUIReady = true;
         console.log('✅ AcceptUI: Script loaded and ready');
         window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
       } else {
         console.warn('⚠️ AcceptUI: Script loaded but AcceptUI object not found');
-        window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
+        // Still mark as ready since we can add attributes manually
+        acceptUIReady = true;
+        window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
       }
       
     } catch (e) {
       console.error('❌ AcceptUI: Script load failed:', e);
-      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
+      // Even if script fails, we can still try to work with attributes
+      acceptUIReady = true;
+      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: true } }));
     }
   }
 

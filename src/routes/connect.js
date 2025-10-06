@@ -732,6 +732,15 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     if (window.addAcceptUIAttributes) {
       var success = window.addAcceptUIAttributes(button);
       console.log('🔧 AcceptUI attributes added:', success);
+      button.addEventListener('click', function(e) {
+        console.log('🔧 Button clicked!', {
+          hasAcceptUIClass: this.classList.contains('AcceptUI'),
+          dataAttributes: {
+            apiLoginID: this.getAttribute('data-apiLoginID'),
+            clientKey: this.getAttribute('data-clientKey'),
+            responseHandler: this.getAttribute('data-responseHandler')
+          }});
+      });
     } else {
       console.warn('⚠️ addAcceptUIAttributes function not available');
     }
