@@ -30,34 +30,24 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     --rg-card: #ffffff;
     --rg-gold: #d4af37;
   }
-    html, body { 
-  height: 100% !important; 
-  margin: 0 !important; 
-  padding: 0 !important;
-  transform: none !important; 
-  zoom: 1 !important;
-  font-size: 16px !important;
-  overflow-x: hidden !important;
-}
-
-* {
-  box-sizing: border-box !important;
-}
-
-body { 
-  min-height: 100vh; 
-  overflow-x: hidden;
-}
-
-
   
-  * { 
-    box-sizing: border-box; 
-    margin: 0;
-    padding: 0;
+  html, body { 
+    height: 100% !important; 
+    margin: 0 !important; 
+    padding: 0 !important;
+    transform: none !important; 
+    zoom: 1 !important;
+    font-size: 16px !important;
+    overflow-x: hidden !important;
   }
-  
+
+  * {
+    box-sizing: border-box !important;
+  }
+
   body { 
+    min-height: 100vh; 
+    overflow-x: hidden;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f8fafc; 
     color: var(--rg-body);
@@ -1226,6 +1216,7 @@ body {
 </body>
 </html>`;
 }
+
 router.get("/", async (req, res, next) => {
   try {
     const cookies = parseCookies(req);
