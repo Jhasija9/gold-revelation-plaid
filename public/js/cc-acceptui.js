@@ -99,7 +99,23 @@
           const primaryActionArea = document.getElementById('primaryActionArea');
           if (primaryActionArea) primaryActionArea.style.display = 'none';
         }
-        clearFormAndErrors();
+        const amountInput = document.getElementById('amountInput');
+        const descriptionInput = document.getElementById('descriptionInput');
+        const inlineError = document.getElementById('inlineError');
+        
+        if (amountInput) amountInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        if (inlineError) {
+          inlineError.textContent = '';
+          inlineError.classList.add('hidden');
+        }
+        
+        // Update order summary
+        const orderAmount = document.getElementById('orderAmount');
+        const orderTotal = document.getElementById('orderTotal');
+        if (orderAmount) orderAmount.textContent = '$0.00';
+        if (orderTotal) orderTotal.textContent = '$0.00';
+
 
       } else {
         const inlineError = document.getElementById('inlineError');

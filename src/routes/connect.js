@@ -1074,6 +1074,11 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         methodOptions.forEach(function(option) {
           option.addEventListener('click', function() {
             var method = this.dataset.method;
+            var inlineError = document.getElementById('inlineError');
+          if (inlineError) {
+            inlineError.textContent = '';
+            inlineError.classList.add('hidden');
+          }
             
             // Update radio button
             var radio = this.querySelector('.method-radio');
