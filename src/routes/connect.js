@@ -879,6 +879,49 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         // Update order summary
         updateOrderSummary();
       }
+      // Reusable reset function (extracted from New payment button)
+      function resetToInitialState() {
+        // Reset state
+        state.method = 'none';
+        state.amount = '';
+        state.isAmountValid = false;
+        state.desc = '';
+        state.cardFormReady = false;
+        state.loading = false;
+        state.error = null;
+        state.isConnected = false;
+        state.accounts = [];
+        state.selectedAccountId = null;
+        
+        // Reset form
+        var amountInput = document.getElementById('amountInput');
+        var descriptionInput = document.getElementById('descriptionInput');
+        var accountSelect = document.getElementById('accountSelect');
+        if (amountInput) amountInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
+        
+        // Reset UI
+        var methodOptions = document.querySelectorAll('.method-option');
+        methodOptions.forEach(function(opt) {
+          opt.classList.remove('selected');
+          var radio = opt.querySelector('.method-radio');
+          if (radio) radio.checked = false;
+        });
+        
+        var bankAccountSelect = document.getElementById('bankAccountSelect');
+        var bankConnectedBadge = document.getElementById('bankConnectedBadge');
+        var successView = document.getElementById('successView');
+        var primaryActionArea = document.getElementById('primaryActionArea');
+        
+        if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
+        if (bankConnectedBadge) bankConnectedBadge.classList.add('hidden');
+        if (successView) successView.classList.add('hidden');
+        if (primaryActionArea) primaryActionArea.style.display = 'block';
+        
+        updateOrderSummary();
+        updatePrimaryAction();
+      }
 
       
       // Handle bank connection
@@ -954,7 +997,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           var primaryActionArea = document.getElementById('primaryActionArea');
           if (primaryActionArea) primaryActionArea.style.display = 'none';
         }
-          clearFormAndErrors();
+          resetToInitialState();
       }
       
       // Get currently selected account
@@ -1180,45 +1223,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         var newPaymentBtn = document.getElementById('newPaymentBtn');
         if (newPaymentBtn) {
           newPaymentBtn.addEventListener('click', function() {
-            // Reset state
-            state.method = 'none';
-            state.amount = '';
-            state.isAmountValid = false;
-            state.desc = '';
-            state.cardFormReady = false;
-            state.loading = false;
-            state.error = null;
-            state.isConnected = false;
-            state.accounts = [];
-            state.selectedAccountId = null;
-            
-            // Reset form
-            if (amountInput) amountInput.value = '';
-            if (descriptionInput) descriptionInput.value = '';
-            if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
-            
-            // Reset UI
-            methodOptions.forEach(function(opt) {
-              opt.classList.remove('selected');
-              var radio = opt.querySelector('.method-radio');
-              if (radio) radio.checked = false;
-            });
-            
-            var bankAccountSelect = document.getElementById('bankAccountSelect');
-            var bankConnectedBadge = document.getElementById('bankConnectedBadge');
-            var successView = document.getElementById('successView');
-            var primaryActionArea = document.getElementById('primaryActionArea');
-            
-            if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
-            if (bankConnectedBadge) bankConnectedBadge.classList.add('hidden');
-            if (successView) successView.classList.add('hidden');
-            if (primaryActionArea) primaryActionArea.style.display = 'block';
-            
-            updateOrderSummary();
-            updatePrimaryAction();
+            resetToInitialState();
           });
         }
-      });
       
       // Listen for AcceptUI ready state
       window.addEventListener('acceptUIReady', function(event) {
