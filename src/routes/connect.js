@@ -557,6 +557,18 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <!-- AcceptUI context (passes server values safely to frontend) -->
                 <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
                 <div id="acceptUIContainer"></div>
+                <!-- Static AcceptUI button (hidden by default) -->
+  <button 
+    id="staticAcceptUIButton" 
+    class="AcceptUI primary-action-btn" 
+    style="display: none;"
+    data-billingAddressOptions='{"show":true,"required":false}'
+    data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
+    data-acceptUIFormBtnTxt="Pay Securely"
+    data-acceptUIFormHeaderTxt="Card Information"
+    data-responseHandler="acceptUIResponseHandler">
+    Pay with Credit Card
+  </button>
    
               `
           }
@@ -596,18 +608,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     </div>
   </div>
 
-  <!-- Static AcceptUI button (hidden by default) -->
-  <button 
-    id="staticAcceptUIButton" 
-    class="AcceptUI primary-action-btn" 
-    style="display: none;"
-    data-billingAddressOptions='{"show":true,"required":false}'
-    data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
-    data-acceptUIFormBtnTxt="Pay Securely"
-    data-acceptUIFormHeaderTxt="Card Information"
-    data-responseHandler="acceptUIResponseHandler">
-    Pay with Credit Card
-  </button>
 
   ${
     linkToken
