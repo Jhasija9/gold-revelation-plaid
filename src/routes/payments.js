@@ -9,26 +9,17 @@ const crypto = require('crypto');
 function verifyWebhookSignature(rawBody, signature) {
   const signatureKey = process.env.ANET_SIGNATURE_KEY;
   
-  console.log('🔍 Verifying signature:', {
-    signatureKey: signatureKey ? 'Present' : 'Missing',
-    rawBody: rawBody,
-    receivedSignature: signature
-  });
-  
   const expectedSignature = crypto
     .createHmac('sha512', signatureKey)
     .update(rawBody)
     .digest('hex');
   
-  const expectedSignatureWithPrefix = `sha512=${expectedSignature}`;
+  // Extract just the hash part (remove 'sha512=' prefix)
+  const receivedHash = signature.replace('sha512=', '');
+  const expectedHash = expectedSignature;
   
-  console.log('🔍 Signature comparison:', {
-    expected: expectedSignatureWithPrefix,
-    received: signature,
-    match: signature === expectedSignatureWithPrefix
-  });
-  
-  return signature === expectedSignatureWithPrefix;
+  // Case-insensitive comparison of just the hash
+  return receivedHash.toLowerCase() === expectedHash.toLowerCase();
 }
 async function updateTransactionStatus(transactionId, status) {
   try {
