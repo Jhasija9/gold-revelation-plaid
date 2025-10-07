@@ -699,7 +699,10 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       function updatePrimaryAction() {
         var primaryActionArea = document.getElementById('primaryActionArea');
         var inlineError = document.getElementById('inlineError');
-        
+        if (inlineError) {
+          inlineError.classList.add('hidden');
+          inlineError.textContent = '';
+        }
         if (!primaryActionArea) return;
         
         // Clear previous content
@@ -852,6 +855,31 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           inlineError.classList.remove('hidden');
         }
       }
+              // Clear form and errors
+      function clearFormAndErrors() {
+        // Clear form fields
+        var amountInput = document.getElementById('amountInput');
+        var descriptionInput = document.getElementById('descriptionInput');
+        if (amountInput) amountInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        
+        // Clear error messages
+        var inlineError = document.getElementById('inlineError');
+        if (inlineError) {
+          inlineError.textContent = '';
+          inlineError.classList.add('hidden');
+        }
+        
+        // Reset state
+        state.amount = '';
+        state.isAmountValid = false;
+        state.desc = '';
+        state.error = null;
+        
+        // Update order summary
+        updateOrderSummary();
+      }
+
       
       // Handle bank connection
       function handleBankConnect() {
@@ -926,6 +954,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           var primaryActionArea = document.getElementById('primaryActionArea');
           if (primaryActionArea) primaryActionArea.style.display = 'none';
         }
+          clearFormAndErrors();
       }
       
       // Get currently selected account

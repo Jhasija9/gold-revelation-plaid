@@ -99,6 +99,8 @@
           const primaryActionArea = document.getElementById('primaryActionArea');
           if (primaryActionArea) primaryActionArea.style.display = 'none';
         }
+        clearFormAndErrors();
+
       } else {
         const inlineError = document.getElementById('inlineError');
         if (inlineError) {
