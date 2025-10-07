@@ -205,4 +205,6 @@
       acceptButton.style.display = show ? 'block' : 'none';
     }
   };
+  window.initializeAcceptUI = initializeAcceptUI;
+
 })();

@@ -835,6 +835,12 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             loadingDiv.innerHTML = '<span class="spinner"></span>Loading secure payment form…';
             loadingDiv.setAttribute('data-testid', 'loading-indicator');
             primaryActionArea.appendChild(loadingDiv);
+            if (window.initializeAcceptUI) {
+      window.initializeAcceptUI();
+    } else {
+      // Dispatch event to trigger re-initialization
+      window.dispatchEvent(new CustomEvent('acceptUIReady', { detail: { ready: false } }));
+    }
           }
         } else {
           // For non-card methods, hide static button and show primary action area
@@ -1196,6 +1202,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             state.isConnected = false;
             state.accounts = [];
             state.selectedAccountId = null;
+            if (window.acceptUIConfig) {
+  window.acceptUIConfig = null;
+}
             
             // Reset form
             if (amountInput) amountInput.value = '';
