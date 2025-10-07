@@ -6,9 +6,8 @@ const Transaction = require('../models/Transaction');
 
 const crypto = require('crypto');
 
-function verifyWebhookSignature(payload, signature) {
+function verifyWebhookSignature(rawBody, signature) {
   const signatureKey = process.env.ANET_SIGNATURE_KEY;
-  const rawBody = JSON.stringify(payload);
   
   console.log('🔍 Verifying signature:', {
     signatureKey: signatureKey ? 'Present' : 'Missing',
@@ -237,10 +236,13 @@ router.post('/charge', async (req, res) => {
 
 // Webhook handler stub for Authorize.Net events
 // In /src/routes/payments.js
+// Add this middleware to capture raw body
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+
 router.post('/webhook', async (req, res) => {
   try {
-    // Get raw body for signature verification
-    const rawBody = JSON.stringify(req.body);
+    // Use the raw body directly
+    const rawBody = req.body.toString();
     const signature = req.headers['x-anet-signature'];
     
     console.log('🔍 Webhook received:', {
@@ -249,15 +251,16 @@ router.post('/webhook', async (req, res) => {
     });
     
     // Verify signature
-    const isValid = verifyWebhookSignature(req.body, signature);
+    const isValid = verifyWebhookSignature(rawBody, signature);
     
     if (!isValid) {
       console.log('❌ Invalid signature');
       return res.status(401).json({ error: 'Invalid signature' });
     }
     
-    // Process webhook...
-    const { eventType, payload } = req.body;
+    // Parse the JSON
+    const webhookData = JSON.parse(rawBody);
+    const { eventType, payload } = webhookData;
     const transactionId = payload.id;
     
     switch (eventType) {
