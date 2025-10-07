@@ -240,7 +240,7 @@ router.post('/charge', async (req, res) => {
 router.post('/webhook', async (req, res) => {
   try {
     // Get raw body from the request
-    const rawBody = JSON.stringify(req.body);
+    const rawBody = req.rawBody; 
     const signature = req.headers['x-anet-signature'];
     
     console.log('🔍 Webhook received:', {

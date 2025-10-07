@@ -75,6 +75,23 @@ app.use(
     next();
   }
 );
+app.use(
+  "/api/payments/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  (req, res, next) => {
+    // Keep raw body for signature verification
+    req.rawBody = req.body.toString();
+    // Also parse JSON for easy access
+    if (req.body && req.body.length) {
+      try {
+        req.body = JSON.parse(req.body.toString());
+      } catch (e) {
+        console.error("Error parsing Authorize.Net webhook body", e);
+      }
+    }
+    next();
+  }
+);
 
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
