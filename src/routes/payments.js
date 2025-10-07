@@ -255,6 +255,12 @@ router.post('/webhook', async (req, res) => {
       case 'net.authorize.payment.authcapture.created':
         await updateTransactionStatus(transactionId, 'captured');
         break;
+        case 'net.authorize.payment.void.created':  // ← Make sure this exists
+    await updateTransactionStatus(transactionId, 'cancelled');
+    break;
+  case 'net.authorize.payment.refund.created':
+    await updateTransactionStatus(transactionId, 'refunded');
+    break;
     }
     
     res.status(200).json({ received: true });
