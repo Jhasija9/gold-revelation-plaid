@@ -4,6 +4,35 @@ const acceptSuiteService = require('../services/acceptSuiteService');
 const databaseService = require('../services/databaseService');
 const Transaction = require('../models/Transaction');
 
+const crypto = require('crypto');
+
+function verifyWebhookSignature(payload, signature) {
+  const signatureKey = process.env.AUTHORIZE_NET_SIGNATURE_KEY;
+  const rawBody = JSON.stringify(payload);
+  
+  const expectedSignature = crypto
+    .createHmac('sha512', signatureKey)
+    .update(rawBody)
+    .digest('hex');
+  
+  return signature === `sha512=${expectedSignature}`;
+}
+async function updateTransactionStatus(transactionId, status) {
+  try {
+    // Update transaction status in database
+    const result = await db.query(
+      'UPDATE transactions SET status = $1 WHERE authorize_net_transaction_id = $2',
+      [status, transactionId]
+    );
+    
+    console.log(`✅ Updated transaction ${transactionId} to status: ${status}`);
+    return result;
+  } catch (error) {
+    console.error('❌ Database update error:', error);
+    throw error;
+  }
+}
+
 // Get Authorize.Net public configuration
 router.get('/config', (req, res) => {
   console.log('🌐 Payments Route: /config endpoint called');
@@ -129,7 +158,7 @@ router.post('/charge', async (req, res) => {
         amount: parseFloat(amount),
         status: 'pending', // Credit card payments are immediate
         description: paymentData.description,
-        payment_method: 'credit_card',
+        payment_method: 'captured',
         authorize_net_transaction_id: chargeResult.transactionId,
         authorize_net_auth_code: chargeResult.authCode,
         authorize_net_response_code: chargeResult.responseCode,
@@ -193,25 +222,39 @@ router.post('/charge', async (req, res) => {
 });
 
 // Webhook handler stub for Authorize.Net events
-router.post('/webhook', (req, res) => {
+// In /src/routes/payments.js
+router.post('/webhook', async (req, res) => {
   try {
-    console.log('🔔 Authorize.Net webhook received:', req.body);
+    // 1. Verify signature (security)
+    const signature = req.headers['x-anet-signature'];
+    const isValid = verifyWebhookSignature(req.body, signature);
     
-    // TODO: Verify SHA-512 signature
-    // TODO: Parse event type and update transaction status
-    
-    const { eventType, payload } = req.body;
-    
-    if (eventType) {
-      console.log(`📦 Processing webhook event: ${eventType}`);
-      // Future: Update transaction status based on settlement/void/refund events
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid signature' });
     }
-
-    // Always respond with 200 to acknowledge receipt
+    
+    // 2. Parse webhook data
+    const { eventType, payload } = req.body;
+    const transactionId = payload.id;
+    
+    // 3. Update database based on event
+    switch (eventType) {
+      case 'net.authorize.payment.authcapture.created':
+        await updateTransactionStatus(transactionId, 'captured');
+        break;
+      case 'net.authorize.payment.void.created':
+        await updateTransactionStatus(transactionId, 'cancelled');
+        break;
+      case 'net.authorize.payment.refund.created':
+        await updateTransactionStatus(transactionId, 'refunded');
+        break;
+    }
+    
+    // 4. Always respond with 200
     res.status(200).json({ received: true });
     
   } catch (error) {
-    console.error('❌ Webhook processing error:', error);
+    console.error('Webhook error:', error);
     res.status(200).json({ received: true, error: 'Processing error' });
   }
 });
