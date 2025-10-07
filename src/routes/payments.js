@@ -132,6 +132,7 @@ router.post('/charge', async (req, res) => {
         payment_method: 'credit_card',
         authorize_net_transaction_id: chargeResult.transactionId,
         authorize_net_auth_code: chargeResult.authCode,
+        authorize_net_response_code: chargeResult.responseCode,
         created_at: new Date().toISOString(),
       };
 
