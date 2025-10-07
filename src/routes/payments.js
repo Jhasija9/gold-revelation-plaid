@@ -54,6 +54,7 @@ router.post('/charge', async (req, res) => {
       amount,
       description,
       opaqueData,
+      user_id
     } = req.body;
 
     // Validate required fields
