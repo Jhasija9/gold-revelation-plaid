@@ -10,12 +10,26 @@ function verifyWebhookSignature(payload, signature) {
   const signatureKey = process.env.ANET_SIGNATURE_KEY;
   const rawBody = JSON.stringify(payload);
   
+  console.log('🔍 Verifying signature:', {
+    signatureKey: signatureKey ? 'Present' : 'Missing',
+    rawBody: rawBody,
+    receivedSignature: signature
+  });
+  
   const expectedSignature = crypto
     .createHmac('sha512', signatureKey)
     .update(rawBody)
     .digest('hex');
   
-  return signature === `sha512=${expectedSignature}`;
+  const expectedSignatureWithPrefix = `sha512=${expectedSignature}`;
+  
+  console.log('🔍 Signature comparison:', {
+    expected: expectedSignatureWithPrefix,
+    received: signature,
+    match: signature === expectedSignatureWithPrefix
+  });
+  
+  return signature === expectedSignatureWithPrefix;
 }
 async function updateTransactionStatus(transactionId, status) {
   try {
@@ -225,40 +239,33 @@ router.post('/charge', async (req, res) => {
 // In /src/routes/payments.js
 router.post('/webhook', async (req, res) => {
   try {
+    // Get raw body for signature verification
+    const rawBody = JSON.stringify(req.body);
+    const signature = req.headers['x-anet-signature'];
+    
     console.log('🔍 Webhook received:', {
-      headers: req.headers,
-      body: req.body,
-      signature: req.headers['x-anet-signature']
+      rawBody: rawBody,
+      signature: signature
     });
     
-    // 1. Verify signature (security)
-    const signature = req.headers['x-anet-signature'];
+    // Verify signature
     const isValid = verifyWebhookSignature(req.body, signature);
-    console.log('🔍 Signature verification:', { isValid, signature });
-
     
     if (!isValid) {
+      console.log('❌ Invalid signature');
       return res.status(401).json({ error: 'Invalid signature' });
     }
     
-    // 2. Parse webhook data
+    // Process webhook...
     const { eventType, payload } = req.body;
     const transactionId = payload.id;
     
-    // 3. Update database based on event
     switch (eventType) {
       case 'net.authorize.payment.authcapture.created':
         await updateTransactionStatus(transactionId, 'captured');
         break;
-      case 'net.authorize.payment.void.created':
-        await updateTransactionStatus(transactionId, 'cancelled');
-        break;
-      case 'net.authorize.payment.refund.created':
-        await updateTransactionStatus(transactionId, 'refunded');
-        break;
     }
     
-    // 4. Always respond with 200
     res.status(200).json({ received: true });
     
   } catch (error) {
