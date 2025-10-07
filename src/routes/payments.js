@@ -7,7 +7,7 @@ const Transaction = require('../models/Transaction');
 const crypto = require('crypto');
 
 function verifyWebhookSignature(payload, signature) {
-  const signatureKey = process.env.AUTHORIZE_NET_SIGNATURE_KEY;
+  const signatureKey = process.env.ANET_SIGNATURE_KEY;
   const rawBody = JSON.stringify(payload);
   
   const expectedSignature = crypto
@@ -158,7 +158,7 @@ router.post('/charge', async (req, res) => {
         amount: parseFloat(amount),
         status: 'pending', // Credit card payments are immediate
         description: paymentData.description,
-        payment_method: 'captured',
+        payment_method: 'credit_card',
         authorize_net_transaction_id: chargeResult.transactionId,
         authorize_net_auth_code: chargeResult.authCode,
         authorize_net_response_code: chargeResult.responseCode,
