@@ -25,8 +25,8 @@ async function updateTransactionStatus(transactionId, status) {
   try {
     // Update transaction status in database using databaseService
     const result = await databaseService.query('transactions', 'update', {
-      set: { status: status },
-      where: { authorize_net_transaction_id: transactionId }
+      where: { authorize_net_transaction_id: transactionId },
+      values: { status: status }
     });
     
     console.log(`✅ Updated transaction ${transactionId} to status: ${status}`);
