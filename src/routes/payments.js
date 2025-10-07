@@ -225,9 +225,17 @@ router.post('/charge', async (req, res) => {
 // In /src/routes/payments.js
 router.post('/webhook', async (req, res) => {
   try {
+    console.log('🔍 Webhook received:', {
+      headers: req.headers,
+      body: req.body,
+      signature: req.headers['x-anet-signature']
+    });
+    
     // 1. Verify signature (security)
     const signature = req.headers['x-anet-signature'];
     const isValid = verifyWebhookSignature(req.body, signature);
+    console.log('🔍 Signature verification:', { isValid, signature });
+
     
     if (!isValid) {
       return res.status(401).json({ error: 'Invalid signature' });
