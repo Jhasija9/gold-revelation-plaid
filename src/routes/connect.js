@@ -454,7 +454,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     <div class="grid">
       <!-- Left Column: Payment Flow -->
       <div class="main-content">
-        <div class="card">
+  <div class="card">
           <!-- Company Logo and Header -->
           <div class="header">
             <img src="/logo.png" alt="Revelation Gold Group" class="logo" onerror="this.style.display='none'">
@@ -462,67 +462,67 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
           </div>
           
-          ${
-            error
-              ? `
-                <div style="color: #dc2626; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 24px;">
-                  <strong>Error:</strong> ${error}
-                </div>
-                <p><a href="/" style="color: var(--rg-navy);">← Start over</a></p>
-              `
+    ${
+      error
+        ? `
+            <div style="color: #dc2626; padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-bottom: 24px;">
+              <strong>Error:</strong> ${error}
+            </div>
+            <p><a href="/" style="color: var(--rg-navy);">← Start over</a></p>
+          `
               : `
-                <!-- Payment Method Selection -->
-                <div class="method-group">
-                  <div class="section-title">Payment method</div>
+          <!-- Payment Method Selection -->
+          <div class="method-group">
+            <div class="section-title">Payment method</div>
                   <div class="method-option" data-method="bank" data-testid="method-bank">
                     <input type="radio" name="payment-method" value="bank" class="method-radio">
-                    <div class="method-icon">🏦</div>
-                    <div class="method-content">
-                      <div class="method-title">Bank account (Plaid)</div>
-                      <div class="method-desc">Connect your bank account securely</div>
-                    </div>
-                  </div>
+              <div class="method-icon">🏦</div>
+              <div class="method-content">
+                <div class="method-title">Bank account (Plaid)</div>
+                <div class="method-desc">Connect your bank account securely</div>
+              </div>
+            </div>
                   <div class="method-option" data-method="card" data-testid="method-card">
-                    <input type="radio" name="payment-method" value="card" class="method-radio">
-                    <div class="method-icon">💳</div>
-                    <div class="method-content">
-                      <div class="method-title">Credit/Debit card</div>
+              <input type="radio" name="payment-method" value="card" class="method-radio">
+              <div class="method-icon">💳</div>
+              <div class="method-content">
+                <div class="method-title">Credit/Debit card</div>
                       <div class="method-desc">Pay instantly with your credit or debit card</div>
-                    </div>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </div>
 
                 <!-- Always-visible Amount and Description fields -->
-                <div class="form-group">
+            <div class="form-group">
                   <label class="form-label" for="amountInput" data-testid="amount-label">Amount</label>
-                  <input 
-                    type="text" 
-                    id="amountInput" 
-                    class="form-input" 
-                    placeholder="0.00" 
-                    inputmode="decimal"
+              <input 
+                type="text" 
+                id="amountInput" 
+                class="form-input" 
+                placeholder="0.00" 
+                inputmode="decimal"
                     data-testid="amount-input"
-                    required
-                  >
+                required
+              >
                   <div id="amountError" class="error-message hidden" data-testid="amount-error">Please enter a valid amount</div>
-                </div>
-                
-                <div class="form-group">
+            </div>
+            
+            <div class="form-group">
                   <label class="form-label" for="descriptionInput" data-testid="description-label">Description (optional)</label>
-                  <input 
-                    type="text" 
-                    id="descriptionInput" 
-                    class="form-input" 
+              <input 
+                type="text" 
+                id="descriptionInput" 
+                class="form-input" 
                     placeholder="Gold Investment Plan"
                     data-testid="description-input"
-                  >
-                </div>
-
+              >
+            </div>
+            
                 <!-- Dynamic Primary Action Area -->
                 <div id="primaryActionArea" data-testid="primary-action">
                   <!-- Content will be dynamically inserted here -->
-                </div>
-
+            </div>
+            
                 <!-- Inline Error Area -->
                 <div id="inlineError" class="error-message hidden" data-testid="inline-error"></div>
 
@@ -538,21 +538,21 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                   <select id="accountSelect" class="form-select" required>
                     <option value="">Choose an account...</option>
                   </select>
-                </div>
+          </div>
 
-                <!-- Success View (shown after successful payment) -->
-                <div id="successView" class="success-view hidden">
-                  <div class="success-icon">✓</div>
-                  <h2 class="success-title">Payment successful</h2>
-                  <div class="success-details">
-                    <div>Amount: <span id="successAmount">$0.00</span></div>
-                    <div>Account: <span id="successAccount">Account</span></div>
-                    <div>Date: <span id="successDate">Date</span></div>
-                  </div>
-                  <div class="success-actions">
-                    <button id="newPaymentBtn" class="btn-primary">New payment</button>
-                  </div>
-                </div>
+          <!-- Success View (shown after successful payment) -->
+          <div id="successView" class="success-view hidden">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Payment successful</h2>
+            <div class="success-details">
+              <div>Amount: <span id="successAmount">$0.00</span></div>
+              <div>Account: <span id="successAccount">Account</span></div>
+              <div>Date: <span id="successDate">Date</span></div>
+            </div>
+            <div class="success-actions">
+              <button id="newPaymentBtn" class="btn-primary">New payment</button>
+            </div>
+          </div>
 
                 <!-- AcceptUI context (passes server values safely to frontend) -->
                 <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
@@ -570,7 +570,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     Pay with Credit Card
   </button>
    
-              `
+          `
           }
         </div>
       </div>
@@ -733,7 +733,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             primaryActionArea.appendChild(connectedBadge);
             
             // Update connected badge text
-            var selected = getSelectedAccount();
+        var selected = getSelectedAccount();
             var connectedText = connectedBadge.querySelector('#connectedText');
             if (connectedText && selected) {
               var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
@@ -781,7 +781,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               var selected = getSelectedAccount();
               var connectedText = connectedBadge.querySelector('#connectedText');
               if (connectedText && selected) {
-                var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
+            var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
                 connectedText.textContent = 'Connected — ' + accountName + ' ••••' + selected.mask;
               }
               updatePrimaryAction();
@@ -794,7 +794,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             button.disabled = !state.isAmountValid || !state.selectedAccountId || state.loading;
             button.addEventListener('click', handleBankPayment);
             primaryActionArea.appendChild(button);
-          } else {
+        } else {
             // Show connect button
             var button = document.createElement('button');
             button.className = 'primary-action-btn';
@@ -879,49 +879,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         // Update order summary
         updateOrderSummary();
       }
-      // Reusable reset function (extracted from New payment button)
-      function resetToInitialState() {
-        // Reset state
-        state.method = 'none';
-        state.amount = '';
-        state.isAmountValid = false;
-        state.desc = '';
-        state.cardFormReady = false;
-        state.loading = false;
-        state.error = null;
-        state.isConnected = false;
-        state.accounts = [];
-        state.selectedAccountId = null;
-        
-        // Reset form
-        var amountInput = document.getElementById('amountInput');
-        var descriptionInput = document.getElementById('descriptionInput');
-        var accountSelect = document.getElementById('accountSelect');
-        if (amountInput) amountInput.value = '';
-        if (descriptionInput) descriptionInput.value = '';
-        if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
-        
-        // Reset UI
-        var methodOptions = document.querySelectorAll('.method-option');
-        methodOptions.forEach(function(opt) {
-          opt.classList.remove('selected');
-          var radio = opt.querySelector('.method-radio');
-          if (radio) radio.checked = false;
-        });
-        
-        var bankAccountSelect = document.getElementById('bankAccountSelect');
-        var bankConnectedBadge = document.getElementById('bankConnectedBadge');
-        var successView = document.getElementById('successView');
-        var primaryActionArea = document.getElementById('primaryActionArea');
-        
-        if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
-        if (bankConnectedBadge) bankConnectedBadge.classList.add('hidden');
-        if (successView) successView.classList.add('hidden');
-        if (primaryActionArea) primaryActionArea.style.display = 'block';
-        
-        updateOrderSummary();
-        updatePrimaryAction();
-      }
 
       
       // Handle bank connection
@@ -997,7 +954,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           var primaryActionArea = document.getElementById('primaryActionArea');
           if (primaryActionArea) primaryActionArea.style.display = 'none';
         }
-          resetToInitialState();
+          clearFormAndErrors();
       }
       
       // Get currently selected account
@@ -1223,9 +1180,45 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
         var newPaymentBtn = document.getElementById('newPaymentBtn');
         if (newPaymentBtn) {
           newPaymentBtn.addEventListener('click', function() {
-            resetToInitialState();
+            // Reset state
+            state.method = 'none';
+            state.amount = '';
+            state.isAmountValid = false;
+            state.desc = '';
+            state.cardFormReady = false;
+            state.loading = false;
+            state.error = null;
+            state.isConnected = false;
+            state.accounts = [];
+            state.selectedAccountId = null;
+            
+            // Reset form
+            if (amountInput) amountInput.value = '';
+            if (descriptionInput) descriptionInput.value = '';
+            if (accountSelect) accountSelect.innerHTML = '<option value="">Choose an account...</option>';
+            
+            // Reset UI
+            methodOptions.forEach(function(opt) {
+              opt.classList.remove('selected');
+              var radio = opt.querySelector('.method-radio');
+              if (radio) radio.checked = false;
+            });
+            
+            var bankAccountSelect = document.getElementById('bankAccountSelect');
+            var bankConnectedBadge = document.getElementById('bankConnectedBadge');
+            var successView = document.getElementById('successView');
+            var primaryActionArea = document.getElementById('primaryActionArea');
+            
+            if (bankAccountSelect) bankAccountSelect.classList.add('hidden');
+            if (bankConnectedBadge) bankConnectedBadge.classList.add('hidden');
+            if (successView) successView.classList.add('hidden');
+            if (primaryActionArea) primaryActionArea.style.display = 'block';
+            
+            updateOrderSummary();
+            updatePrimaryAction();
           });
         }
+      });
       
       // Listen for AcceptUI ready state
       window.addEventListener('acceptUIReady', function(event) {
@@ -1235,8 +1228,8 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     })();
   </script>
   `
-  : ""
-}
+      : ""
+  }
 </body>
 </html>`;
 }
@@ -1290,7 +1283,7 @@ router.get("/", async (req, res, next) => {
         linkToken,
         error: null,
         userId: session.user_id,
-        selectedPlan: selected_plan || null
+      selectedPlan: selected_plan || null
     }));
   } catch (err) {
     next(err);
