@@ -237,12 +237,10 @@ router.post('/charge', async (req, res) => {
 // Webhook handler stub for Authorize.Net events
 // In /src/routes/payments.js
 // Add this middleware to capture raw body
-app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
-
 router.post('/webhook', async (req, res) => {
   try {
-    // Use the raw body directly
-    const rawBody = req.body.toString();
+    // Get raw body from the request
+    const rawBody = JSON.stringify(req.body);
     const signature = req.headers['x-anet-signature'];
     
     console.log('🔍 Webhook received:', {
@@ -258,9 +256,8 @@ router.post('/webhook', async (req, res) => {
       return res.status(401).json({ error: 'Invalid signature' });
     }
     
-    // Parse the JSON
-    const webhookData = JSON.parse(rawBody);
-    const { eventType, payload } = webhookData;
+    // Process webhook
+    const { eventType, payload } = req.body;
     const transactionId = payload.id;
     
     switch (eventType) {
@@ -276,5 +273,4 @@ router.post('/webhook', async (req, res) => {
     res.status(200).json({ received: true, error: 'Processing error' });
   }
 });
-
 module.exports = router;
