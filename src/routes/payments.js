@@ -23,11 +23,11 @@ function verifyWebhookSignature(rawBody, signature) {
 }
 async function updateTransactionStatus(transactionId, status) {
   try {
-    // Update transaction status in database
-    const result = await db.query(
-      'UPDATE transactions SET status = $1 WHERE authorize_net_transaction_id = $2',
-      [status, transactionId]
-    );
+    // Update transaction status in database using databaseService
+    const result = await databaseService.query('transactions', 'update', {
+      set: { status: status },
+      where: { authorize_net_transaction_id: transactionId }
+    });
     
     console.log(`✅ Updated transaction ${transactionId} to status: ${status}`);
     return result;
