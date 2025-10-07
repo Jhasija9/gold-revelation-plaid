@@ -54,8 +54,6 @@ router.post('/charge', async (req, res) => {
       amount,
       description,
       opaqueData,
-      user_id,
-      plan_name
     } = req.body;
 
     // Validate required fields
@@ -128,14 +126,12 @@ router.post('/charge', async (req, res) => {
         user_id: user_id,
         transaction_type: 'payment',
         amount: parseFloat(amount),
-        status: 'completed', // Credit card payments are immediate
+        status: 'pending', // Credit card payments are immediate
         description: paymentData.description,
         payment_method: 'credit_card',
         authorize_net_transaction_id: chargeResult.transactionId,
         authorize_net_auth_code: chargeResult.authCode,
-        plan_name: plan_name || null,
         created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString()
       };
 
       console.log('🌐 Payments Route: Storing transaction record:', {
