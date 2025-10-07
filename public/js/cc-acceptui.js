@@ -115,7 +115,12 @@
         const orderTotal = document.getElementById('orderTotal');
         if (orderAmount) orderAmount.textContent = '$0.00';
         if (orderTotal) orderTotal.textContent = '$0.00';
-
+        setTimeout(function() {
+          const newPaymentBtn = document.getElementById('newPaymentBtn');
+          if (newPaymentBtn) {
+            newPaymentBtn.click();
+          }
+        }, 2000);
 
       } else {
         const inlineError = document.getElementById('inlineError');

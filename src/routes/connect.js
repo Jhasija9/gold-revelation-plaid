@@ -954,7 +954,12 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           var primaryActionArea = document.getElementById('primaryActionArea');
           if (primaryActionArea) primaryActionArea.style.display = 'none';
         }
-          clearFormAndErrors();
+          setTimeout(function() {
+  var newPaymentBtn = document.getElementById('newPaymentBtn');
+  if (newPaymentBtn) {
+    newPaymentBtn.click();
+  }
+}, 2000);
       }
       
       // Get currently selected account
