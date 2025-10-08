@@ -47,17 +47,27 @@ class SettlementService {
         environment: this.environment
       });
 
+
       const raw = await new Promise((resolve, reject) => {
         controller.execute(() => {
           try { resolve(controller.getResponse()); }
           catch (e) { reject(e); }
         });
       });
+      console.log('🔍 Raw API Response:', JSON.stringify(raw, null, 2));
+
 
       const response = new ApiContracts.GetSettledBatchListResponse(raw);
-      const batches = response.getBatchList()?.getBatch() || [];
+      if (response.getMessages() && response.getMessages().getResultCode() !== 'Ok') {
+        console.error('❌ API Error:', response.getMessages().getMessage());
+        throw new Error(`API Error: ${response.getMessages().getMessage()}`);
+      }
       
+      const batches = response.getBatchList()?.getBatch() || [];
       console.log(`📦 SettlementService: Found ${batches.length} settled batches`);
+
+      
+    //   console.log(`📦 SettlementService: Found ${batches.length} settled batches`);
       return batches;
       
     } catch (error) {
