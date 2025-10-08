@@ -363,7 +363,6 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     margin-bottom: 12px; 
     font-size: 14px; 
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--rg-border);
   }
   
   .order-item:last-child {
