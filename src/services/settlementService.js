@@ -138,7 +138,10 @@ class SettlementService {
     //   const yesterday = new Date();
     //   yesterday.setDate(yesterday.getDate() - 1);
     //   const dateString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const dateString = '2025-10-07T00:00:00'; // Hardcode Oct 07
+    // const dateString = '2025-10-07T00:00:00'; // Hardcode Oct 07
+    const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+const dateString = yesterday.toISOString().split('T')[0] + 'T00:00:00';
       
       console.log(`📅 SettlementService: Checking settlements for date: ${dateString}`);
       
