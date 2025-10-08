@@ -127,7 +127,7 @@ class SettlementService {
       // Get yesterday's date (settlements happen next day)
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const dateString = yesterday.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dateString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       
       console.log(`📅 SettlementService: Checking settlements for date: ${dateString}`);
       
