@@ -11,7 +11,8 @@ const transferRoutes = require("./routes/transfers");
 const webhookRoutes = require("./routes/webhooks"); // NEW
 const bodyParser = require("body-parser");
 const paymentFormRoutes = require('./routes/paymentForm');
-
+const settlementService = require('./services/settlementService');
+const cron = require('node-cron');
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
 
@@ -178,5 +179,15 @@ process.on("SIGINT", () => {
   console.log("SIGINT received. Shutting down gracefully...");
   process.exit(0);
 });
+
+// Schedule daily settlement check at 7:00 AM PT (2:00 PM UTC)
+cron.schedule('0 14 * * *', () => {
+  console.log('🔄 Running daily settlement check...');
+  settlementService.checkSettledTransactions();
+}, {
+  timezone: "America/Los_Angeles"
+});
+
+console.log('⏰ Daily settlement check scheduled for 7:00 AM PT');
 
 module.exports = app;

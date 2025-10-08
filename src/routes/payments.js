@@ -3,7 +3,7 @@ const router = express.Router();
 const acceptSuiteService = require('../services/acceptSuiteService');
 const databaseService = require('../services/databaseService');
 const Transaction = require('../models/Transaction');
-
+const settlementService = require('../services/settlementService');
 const crypto = require('crypto');
 
 function verifyWebhookSignature(rawBody, signature) {
@@ -270,4 +270,25 @@ router.post('/webhook', async (req, res) => {
     res.status(200).json({ received: true, error: 'Processing error' });
   }
 });
+// Settlement check endpoint
+router.post('/settlement/check', async (req, res) => {
+  try {
+    console.log('🔄 Manual settlement check triggered');
+    const result = await settlementService.checkSettledTransactions();
+    
+    res.json({
+      success: result.success,
+      transactionsUpdated: result.transactionsUpdated || 0,
+      error: result.error
+    });
+  } catch (error) {
+    console.error('❌ Manual settlement check error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
 module.exports = router;
