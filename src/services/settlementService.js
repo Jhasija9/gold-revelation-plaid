@@ -151,42 +151,47 @@ class SettlementService {
       }
       
       let totalUpdated = 0;
-      
       // Process each settled batch
-      // Update each transaction to settled (only if actually settled)
-for (const transaction of transactions) {
-    try {
-      // Get the individual transaction status
-      const transactionStatus = transaction.getTransactionStatus();
-      
-      console.log(`🔍 Transaction ${transaction.getTransId()} status: ${transactionStatus}`);
-      
-      // Only update to 'settled' if the individual transaction is actually settled
-      if (transactionStatus === 'settledSuccessfully') {
-        await this.updateTransactionStatus(transaction.getTransId(), 'settled');
-        totalUpdated++;
-        console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to settled`);
-      } else if (transactionStatus === 'voided') {
-        await this.updateTransactionStatus(transaction.getTransId(), 'cancelled');
-        totalUpdated++;
-        console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to cancelled`);
-      } else if (transactionStatus === 'refundSettledSuccessfully') {
-        await this.updateTransactionStatus(transaction.getTransId(), 'refunded');
-        totalUpdated++;
-        console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to refunded`);
-      } else if (transactionStatus === 'declined') {
-        await this.updateTransactionStatus(transaction.getTransId(), 'failed');
-        totalUpdated++;
-        console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to failed`);
-      } else {
-        console.log(`⏭️ Skipping transaction ${transaction.getTransId()} - Status: ${transactionStatus}`);
+for (const batch of settledBatches) {
+    console.log(`📦 SettlementService: Processing batch: ${batch.getBatchId()}`);
+    
+    // Get transactions in this batch
+    const transactions = await this.getTransactionList(batch.getBatchId());
+    
+    // Update each transaction based on its individual status
+    for (const transaction of transactions) {
+      try {
+        // Get the individual transaction status
+        const transactionStatus = transaction.getTransactionStatus();
+        
+        console.log(`🔍 Transaction ${transaction.getTransId()} status: ${transactionStatus}`);
+        
+        // Update database based on individual transaction status
+        if (transactionStatus === 'settledSuccessfully') {
+          await this.updateTransactionStatus(transaction.getTransId(), 'settled');
+          totalUpdated++;
+          console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to settled`);
+        } else if (transactionStatus === 'voided') {
+          await this.updateTransactionStatus(transaction.getTransId(), 'cancelled');
+          totalUpdated++;
+          console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to cancelled`);
+        } else if (transactionStatus === 'refundSettledSuccessfully') {
+          await this.updateTransactionStatus(transaction.getTransId(), 'refunded');
+          totalUpdated++;
+          console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to refunded`);
+        } else if (transactionStatus === 'declined') {
+          await this.updateTransactionStatus(transaction.getTransId(), 'failed');
+          totalUpdated++;
+          console.log(`✅ SettlementService: Updated transaction ${transaction.getTransId()} to failed`);
+        } else {
+          console.log(`⏭️ Skipping transaction ${transaction.getTransId()} - Status: ${transactionStatus}`);
+        }
+      } catch (error) {
+        console.error(`❌ SettlementService: Failed to update transaction ${transaction.getTransId()}:`, error);
       }
-    } catch (error) {
-      console.error(`❌ SettlementService: Failed to update transaction ${transaction.getTransId()}:`, error);
     }
   }
-      
-      console.log(`🎉 SettlementService: Settlement check completed. Updated ${totalUpdated} transactions to settled`);
+  console.log(`🎉 SettlementService: Settlement check completed. Updated ${totalUpdated} transactions to settled`);
       return { success: true, transactionsUpdated: totalUpdated };
       
     } catch (error) {
