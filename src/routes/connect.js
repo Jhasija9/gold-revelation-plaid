@@ -476,7 +476,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             <div class="section-title">Payment method</div>
                   <div class="method-option" data-method="bank" data-testid="method-bank">
                     <input type="radio" name="payment-method" value="bank" class="method-radio">
-              <div class="method-icon">🏦</div>
+              <div class="method-icon"></div>
               <div class="method-content">
                 <div class="method-title">Bank account (Plaid)</div>
                 <div class="method-desc">Connect your bank account securely</div>
@@ -484,7 +484,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             </div>
                   <div class="method-option" data-method="card" data-testid="method-card">
               <input type="radio" name="payment-method" value="card" class="method-radio">
-              <div class="method-icon">💳</div>
+              <div class="method-icon"></div>
               <div class="method-content">
                 <div class="method-title">Credit/Debit card</div>
                       <div class="method-desc">Pay instantly with your credit or debit card</div>
