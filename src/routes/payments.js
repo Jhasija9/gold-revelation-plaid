@@ -166,6 +166,8 @@ router.post('/charge', async (req, res) => {
         authorize_net_transaction_id: chargeResult.transactionId,
         authorize_net_auth_code: chargeResult.authCode,
         authorize_net_response_code: chargeResult.responseCode,
+        card_last_four: chargeResult.cardLastFour,        
+        card_type: chargeResult.cardType,         
         created_at: new Date().toISOString(),
       };
 

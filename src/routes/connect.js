@@ -562,7 +562,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     class="AcceptUI primary-action-btn" 
     style="display: none;"
     data-billingAddressOptions='{"show":true,"required":true}'
-    data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
+    data-paymentOptions='{"showCreditCard":true,"showBankAccount":false,"requireCardCode":true}'
     data-acceptUIFormBtnTxt="Pay Securely"
     data-acceptUIFormHeaderTxt="Card Information"
     data-responseHandler="acceptUIResponseHandler">
