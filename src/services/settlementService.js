@@ -124,10 +124,11 @@ class SettlementService {
         return { success: false, error: 'Service not configured' };
       }
       
-      // Get yesterday's date (settlements happen next day)
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const dateString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    //   // Get yesterday's date (settlements happen next day)
+    //   const yesterday = new Date();
+    //   yesterday.setDate(yesterday.getDate() - 1);
+    //   const dateString = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const dateString = '2025-10-07'; // Hardcode Oct 07
       
       console.log(`📅 SettlementService: Checking settlements for date: ${dateString}`);
       
