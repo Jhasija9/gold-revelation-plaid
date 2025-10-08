@@ -274,6 +274,8 @@ console.log('🔧 AcceptSuiteService: Result code:', resultCode);
           transactionId: tr.transId,
           authCode: tr.authCode,
           responseCode: tr.responseCode,
+          cardLastFour: tr.accountNumber ? tr.accountNumber.slice(-4) : null,
+  cardType: tr.accountType || null,
           message: 'Payment processed successfully'
         };
       } else {
