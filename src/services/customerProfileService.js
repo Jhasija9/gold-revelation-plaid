@@ -18,9 +18,10 @@ const Environment = Constants.Environment;
 
 class CustomerProfileService {
   constructor() {
-    this.apiLoginId = process.env.AUTHORIZE_NET_API_LOGIN_ID;
-    this.signatureKey = process.env.AUTHORIZE_NET_SIGNATURE_KEY;
-    this.environment = process.env.AUTHORIZE_NET_ENVIRONMENT === 'production' 
+    
+    this.apiLoginId = process.env.ANET_API_LOGIN_ID;
+    this.signatureKey = process.env.ANET_SIGNATURE_KEY;
+    this.environment = process.env.ANET_ENV === 'production' 
       ? Constants.endpoint.production
       : Constants.endpoint.sandbox;
   }
