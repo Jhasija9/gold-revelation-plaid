@@ -199,14 +199,19 @@ console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
       console.log('🔧 Using env:', process.env.ANET_ENV, 'endpoint:', this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production');
       console.log('🔧 API Login ID:', this.mask(this.apiLoginId), 'TxnKey set:', !!this.transactionKey);
 
-      const authOk = await this.testAuth();
-      if (!authOk) {
-        return {
-          success: false,
-          code: 'E00007',
-          message: 'User authentication failed (auth test). Check ANET_API_LOGIN_ID / ANET_TRANSACTION_KEY and environment.'
-        };
-      }
+      // Only test auth in sandbox, not production
+if (process.env.ANET_ENV !== 'production') {
+  const authOk = await this.testAuth();
+  if (!authOk) {
+    return {
+      success: false,
+      code: 'E00007',
+      message: 'User authentication failed (auth test). Check ANET_API_LOGIN_ID / ANET_TRANSACTION_KEY and environment.'
+    };
+  }
+} else {
+  console.log('🔧 Production mode: Skipping auth test, proceeding with transaction');
+}
 
       console.log('✅ AcceptSuiteService: Validation passed, processing payment...');
       console.log('🔧 AcceptSuiteService: Creating transaction request');
