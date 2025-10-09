@@ -47,25 +47,7 @@ class AcceptSuiteService {
     }
   }
   // Around line 50-60 in acceptSuiteService.js
-checkConfiguration() {
-  console.log('🔧 AcceptSuiteService: checkConfiguration() called');
-  
-  // Add these lines to debug environment variables
-  console.log('🔧 Environment Variables Debug:');
-  console.log('🔧 AUTHORIZE_NET_ENVIRONMENT:', process.env.AUTHORIZE_NET_ENVIRONMENT);
-  console.log('🔧 AUTHORIZE_NET_API_LOGIN_ID:', process.env.AUTHORIZE_NET_API_LOGIN_ID ? 'Set' : 'Missing');
-  console.log('🔧 AUTHORIZE_NET_TRANSACTION_KEY:', process.env.AUTHORIZE_NET_TRANSACTION_KEY ? 'Set' : 'Missing');
-  console.log('🔧 AUTHORIZE_NET_SIGNATURE_KEY:', process.env.AUTHORIZE_NET_SIGNATURE_KEY ? 'Set' : 'Missing');
-  
-  const isConfigured = !!(
-    process.env.AUTHORIZE_NET_API_LOGIN_ID &&
-    process.env.AUTHORIZE_NET_TRANSACTION_KEY &&
-    process.env.AUTHORIZE_NET_SIGNATURE_KEY
-  );
-  
-  console.log('🔧 AcceptSuiteService: isConfigured =', isConfigured);
-  return isConfigured;
-}
+
 
   // Create merchant authentication
   getMerchantAuthentication() {
@@ -78,19 +60,27 @@ checkConfiguration() {
   // Check if service is properly configured
   checkConfiguration() {
     console.log('🔧 AcceptSuiteService: checkConfiguration() called');
-    console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
-    
-    if (!this.isConfigured) {
-      console.log('❌ AcceptSuiteService: Service not configured');
-      return {
-        success: false,
-        code: 'SERVICE_NOT_CONFIGURED',
-        message: 'Credit card processing is not configured. Please contact support.'
-      };
-    }
-    
-    console.log('✅ AcceptSuiteService: Configuration check passed');
-    return { success: true };
+  
+  // Add these debug logs here
+  console.log('🔧 Environment Variables Debug:');
+  console.log('🔧 AUTHORIZE_NET_ENVIRONMENT:', process.env.AUTHORIZE_NET_ENVIRONMENT);
+  console.log('🔧 AUTHORIZE_NET_API_LOGIN_ID:', process.env.AUTHORIZE_NET_API_LOGIN_ID ? 'Set' : 'Missing');
+  console.log('🔧 AUTHORIZE_NET_TRANSACTION_KEY:', process.env.AUTHORIZE_NET_TRANSACTION_KEY ? 'Set' : 'Missing');
+  console.log('🔧 AUTHORIZE_NET_SIGNATURE_KEY:', process.env.AUTHORIZE_NET_SIGNATURE_KEY ? 'Set' : 'Missing');
+  
+  console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
+  
+  if (!this.isConfigured) {
+    console.log('❌ AcceptSuiteService: Service not configured');
+    return {
+      success: false,
+      code: 'SERVICE_NOT_CONFIGURED',
+      message: 'Credit card processing is not configured. Please contact support.'
+    };
+  }
+  
+  console.log('✅ AcceptSuiteService: Configuration check passed');
+  return { success: true };
   }
 
   // Get public configuration for frontend AcceptUI
