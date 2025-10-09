@@ -273,6 +273,12 @@ console.log('🔑 Controller Environment:', this.environment);
 console.log('🔑 Environment Variable:', process.env.ANET_ENV);
 console.log('🔑 API Login ID:', this.apiLoginId);
 console.log('🔑 Transaction Key:', this.transactionKey);
+// Add this before the controller execution:
+console.log('🔧 gffffggffggffggfgfCharge Debug:', {
+  environment: process.env.ANET_ENV || 'sandbox',
+  apiLoginId: this.apiLoginId ? `****${this.apiLoginId.slice(-4)}` : 'Missing',
+  endpoint: this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production'
+});
 
       const controller = new CreateTransactionController(reqJson, {
         logger: { enabled: false, location: './', level: 'error' },

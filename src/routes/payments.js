@@ -226,6 +226,39 @@ router.post('/charge', async (req, res) => {
     });
   }
 });
+// Add this endpoint
+router.get('/auth-test', async (req, res) => {
+  try {
+    console.log('🔧 Auth Test Endpoint: Testing Authorize.Net authentication');
+    
+    const authResult = await acceptSuiteService.testAuth();
+    
+    if (authResult.success) {
+      res.json({
+        success: true,
+        message: 'Authentication successful',
+        environment: process.env.ANET_ENV || 'sandbox',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: 'Authentication failed',
+        error: authResult.message,
+        environment: process.env.ANET_ENV || 'sandbox',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    console.error('❌ Auth test endpoint error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Auth test failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 // Webhook handler stub for Authorize.Net events
 // In /src/routes/payments.js
