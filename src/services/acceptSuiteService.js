@@ -267,6 +267,12 @@ if (process.env.ANET_ENV !== 'production') {
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
       const reqJson = createRequest.getJSON();
       console.log('📦 Request root keys:', Object.keys(reqJson)); // expect ['createTransactionRequest']
+      // Around line 268 in acceptSuiteService.js, add this before the controller:
+console.log('🔑 Transaction Request JSON:', reqJson);
+console.log('🔑 Controller Environment:', this.environment);
+console.log('🔑 Environment Variable:', process.env.ANET_ENV);
+console.log('🔑 API Login ID:', this.apiLoginId);
+console.log('🔑 Transaction Key:', this.transactionKey);
 
       const controller = new CreateTransactionController(reqJson, {
         logger: { enabled: false, location: './', level: 'error' },
