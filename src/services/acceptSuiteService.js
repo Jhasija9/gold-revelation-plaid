@@ -63,12 +63,12 @@ class AcceptSuiteService {
   
   // Add these debug logs here
   console.log('🔧 Environment Variables Debug:');
-  console.log('🔧 AUTHORIZE_NET_ENVIRONMENT:', process.env.AUTHORIZE_NET_ENVIRONMENT);
-  console.log('🔧 AUTHORIZE_NET_API_LOGIN_ID:', process.env.AUTHORIZE_NET_API_LOGIN_ID ? 'Set' : 'Missing');
-  console.log('🔧 AUTHORIZE_NET_TRANSACTION_KEY:', process.env.AUTHORIZE_NET_TRANSACTION_KEY ? 'Set' : 'Missing');
-  console.log('🔧 AUTHORIZE_NET_SIGNATURE_KEY:', process.env.AUTHORIZE_NET_SIGNATURE_KEY ? 'Set' : 'Missing');
-  
-  console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
+console.log('🔧 ANET_ENV:', process.env.ANET_ENV);
+console.log('🔧 ANET_API_LOGIN_ID:', process.env.ANET_API_LOGIN_ID ? 'Set' : 'Missing');
+console.log('🔧 ANET_TRANSACTION_KEY:', process.env.ANET_TRANSACTION_KEY ? 'Set' : 'Missing');
+console.log('🔧 ANET_CLIENT_KEY:', process.env.ANET_CLIENT_KEY ? 'Set' : 'Missing');
+console.log('🔧 ANET_SIGNATURE_KEY:', process.env.ANET_SIGNATURE_KEY ? 'Set' : 'Missing');
+console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
   
   if (!this.isConfigured) {
     console.log('❌ AcceptSuiteService: Service not configured');
