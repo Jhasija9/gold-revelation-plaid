@@ -20,7 +20,9 @@ class CustomerProfileService {
   constructor() {
     
     this.apiLoginId = process.env.ANET_API_LOGIN_ID;
-    this.signatureKey = process.env.ANET_SIGNATURE_KEY;
+    // this.signatureKey = process.env.ANET_SIGNATURE_KEY;
+    this.transactionKey = process.env.ANET_TRANSACTION_KEY;
+
     this.environment = process.env.ANET_ENV === 'production' 
       ? Constants.endpoint.production
       : Constants.endpoint.sandbox;
@@ -30,7 +32,8 @@ class CustomerProfileService {
   getMerchantAuthentication() {
     const merchantAuthenticationType = new MerchantAuthenticationType();
     merchantAuthenticationType.setName(this.apiLoginId);
-    merchantAuthenticationType.setTransactionKey(this.signatureKey);
+    // merchantAuthenticationType.setTransactionKey(this.signatureKey);
+    merchantAuthenticationType.setTransactionKey(this.transactionKey);
     return merchantAuthenticationType;
   }
 
