@@ -272,7 +272,7 @@ if (process.env.ANET_ENV !== 'production') {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
         timeout: 120000,
-        environment: Constants.endpoint.sandbox
+        environment: this.environment
       });
       
       // defensive: make sure request has only the proper root
