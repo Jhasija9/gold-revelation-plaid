@@ -51,9 +51,15 @@ class AcceptSuiteService {
 
   // Create merchant authentication
   getMerchantAuthentication() {
+    console.log('🔑 Merchant Auth → Creating merchant authentication');
+  console.log('🔑 Merchant Auth → Login ID:', this.apiLoginId);
+  console.log('🔑 Merchant Auth → Transaction Key length:', this.transactionKey ? this.transactionKey.length : 'null');
+  
     const merchantAuth = new MerchantAuthenticationType();
     merchantAuth.setName(this.apiLoginId);
     merchantAuth.setTransactionKey(this.transactionKey);
+    console.log('🔑 Merchant Auth → Merchant auth object created');
+
     return merchantAuth;
   }
 
@@ -112,6 +118,13 @@ console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
 
   async testAuth() {
     try {
+      console.log('🔑 Auth test → Starting authentication test');
+    console.log('🔑 Auth test → Using environment:', this.environment);
+    console.log('🔑 Auth test → API Login ID:', this.apiLoginId);
+    console.log('🔑 Auth test → Transaction Key length:', this.transactionKey ? this.transactionKey.length : 'null');
+    console.log('🔑 Auth test → Transaction Key first 4 chars:', this.transactionKey ? this.transactionKey.substring(0, 4) : 'null');
+    console.log('🔑 Auth test → Transaction Key last 4 chars:', this.transactionKey ? this.transactionKey.substring(this.transactionKey.length - 4) : 'null');
+    
       const req = new AuthenticateTestRequest();
       req.setMerchantAuthentication(this.getMerchantAuthentication());
 
@@ -121,10 +134,14 @@ console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
         timeout: 120000,
         environment: this.environment
       });
+      console.log('🔑 Auth test → Controller created, executing...');
+
 
       const raw = await new Promise((resolve, reject) => {
         ctrl.execute(() => { try { resolve(ctrl.getResponse()); } catch (e) { reject(e); } });
       });
+      console.log('🔑 Auth test → Raw response:', JSON.stringify(raw, null, 2));
+
 
       const resultCode = raw?.messages?.resultCode;
       const msg = raw?.messages?.message?.[0]?.text;
