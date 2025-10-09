@@ -54,6 +54,8 @@ class AcceptSuiteService {
     console.log('🔑 Merchant Auth → Creating merchant authentication');
   console.log('🔑 Merchant Auth → Login ID:', this.apiLoginId);
   console.log('🔑 Merchant Auth → Transaction Key length:', this.transactionKey ? this.transactionKey.length : 'null');
+  console.log('🔑 Merchant Auth → FULL Transaction Key:', this.transactionKey);
+
   
     const merchantAuth = new MerchantAuthenticationType();
     merchantAuth.setName(this.apiLoginId);
