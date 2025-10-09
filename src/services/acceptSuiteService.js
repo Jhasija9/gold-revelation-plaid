@@ -108,7 +108,7 @@ console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
       config: {
         apiLoginId: this.apiLoginId,
         clientKey: this.clientKey,
-        environment: process.env.ANET_ENV || 'sandbox'
+        environment: process.env.ANET_ENV || 'production'
       }
     };
     
