@@ -46,6 +46,26 @@ class AcceptSuiteService {
       console.log('✅ AcceptSuiteService: Ready for credit card processing');
     }
   }
+  // Around line 50-60 in acceptSuiteService.js
+checkConfiguration() {
+  console.log('🔧 AcceptSuiteService: checkConfiguration() called');
+  
+  // Add these lines to debug environment variables
+  console.log('🔧 Environment Variables Debug:');
+  console.log('🔧 AUTHORIZE_NET_ENVIRONMENT:', process.env.AUTHORIZE_NET_ENVIRONMENT);
+  console.log('🔧 AUTHORIZE_NET_API_LOGIN_ID:', process.env.AUTHORIZE_NET_API_LOGIN_ID ? 'Set' : 'Missing');
+  console.log('🔧 AUTHORIZE_NET_TRANSACTION_KEY:', process.env.AUTHORIZE_NET_TRANSACTION_KEY ? 'Set' : 'Missing');
+  console.log('🔧 AUTHORIZE_NET_SIGNATURE_KEY:', process.env.AUTHORIZE_NET_SIGNATURE_KEY ? 'Set' : 'Missing');
+  
+  const isConfigured = !!(
+    process.env.AUTHORIZE_NET_API_LOGIN_ID &&
+    process.env.AUTHORIZE_NET_TRANSACTION_KEY &&
+    process.env.AUTHORIZE_NET_SIGNATURE_KEY
+  );
+  
+  console.log('🔧 AcceptSuiteService: isConfigured =', isConfigured);
+  return isConfigured;
+}
 
   // Create merchant authentication
   getMerchantAuthentication() {
