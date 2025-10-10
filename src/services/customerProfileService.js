@@ -19,9 +19,13 @@ const Environment = Constants.Environment;
 class CustomerProfileService {
   constructor() {
     
-    this.apiLoginId = process.env.ANET_API_LOGIN_ID;
+    this.apiLoginId = process.env.ANET_API_LOGIN_ID?.trim();
     // this.signatureKey = process.env.ANET_SIGNATURE_KEY;
-    this.transactionKey = process.env.ANET_TRANSACTION_KEY;
+    this.transactionKey = process.env.ANET_TRANSACTION_KEY?.trim();
+
+    if (!this.apiLoginId || !this.transactionKey) {
+      throw new Error('ANET_API_LOGIN_ID and ANET_TRANSACTION_KEY are required and cannot be empty');
+    }
 
     // this.environment = process.env.ANET_ENV === 'production' 
     //   ? Constants.endpoint.production

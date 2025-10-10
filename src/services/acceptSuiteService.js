@@ -21,21 +21,24 @@ class AcceptSuiteService {
     console.log('🔧 AcceptSuiteService: Constructor called');
     
     // Validate required environment variables
-    this.apiLoginId = process.env.ANET_API_LOGIN_ID;
-    this.transactionKey = process.env.ANET_TRANSACTION_KEY;
-    this.clientKey = process.env.ANET_CLIENT_KEY;
+    this.apiLoginId = process.env.ANET_API_LOGIN_ID.trim();
+    this.transactionKey = process.env.ANET_TRANSACTION_KEY.trim();
+    this.clientKey = process.env.ANET_CLIENT_KEY.trim();
     // this.environment = process.env.ANET_ENV === 'production' 
     //   ? Constants.endpoint.production
     //   : Constants.endpoint.sandbox;
+    if (!this.apiLoginId || !this.transactionKey) {
+      throw new Error('ANET_API_LOGIN_ID and ANET_TRANSACTION_KEY are required and cannot be empty');
+    }
     this.environment = Constants.endpoint.production; // Force production only
+    
 
 
     console.log('🔧 AcceptSuiteService: Environment variables check:');
     console.log('  - ANET_API_LOGIN_ID:', this.apiLoginId ? '✅ Set' : '❌ Missing');
     console.log('  - ANET_TRANSACTION_KEY:', this.transactionKey ? '✅ Set' : '❌ Missing');
     console.log('  - ANET_CLIENT_KEY:', this.clientKey ? '✅ Set' : '❌ Missing');
-    console.log('  - ANET_ENV:', process.env.ANET_ENV || 'production');
-
+    console.log('  - ANET_ENV: production (forced)');
     // Set service availability based on environment variables
     this.isConfigured = !!(this.apiLoginId && this.transactionKey);
     
@@ -47,6 +50,10 @@ class AcceptSuiteService {
     } else {
       console.log('✅ AcceptSuiteService: Ready for credit card processing');
     }
+  }
+  mask(value) {
+    if (!value) return 'null';
+    return value.length > 4 ? `****${value.slice(-4)}` : '****';
   }
   // Around line 50-60 in acceptSuiteService.js
 
@@ -66,6 +73,7 @@ class AcceptSuiteService {
 
     return merchantAuth;
   }
+  
 
   // Check if service is properly configured
   checkConfiguration() {
@@ -264,6 +272,17 @@ console.log('🔧 Production mode: Skipping auth test, proceeding with transacti
       if (customerIP) {
         transactionRequestType.setCustomerIP(customerIP);
       }
+      console.log('🔑 Transaction Request JSON:', reqJson);
+  console.log('🔑 Controller Environment:', this.environment);
+  console.log('🔑 Environment Variable: production');
+  console.log('🔑 API Login ID:', this.mask(this.apiLoginId));
+  console.log('🔑 Transaction Key length:', this.transactionKey?.length || 0);
+  
+  console.log('🔧 Charge Debug:', {
+    environment: 'production',
+    apiLoginId: this.mask(this.apiLoginId),
+    endpoint: 'production'
+  });
 
       createRequest.setTransactionRequest(transactionRequestType);
 

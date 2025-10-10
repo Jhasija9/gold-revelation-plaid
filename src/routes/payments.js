@@ -235,35 +235,27 @@ router.get('/test-credentials', async (req, res) => {
     const ApiContracts = authorizenet.APIContracts;
     const Constants = authorizenet.Constants;
     
-    console.log('🧪 Testing credentials with both sandbox and production endpoints...');
+    // Trim and validate environment variables
+    const apiLoginId = process.env.ANET_API_LOGIN_ID?.trim();
+    const transactionKey = process.env.ANET_TRANSACTION_KEY?.trim();
+    
+    if (!apiLoginId || !transactionKey) {
+      return res.status(500).json({
+        success: false,
+        error: 'ANET_API_LOGIN_ID and ANET_TRANSACTION_KEY are required'
+      });
+    }
+    
+    console.log('🧪 Testing PRODUCTION credentials only...');
     
     // Create authenticate test request
     const authReq = new ApiContracts.AuthenticateTestRequest();
     const merchantAuth = new ApiContracts.MerchantAuthenticationType();
-    merchantAuth.setName(process.env.ANET_API_LOGIN_ID);
-    merchantAuth.setTransactionKey(process.env.ANET_TRANSACTION_KEY);
+    merchantAuth.setName(apiLoginId);
+    merchantAuth.setTransactionKey(transactionKey);
     authReq.setMerchantAuthentication(merchantAuth);
     
-    // Test with SANDBOX endpoint first
-    console.log('🧪 Testing credentials with SANDBOX endpoint...');
-    const sandboxCtrl = new ApiControllers.AuthenticateTestController(authReq.getJSON(), {
-      logger: { enabled: false, location: './', level: 'error' },
-      proxy: { setProxy: false, proxyUrl: '' },
-      timeout: 120000,
-      environment: Constants.endpoint.sandbox
-    });
-    
-    const sandboxResult = await new Promise((resolve, reject) => {
-      sandboxCtrl.execute(() => {
-        try { resolve(sandboxCtrl.getResponse()); } 
-        catch (e) { reject(e); }
-      });
-    });
-    
-    console.log('🧪 Sandbox test result:', sandboxResult);
-    
-    // Test with PRODUCTION endpoint
-    console.log('🧪 Testing credentials with PRODUCTION endpoint...');
+    // Test with PRODUCTION endpoint only
     const prodCtrl = new ApiControllers.AuthenticateTestController(authReq.getJSON(), {
       logger: { enabled: false, location: './', level: 'error' },
       proxy: { setProxy: false, proxyUrl: '' },
@@ -278,20 +270,13 @@ router.get('/test-credentials', async (req, res) => {
       });
     });
     
-    console.log('🧪 Production test result:', prodResult);
-    
     res.json({
       success: true,
       credentials: {
-        apiLoginId: process.env.ANET_API_LOGIN_ID,
-        transactionKeyLength: process.env.ANET_TRANSACTION_KEY?.length,
-        environment: process.env.ANET_ENV
-      },
-      sandboxTest: {
-        success: sandboxResult.messages.resultCode === 'Ok',
-        resultCode: sandboxResult.messages.resultCode,
-        message: sandboxResult.messages.message?.[0]?.text || 'No message',
-        code: sandboxResult.messages.message?.[0]?.code || 'No code'
+        apiLoginId: apiLoginId ? `****${apiLoginId.slice(-4)}` : 'Missing',
+        transactionKeyLength: transactionKey?.length || 0,
+        environment: 'production',
+        endpoint: 'production'
       },
       productionTest: {
         success: prodResult.messages.resultCode === 'Ok',
@@ -305,10 +290,54 @@ router.get('/test-credentials', async (req, res) => {
     console.error('🧪 Credential test error:', error);
     res.status(500).json({ 
       success: false,
-      error: error.message,
-      stack: error.stack
+      error: error.message
     });
   }
+});
+// Add this to revelation-gold-backend/src/routes/payments.js
+
+// Debug route to verify runtime environment variables
+router.get('/debug-env', (req, res) => {
+  const apiLoginId = process.env.ANET_API_LOGIN_ID?.trim();
+  const transactionKey = process.env.ANET_TRANSACTION_KEY?.trim();
+  const clientKey = process.env.ANET_CLIENT_KEY?.trim();
+  const signatureKey = process.env.ANET_SIGNATURE_KEY?.trim();
+  
+  res.json({
+    success: true,
+    environment: process.env.NODE_ENV || 'development',
+    credentials: {
+      apiLoginId: {
+        present: !!apiLoginId,
+        length: apiLoginId?.length || 0,
+        masked: apiLoginId ? `****${apiLoginId.slice(-4)}` : 'Missing',
+        hasWhitespace: apiLoginId !== process.env.ANET_API_LOGIN_ID
+      },
+      transactionKey: {
+        present: !!transactionKey,
+        length: transactionKey?.length || 0,
+        masked: transactionKey ? `****${transactionKey.slice(-4)}` : 'Missing',
+        hasWhitespace: transactionKey !== process.env.ANET_TRANSACTION_KEY
+      },
+      clientKey: {
+        present: !!clientKey,
+        length: clientKey?.length || 0,
+        masked: clientKey ? `****${clientKey.slice(-4)}` : 'Missing'
+      },
+      signatureKey: {
+        present: !!signatureKey,
+        length: signatureKey?.length || 0,
+        masked: signatureKey ? `****${signatureKey.slice(-4)}` : 'Missing'
+      }
+    },
+    validation: {
+      hasRequiredCredentials: !!(apiLoginId && transactionKey),
+      missingCredentials: [
+        !apiLoginId && 'ANET_API_LOGIN_ID',
+        !transactionKey && 'ANET_TRANSACTION_KEY'
+      ].filter(Boolean)
+    }
+  });
 });
 
 // Add this endpoint
