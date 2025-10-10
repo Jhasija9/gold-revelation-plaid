@@ -818,6 +818,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
               staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
               staticButton.disabled = !state.isAmountValid || state.loading;
               staticButton.style.display = 'block';
+              console.log('✅ AcceptUI Button made visible - CSP should be fixed');
               staticButton.addEventListener('click', function() {
                 console.log('🔧 Static AcceptUI button clicked!');
               });

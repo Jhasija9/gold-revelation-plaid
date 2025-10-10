@@ -46,8 +46,8 @@ app.use(
           "https://*.authorize.net"    // For credit cards (Authorize.Net)
         ],
         "img-src": ["'self'", "data:"],
-        "style-src": ["'self'", "'unsafe-inline'"],
-        "font-src": ["'self'", "data:"],
+        "style-src": ["'self'", "'unsafe-inline'","https://fonts.googleapis.com"],
+        "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
         "object-src": ["'none'"],
       },
     },
