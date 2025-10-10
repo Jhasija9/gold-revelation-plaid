@@ -145,6 +145,19 @@
   // Initialize AcceptUI
   async function initializeAcceptUI() {
     console.log('🔧 AcceptUI: Initializing...');
+    console.log('🔍 DEBUG: Checking page state...');
+  console.log('🔍 AcceptUI Button exists:', !!document.getElementById('staticAcceptUIButton'));
+  console.log('🔍 AcceptUI Button visible:', document.getElementById('staticAcceptUIButton')?.style.display);
+  console.log('🔍 All forms on page:', document.querySelectorAll('form').length);
+  console.log('🔍 All buttons on page:', document.querySelectorAll('button').length);
+  const cardInputs = document.querySelectorAll('[name*="cardNumber"], [id*="cardNumber"], [name*="expiration"], [id*="expiration"]');
+  console.log('🔍 Found card input fields:', cardInputs.length);
+  if (cardInputs.length > 0) {
+    console.log('🚨 WARNING: Found card input fields - AcceptUI may not be working!');
+    cardInputs.forEach((input, index) => {
+      console.log(`🔍 Card input ${index}:`, input.name || input.id, input.type);
+    });
+  }
     
     // Fetch config first
     cfg = await fetchConfig();
