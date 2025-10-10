@@ -226,6 +226,70 @@ router.post('/charge', async (req, res) => {
     });
   }
 });
+// Add this to your routes/payments.js for testing
+router.get('/test-credentials', async (req, res) => {
+  try {
+    const authorizenet = require('authorizenet');
+    const ApiControllers = authorizenet.APIControllers;
+    const ApiContracts = authorizenet.APIContracts;
+    const Constants = authorizenet.Constants;
+    
+    // Test with SANDBOX endpoint first
+    const req = new ApiContracts.AuthenticateTestRequest();
+    const merchantAuth = new ApiContracts.MerchantAuthenticationType();
+    merchantAuth.setName(process.env.ANET_API_LOGIN_ID);
+    merchantAuth.setTransactionKey(process.env.ANET_TRANSACTION_KEY);
+    req.setMerchantAuthentication(merchantAuth);
+    
+    console.log('🧪 Testing credentials with SANDBOX endpoint...');
+    const sandboxCtrl = new ApiControllers.AuthenticateTestController(req.getJSON(), {
+      environment: Constants.endpoint.sandbox
+    });
+    
+    const sandboxResult = await new Promise((resolve, reject) => {
+      sandboxCtrl.execute(() => {
+        try { resolve(sandboxCtrl.getResponse()); } 
+        catch (e) { reject(e); }
+      });
+    });
+    
+    console.log('🧪 Sandbox test result:', sandboxResult);
+    
+    // Test with PRODUCTION endpoint
+    console.log('🧪 Testing credentials with PRODUCTION endpoint...');
+    const prodCtrl = new ApiControllers.AuthenticateTestController(req.getJSON(), {
+      environment: Constants.endpoint.production
+    });
+    
+    const prodResult = await new Promise((resolve, reject) => {
+      prodCtrl.execute(() => {
+        try { resolve(prodCtrl.getResponse()); } 
+        catch (e) { reject(e); }
+      });
+    });
+    
+    console.log('🧪 Production test result:', prodResult);
+    
+    res.json({
+      credentials: {
+        apiLoginId: process.env.ANET_API_LOGIN_ID,
+        transactionKeyLength: process.env.ANET_TRANSACTION_KEY?.length,
+      },
+      sandboxTest: {
+        success: sandboxResult.messages.resultCode === 'Ok',
+        result: sandboxResult
+      },
+      productionTest: {
+        success: prodResult.messages.resultCode === 'Ok',
+        result: prodResult
+      }
+    });
+    
+  } catch (error) {
+    console.error('🧪 Credential test error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 // Add this endpoint
 router.get('/auth-test', async (req, res) => {
   try {
