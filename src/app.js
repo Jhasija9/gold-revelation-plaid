@@ -28,14 +28,14 @@ app.use(
           "'self'", 
           "https://cdn.plaid.com", 
           "https://js.authorize.net",      // AcceptUI production
-          "https://jstest.authorize.net",  // AcceptUI sandbox
+          // "https://jstest.authorize.net",  // AcceptUI sandbox
           "'unsafe-inline'"
         ],
         "connect-src": [
           "'self'", 
           "https://*.plaid.com",
           "https://api.authorize.net",     // Authorize.Net API production
-          "https://apitest.authorize.net"  // Authorize.Net API sandbox
+          // "https://apitest.authorize.net"  // Authorize.Net API sandbox
         ],
         "frame-src": [
           "'self'",                    // Your own domain

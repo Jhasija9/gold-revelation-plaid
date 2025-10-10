@@ -24,15 +24,17 @@ class AcceptSuiteService {
     this.apiLoginId = process.env.ANET_API_LOGIN_ID;
     this.transactionKey = process.env.ANET_TRANSACTION_KEY;
     this.clientKey = process.env.ANET_CLIENT_KEY;
-    this.environment = process.env.ANET_ENV === 'production' 
-      ? Constants.endpoint.production
-      : Constants.endpoint.sandbox;
+    // this.environment = process.env.ANET_ENV === 'production' 
+    //   ? Constants.endpoint.production
+    //   : Constants.endpoint.sandbox;
+    this.environment = Constants.endpoint.production; // Force production only
+
 
     console.log('🔧 AcceptSuiteService: Environment variables check:');
     console.log('  - ANET_API_LOGIN_ID:', this.apiLoginId ? '✅ Set' : '❌ Missing');
     console.log('  - ANET_TRANSACTION_KEY:', this.transactionKey ? '✅ Set' : '❌ Missing');
     console.log('  - ANET_CLIENT_KEY:', this.clientKey ? '✅ Set' : '❌ Missing');
-    console.log('  - ANET_ENV:', process.env.ANET_ENV || 'sandbox (default)');
+    console.log('  - ANET_ENV:', process.env.ANET_ENV || 'production');
 
     // Set service availability based on environment variables
     this.isConfigured = !!(this.apiLoginId && this.transactionKey);
@@ -214,6 +216,8 @@ console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
 // } else {
 //   console.log('🔧 Production mode: Skipping auth test, proceeding with transaction');
 // }
+console.log('🔧 Production mode: Skipping auth test, proceeding with transaction');
+
 
       console.log('✅ AcceptSuiteService: Validation passed, processing payment...');
       console.log('🔧 AcceptSuiteService: Creating transaction request');
@@ -275,9 +279,11 @@ console.log('🔑 API Login ID:', this.apiLoginId);
 console.log('🔑 Transaction Key:', this.transactionKey);
 // Add this before the controller execution:
 console.log('🔧 gffffggffggffggfgfCharge Debug:', {
-  environment: process.env.ANET_ENV || 'sandbox',
+  // environment: process.env.ANET_ENV || 'sandbox',
+  environment: 'production',
   apiLoginId: this.apiLoginId ? `****${this.apiLoginId.slice(-4)}` : 'Missing',
-  endpoint: this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production'
+  // endpoint: this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production'
+  endpoint: 'production'
 });
 
       const controller = new CreateTransactionController(reqJson, {

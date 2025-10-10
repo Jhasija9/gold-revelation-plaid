@@ -322,7 +322,8 @@ router.get('/auth-test', async (req, res) => {
       res.json({
         success: true,
         message: 'Authentication successful',
-        environment: process.env.ANET_ENV || 'sandbox',
+        // environment: process.env.ANET_ENV || 'sandbox',
+        environment: 'production',
         timestamp: new Date().toISOString()
       });
     } else {
@@ -330,7 +331,8 @@ router.get('/auth-test', async (req, res) => {
         success: false,
         message: 'Authentication failed',
         error: authResult.message,
-        environment: process.env.ANET_ENV || 'sandbox',
+        // environment: process.env.ANET_ENV || 'sandbox',
+        environment: 'production',
         timestamp: new Date().toISOString()
       });
     }

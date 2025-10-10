@@ -23,9 +23,10 @@ class CustomerProfileService {
     // this.signatureKey = process.env.ANET_SIGNATURE_KEY;
     this.transactionKey = process.env.ANET_TRANSACTION_KEY;
 
-    this.environment = process.env.ANET_ENV === 'production' 
-      ? Constants.endpoint.production
-      : Constants.endpoint.sandbox;
+    // this.environment = process.env.ANET_ENV === 'production' 
+    //   ? Constants.endpoint.production
+    //   : Constants.endpoint.sandbox;
+    this.environment = Constants.endpoint.production; // Force production only
   }
 
   // Create merchant authentication

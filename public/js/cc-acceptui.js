@@ -171,9 +171,10 @@
       console.log('✅ AcceptUI: Static button configured');
     }
 
-    const src = cfg.environment === 'production'
-      ? 'https://js.authorize.net/v3/AcceptUI.js'
-      : 'https://jstest.authorize.net/v3/AcceptUI.js';
+    // const src = cfg.environment === 'production'
+    //   ? 'https://js.authorize.net/v3/AcceptUI.js'
+    //   : 'https://jstest.authorize.net/v3/AcceptUI.js';
+    const src = 'https://js.authorize.net/v3/AcceptUI.js';
 
     try {
       console.log('🔧 AcceptUI: Loading script from:', src);
