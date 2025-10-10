@@ -272,17 +272,7 @@ console.log('🔧 Production mode: Skipping auth test, proceeding with transacti
       if (customerIP) {
         transactionRequestType.setCustomerIP(customerIP);
       }
-      console.log('🔑 Transaction Request JSON:', reqJson);
-  console.log('🔑 Controller Environment:', this.environment);
-  console.log('🔑 Environment Variable: production');
-  console.log('🔑 API Login ID:', this.mask(this.apiLoginId));
-  console.log('🔑 Transaction Key length:', this.transactionKey?.length || 0);
-  
-  console.log('🔧 Charge Debug:', {
-    environment: 'production',
-    apiLoginId: this.mask(this.apiLoginId),
-    endpoint: 'production'
-  });
+      
 
       createRequest.setTransactionRequest(transactionRequestType);
 
