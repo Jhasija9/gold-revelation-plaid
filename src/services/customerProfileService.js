@@ -74,7 +74,18 @@ class CustomerProfileService {
       createRequest.setProfile(customerProfile);
 
       // Execute the request
-      const ctrl = new ApiControllers.CreateCustomerProfileController(createRequest.getJSON());
+      // const ctrl = new ApiControllers.CreateCustomerProfileController(createRequest.getJSON());
+      // ❌ PROBLEMATIC CODE:
+// const ctrl = new ApiControllers.CreateCustomerProfileController(createRequest.getJSON());
+// Missing environment configuration!
+
+// ✅ SHOULD BE:
+    const ctrl = new ApiControllers.CreateCustomerProfileController(createRequest.getJSON(), {
+      logger: { enabled: false, location: './', level: 'error' },
+      proxy: { setProxy: false, proxyUrl: '' },
+      timeout: 120000,
+      environment: this.environment  // ← THIS IS MISSING!
+    });
       
       return new Promise((resolve, reject) => {
         ctrl.execute((response) => {
@@ -111,8 +122,13 @@ class CustomerProfileService {
       getRequest.setMerchantAuthentication(this.getMerchantAuthentication());
       getRequest.setCustomerProfileId(customerProfileId);
 
-      const ctrl = new ApiControllers.GetCustomerProfileController(getRequest.getJSON());
-      
+      // const ctrl = new ApiControllers.GetCustomerProfileController(getRequest.getJSON());
+      const ctrl = new ApiControllers.GetCustomerProfileController(getRequest.getJSON(), {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy: { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        environment: this.environment
+      });
       return new Promise((resolve, reject) => {
         ctrl.execute((response) => {
           if (response.messages.resultCode === 'Ok') {
@@ -186,7 +202,13 @@ class CustomerProfileService {
       createRequest.setCustomerProfileId(customerProfileId);
       createRequest.setPaymentProfile(paymentProfile);
 
-      const ctrl = new ApiControllers.CreateCustomerPaymentProfileController(createRequest.getJSON());
+      // const ctrl = new ApiControllers.CreateCustomerPaymentProfileController(createRequest.getJSON());
+      const ctrl = new ApiControllers.CreateCustomerPaymentProfileController(createRequest.getJSON(), {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy: { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        environment: this.environment
+      });
       
       return new Promise((resolve, reject) => {
         ctrl.execute((response) => {
@@ -223,7 +245,13 @@ class CustomerProfileService {
       getRequest.setCustomerProfileId(customerProfileId);
       getRequest.setCustomerPaymentProfileId(paymentProfileId);
 
-      const ctrl = new ApiControllers.GetCustomerPaymentProfileController(getRequest.getJSON());
+      // const ctrl = new ApiControllers.GetCustomerPaymentProfileController(getRequest.getJSON());
+      const ctrl = new ApiControllers.GetCustomerPaymentProfileController(getRequest.getJSON(), {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy: { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        environment: this.environment
+      });
       
       return new Promise((resolve, reject) => {
         ctrl.execute((response) => {
@@ -260,7 +288,13 @@ class CustomerProfileService {
       deleteRequest.setCustomerProfileId(customerProfileId);
       deleteRequest.setCustomerPaymentProfileId(paymentProfileId);
 
-      const ctrl = new ApiControllers.DeleteCustomerPaymentProfileController(deleteRequest.getJSON());
+      // const ctrl = new ApiControllers.DeleteCustomerPaymentProfileController(deleteRequest.getJSON());
+      const ctrl = new ApiControllers.DeleteCustomerPaymentProfileController(deleteRequest.getJSON(), {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy: { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        environment: this.environment
+      });
       
       return new Promise((resolve, reject) => {
         ctrl.execute((response) => {
@@ -295,7 +329,13 @@ class CustomerProfileService {
       deleteRequest.setMerchantAuthentication(this.getMerchantAuthentication());
       deleteRequest.setCustomerProfileId(customerProfileId);
 
-      const ctrl = new ApiControllers.DeleteCustomerProfileController(deleteRequest.getJSON());
+      // const ctrl = new ApiControllers.DeleteCustomerProfileController(deleteRequest.getJSON());
+      const ctrl = new ApiControllers.DeleteCustomerProfileController(deleteRequest.getJSON(), {
+        logger: { enabled: false, location: './', level: 'error' },
+        proxy: { setProxy: false, proxyUrl: '' },
+        timeout: 120000,
+        environment: this.environment
+      });
       
       return new Promise((resolve, reject) => {
         ctrl.execute((response) => {
