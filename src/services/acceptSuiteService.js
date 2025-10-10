@@ -189,6 +189,12 @@ console.log('🔧 AcceptSuiteService: isConfigured =', this.isConfigured);
         customerIP
       } = paymentData;
 
+      console.log('🔍 OPAQUE DATA DEBUG:');
+console.log('🔍 opaqueData.dataDescriptor:', opaqueData.dataDescriptor);
+console.log('🔍 opaqueData.dataValue length:', opaqueData.dataValue?.length);
+console.log('🔍 opaqueData.dataValue first 20 chars:', opaqueData.dataValue?.substring(0, 20));
+console.log('🔍 opaqueData.dataValue last 20 chars:', opaqueData.dataValue?.substring(opaqueData.dataValue.length - 20));
+
       // Validate required fields
       if (!amount || amount <= 0) {
         console.log('❌ AcceptSuiteService: Invalid amount:', amount);
