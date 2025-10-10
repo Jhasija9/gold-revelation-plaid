@@ -227,6 +227,7 @@ router.post('/charge', async (req, res) => {
   }
 });
 // Add this to your routes/payments.js for testing
+// Test credentials endpoint - FIXED VERSION
 router.get('/test-credentials', async (req, res) => {
   try {
     const authorizenet = require('authorizenet');
@@ -234,15 +235,21 @@ router.get('/test-credentials', async (req, res) => {
     const ApiContracts = authorizenet.APIContracts;
     const Constants = authorizenet.Constants;
     
-    // Test with SANDBOX endpoint first
-    const req = new ApiContracts.AuthenticateTestRequest();
+    console.log('🧪 Testing credentials with both sandbox and production endpoints...');
+    
+    // Create authenticate test request
+    const authReq = new ApiContracts.AuthenticateTestRequest();
     const merchantAuth = new ApiContracts.MerchantAuthenticationType();
     merchantAuth.setName(process.env.ANET_API_LOGIN_ID);
     merchantAuth.setTransactionKey(process.env.ANET_TRANSACTION_KEY);
-    req.setMerchantAuthentication(merchantAuth);
+    authReq.setMerchantAuthentication(merchantAuth);
     
+    // Test with SANDBOX endpoint first
     console.log('🧪 Testing credentials with SANDBOX endpoint...');
-    const sandboxCtrl = new ApiControllers.AuthenticateTestController(req.getJSON(), {
+    const sandboxCtrl = new ApiControllers.AuthenticateTestController(authReq.getJSON(), {
+      logger: { enabled: false, location: './', level: 'error' },
+      proxy: { setProxy: false, proxyUrl: '' },
+      timeout: 120000,
       environment: Constants.endpoint.sandbox
     });
     
@@ -257,7 +264,10 @@ router.get('/test-credentials', async (req, res) => {
     
     // Test with PRODUCTION endpoint
     console.log('🧪 Testing credentials with PRODUCTION endpoint...');
-    const prodCtrl = new ApiControllers.AuthenticateTestController(req.getJSON(), {
+    const prodCtrl = new ApiControllers.AuthenticateTestController(authReq.getJSON(), {
+      logger: { enabled: false, location: './', level: 'error' },
+      proxy: { setProxy: false, proxyUrl: '' },
+      timeout: 120000,
       environment: Constants.endpoint.production
     });
     
@@ -271,25 +281,36 @@ router.get('/test-credentials', async (req, res) => {
     console.log('🧪 Production test result:', prodResult);
     
     res.json({
+      success: true,
       credentials: {
         apiLoginId: process.env.ANET_API_LOGIN_ID,
         transactionKeyLength: process.env.ANET_TRANSACTION_KEY?.length,
+        environment: process.env.ANET_ENV
       },
       sandboxTest: {
         success: sandboxResult.messages.resultCode === 'Ok',
-        result: sandboxResult
+        resultCode: sandboxResult.messages.resultCode,
+        message: sandboxResult.messages.message?.[0]?.text || 'No message',
+        code: sandboxResult.messages.message?.[0]?.code || 'No code'
       },
       productionTest: {
         success: prodResult.messages.resultCode === 'Ok',
-        result: prodResult
+        resultCode: prodResult.messages.resultCode,
+        message: prodResult.messages.message?.[0]?.text || 'No message',
+        code: prodResult.messages.message?.[0]?.code || 'No code'
       }
     });
     
   } catch (error) {
     console.error('🧪 Credential test error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
+
 // Add this endpoint
 router.get('/auth-test', async (req, res) => {
   try {
