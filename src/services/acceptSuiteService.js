@@ -325,29 +325,42 @@ console.log('🔧 AcceptSuiteService: Result code:', resultCode);
           message: 'Payment processed successfully'
         };
       } else {
-        // Handle errors
-        let errorMessage = 'Payment processing failed';
-        let errorCode = 'PROCESSING_ERROR';
-
-        if (tr && tr.errors) {
-          const error = tr.errors[0];
-          errorMessage = error.errorText;
-          errorCode = error.errorCode;
-        } else if (apiResp.messages && apiResp.messages.message) {
-          errorMessage = apiResp.messages.message[0].text;
-          errorCode = apiResp.messages.message[0].code;
-        }
-
-        console.error('❌ AcceptSuiteService: Transaction failed');
-        console.error('🔧 AcceptSuiteService: Error code:', errorCode);
-        console.error('🔧 AcceptSuiteService: Error message:', errorMessage);
+        console.log('🔍 RAW API RESPONSE (commented out E00007 handling):');
+        console.log('🔍 apiResp:', JSON.stringify(apiResp, null, 2));
+        console.log('🔍 tr:', JSON.stringify(tr, null, 2));
+        console.log('🔍 apiResp.messages:', JSON.stringify(apiResp.messages, null, 2));
         
+        // Let the real error through instead of masking it
         return {
           success: false,
-          code: errorCode,
-          message: errorMessage,
-          responseCode: tr?.responseCode
+          code: 'RAW_ERROR',
+          message: 'See logs for actual Authorize.net error details',
+          rawResponse: apiResp,
+          rawTransaction: tr
         };
+        // Handle errors
+        // let errorMessage = 'Payment processing failed';
+        // let errorCode = 'PROCESSING_ERROR';
+
+        // if (tr && tr.errors) {
+        //   const error = tr.errors[0];
+        //   errorMessage = error.errorText;
+        //   errorCode = error.errorCode;
+        // } else if (apiResp.messages && apiResp.messages.message) {
+        //   errorMessage = apiResp.messages.message[0].text;
+        //   errorCode = apiResp.messages.message[0].code;
+        // }
+
+        // console.error('❌ AcceptSuiteService: Transaction failed');
+        // console.error('🔧 AcceptSuiteService: Error code:', errorCode);
+        // console.error('🔧 AcceptSuiteService: Error message:', errorMessage);
+        
+        // return {
+        //   success: false,
+        //   code: errorCode,
+        //   message: errorMessage,
+        //   responseCode: tr?.responseCode
+        // };
       }
 
     } catch (error) {
