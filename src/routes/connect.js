@@ -561,6 +561,9 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     id="staticAcceptUIButton" 
     class="AcceptUI primary-action-btn" 
     style="display: none;"
+    data-apiLoginID="${process.env.ANET_API_LOGIN_ID}"
+  data-clientKey="${process.env.ANET_CLIENT_KEY}"
+  data-environment="${process.env.ANET_ENV || 'sandbox'}"
     data-billingAddressOptions='{"show":true,"required":true}'
     data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
     data-requireCardCode="true"
