@@ -168,8 +168,13 @@
     if (staticButton) {
       staticButton.setAttribute('data-apiLoginID', cfg.apiLoginId);
       staticButton.setAttribute('data-clientKey', cfg.clientKey);
-      console.log('✅ AcceptUI: Static button configured');
-    }
+      staticButton.setAttribute('data-environment', cfg.environment);
+  console.log('✅ AcceptUI: Static button configured with:', {
+    apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
+    clientKey: cfg.clientKey ? 'Set' : 'Missing',
+    environment: cfg.environment
+  });
+}
 
     const src = cfg.environment === 'production'
       ? 'https://js.authorize.net/v3/AcceptUI.js'
