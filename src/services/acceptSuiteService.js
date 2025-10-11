@@ -283,14 +283,30 @@ console.log('🔧 AcceptSuiteService: Result code:', resultCode);
         let errorMessage = 'Payment processing failed';
         let errorCode = 'PROCESSING_ERROR';
 
-        if (tr && tr.errors) {
-          const error = tr.errors[0];
-          errorMessage = error.errorText;
-          errorCode = error.errorCode;
-        } else if (apiResp.messages && apiResp.messages.message) {
-          errorMessage = apiResp.messages.message[0].text;
-          errorCode = apiResp.messages.message[0].code;
-        }
+       // Priority 1: Transaction Response Errors (most specific)
+if (tr && tr.errors && Array.isArray(tr.errors) && tr.errors.length > 0) {
+  const error = tr.errors[0];
+  if (error && error.errorText) {
+    errorMessage = error.errorText;
+    errorCode = error.errorCode || 'TRANSACTION_ERROR';
+  }
+} 
+// Priority 2: API Messages (API-level errors)
+else if (apiResp && apiResp.messages && apiResp.messages.message) {
+  const messages = Array.isArray(apiResp.messages.message) 
+    ? apiResp.messages.message 
+    : [apiResp.messages.message];
+  
+  if (messages.length > 0 && messages[0]) {
+    errorMessage = messages[0].text || 'Unknown API error';
+    errorCode = messages[0].code || 'API_ERROR';
+  }
+}
+// Priority 3: Transaction Response Code
+else if (tr && tr.responseCode) {
+  errorMessage = `Transaction declined (Response Code: ${tr.responseCode})`;
+  errorCode = `RESPONSE_${tr.responseCode}`;
+}
 
         console.error('❌ AcceptSuiteService: Transaction failed');
         console.error('🔧 AcceptSuiteService: Error code:', errorCode);
