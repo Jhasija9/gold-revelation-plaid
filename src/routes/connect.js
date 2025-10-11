@@ -559,8 +559,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <!-- Static AcceptUI button (hidden by default) -->
                 
                 
-  <form action="javascript:void(0);" method="post">
-
+<form action="#" method="post" onsubmit="return false;">
   <button 
     id="staticAcceptUIButton" 
     class="AcceptUI primary-action-btn" 
@@ -822,10 +821,13 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             if (staticButton && window.acceptUIConfig) {
               console.log('🔧 Static button found, updating attributes');
 
-   
+              staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
+              staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
               staticButton.disabled = !state.isAmountValid || state.loading;
               staticButton.style.display = 'block';
-              
+              staticButton.addEventListener('click', function() {
+                console.log('🔧 Static AcceptUI button clicked!');
+              });
             } else {
               console.error('❌ Static button or config not found:', {
                 staticButton: !!staticButton,
