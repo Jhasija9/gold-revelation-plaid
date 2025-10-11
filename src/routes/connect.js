@@ -559,15 +559,17 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <!-- Static AcceptUI button (hidden by default) -->
                 
                 
-  <form action="javascript:void(0);" method="post">
-
+  <form id="paymentForm" action="/api/payments/charge" method="post">
+  <input type="hidden" name="dataValue" id="dataValue" />
+  <input type="hidden" name="dataDescriptor" id="dataDescriptor" />
   <button 
     id="staticAcceptUIButton" 
     class="AcceptUI primary-action-btn" 
     style="display: none;"
+    type="button"
     data-apiLoginID="${process.env.ANET_API_LOGIN_ID}"
-  data-clientKey="${process.env.ANET_CLIENT_KEY}"
-  data-environment="${process.env.ANET_ENV || 'sandbox'}"
+    data-clientKey="${process.env.ANET_CLIENT_KEY}"
+    data-environment="${process.env.ANET_ENV || 'sandbox'}"
     data-billingAddressOptions='{"show":true,"required":true}'
     data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
     data-requireCardCode="true"
@@ -576,7 +578,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     data-responseHandler="acceptUIResponseHandler">
     Pay with Credit Card
   </button>
-  </form>
+</form>
    
           `
           }
@@ -822,13 +824,13 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
             if (staticButton && window.acceptUIConfig) {
               console.log('🔧 Static button found, updating attributes');
 
-              staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
-              staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
+              // staticButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
+              // staticButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
               staticButton.disabled = !state.isAmountValid || state.loading;
               staticButton.style.display = 'block';
-              staticButton.addEventListener('click', function() {
-                console.log('🔧 Static AcceptUI button clicked!');
-              });
+              // staticButton.addEventListener('click', function() {
+              //   console.log('🔧 Static AcceptUI button clicked!');
+              // });
             } else {
               console.error('❌ Static button or config not found:', {
                 staticButton: !!staticButton,
