@@ -559,7 +559,8 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <!-- Static AcceptUI button (hidden by default) -->
                 
                 
-<form action="#" method="post" onsubmit="return false;">
+  <form action="javascript:void(0);" method="post">
+
   <button 
     id="staticAcceptUIButton" 
     class="AcceptUI primary-action-btn" 
