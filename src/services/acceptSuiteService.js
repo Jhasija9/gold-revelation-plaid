@@ -35,7 +35,7 @@ class AcceptSuiteService {
     console.log('  - ANET_ENV:', process.env.ANET_ENV || 'sandbox (default)');
 
     // Set service availability based on environment variables
-    this.isConfigured = !!(this.apiLoginId && this.transactionKey);
+    this.isConfigured = !!(this.apiLoginId && this.transactionKey && this.clientKey);
     
     console.log('🔧 AcceptSuiteService: Service configured:', this.isConfigured ? '✅ YES' : '❌ NO');
     
