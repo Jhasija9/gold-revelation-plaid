@@ -154,11 +154,10 @@
       return;
     }
 
-    console.log('✅ AcceptUI: Config loaded:', { 
-      apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
-      clientKey: cfg.clientKey ? 'Set' : 'Missing',
-      environment: cfg.environment 
-    });
+    console.log('🔍 DEBUG - Actual credentials being used:');
+console.log('  - apiLoginId:', cfg.apiLoginId ? `${cfg.apiLoginId.substring(0,4)}...${cfg.apiLoginId.substring(cfg.apiLoginId.length-4)}` : 'MISSING');
+console.log('  - clientKey:', cfg.clientKey ? `${cfg.clientKey.substring(0,4)}...${cfg.clientKey.substring(cfg.clientKey.length-4)}` : 'MISSING');
+console.log('  - environment:', cfg.environment);
 
     // Make config available globally
     window.acceptUIConfig = cfg;
@@ -169,6 +168,11 @@
       staticButton.setAttribute('data-apiLoginID', cfg.apiLoginId);
       staticButton.setAttribute('data-clientKey', cfg.clientKey);
       staticButton.setAttribute('data-environment', cfg.environment);
+      // DEBUG: Verify what was actually set on the button
+  console.log('🔍 DEBUG - Button attributes after setting:');
+  console.log('  - data-apiLoginID:', staticButton.getAttribute('data-apiLoginID'));
+  console.log('  - data-clientKey:', staticButton.getAttribute('data-clientKey'));
+  console.log('  - data-environment:', staticButton.getAttribute('data-environment'));
   console.log('✅ AcceptUI: Static button configured with:', {
     apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
     clientKey: cfg.clientKey ? 'Set' : 'Missing',
@@ -213,3 +217,17 @@
   window.initializeAcceptUI = initializeAcceptUI;
 
 })();
+
+// DEBUG: Add AcceptUI error handling
+window.addEventListener('error', function(e) {
+  if (e.message && e.message.includes('AcceptUI')) {
+    console.error('🚨 AcceptUI Error:', e.message);
+  }
+});
+
+// DEBUG: Listen for AcceptUI specific events
+window.addEventListener('message', function(e) {
+  if (e.data && typeof e.data === 'object') {
+    console.log('🔍 AcceptUI Message:', e.data);
+  }
+});
