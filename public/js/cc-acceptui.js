@@ -165,9 +165,7 @@ console.log('  - environment:', cfg.environment);
     // Set up the static button with config immediately
     const staticButton = document.getElementById('staticAcceptUIButton');
     if (staticButton) {
-      staticButton.setAttribute('data-apiLoginID', cfg.apiLoginId);
-      staticButton.setAttribute('data-clientKey', cfg.clientKey);
-      staticButton.setAttribute('data-environment', cfg.environment);
+      
       // DEBUG: Verify what was actually set on the button
   console.log('🔍 DEBUG - Button attributes after setting:');
   console.log('  - data-apiLoginID:', staticButton.getAttribute('data-apiLoginID'));
