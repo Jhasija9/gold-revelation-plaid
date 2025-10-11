@@ -557,6 +557,10 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
                 <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
                 <div id="acceptUIContainer"></div>
                 <!-- Static AcceptUI button (hidden by default) -->
+                
+                
+  <form action="javascript:void(0);" method="post">
+
   <button 
     id="staticAcceptUIButton" 
     class="AcceptUI primary-action-btn" 
@@ -572,6 +576,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
     data-responseHandler="acceptUIResponseHandler">
     Pay with Credit Card
   </button>
+  </form>
    
           `
           }
