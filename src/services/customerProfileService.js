@@ -25,7 +25,7 @@ class CustomerProfileService {
       : Constants.endpoint.sandbox;
   }
 
-  // Create merchant authentication
+  // Create merchant authenticationjjjjjjjjjjjjjj
   getMerchantAuthentication() {
     const merchantAuthenticationType = new MerchantAuthenticationType();
     merchantAuthenticationType.setName(this.apiLoginId);
