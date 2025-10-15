@@ -102,22 +102,42 @@ class AcceptSuiteService {
 
   async testAuth() {
     try {
+      console.log('🔧 AcceptSuiteService: testAuth() called');
+      console.log('🔧 AcceptSuiteService: Merchant authentication:', this.getMerchantAuthentication());
+      console.log('🔧 AcceptSuiteService: Environment:', this.environment);
+      console.log('🔧 AcceptSuiteService: API Login ID:', this.apiLoginId);
+      console.log('🔧 AcceptSuiteService: Transaction Key:', this.transactionKey);
+      console.log('🔧 AcceptSuiteService: Client Key:', this.clientKey);
+      console.log('🔧 AcceptSuiteService: Environment:', this.environment);
+      console.log('🔧 AcceptSuiteService: API Login ID:', this.apiLoginId);
+      console.log('🔧 AcceptSuiteService: Transaction Key:', this.transactionKey);
       const req = new AuthenticateTestRequest();
       req.setMerchantAuthentication(this.getMerchantAuthentication());
-
+      console.log('req', req);
       const ctrl = new AuthenticateTestController(req.getJSON(), {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
         timeout: 120000,
         environment: this.environment
       });
-
+      console.log('ctrl', ctrl);
       const raw = await new Promise((resolve, reject) => {
-        ctrl.execute(() => { try { resolve(ctrl.getResponse()); } catch (e) { reject(e); } });
+        ctrl.execute(() => { 
+          try { 
+            console.log("try of raw")
+            resolve(ctrl.getResponse()); 
+          } 
+          catch (e) { 
+            console.log("catch of raw", e);
+            reject(e); 
+          } 
+        });
       });
-
+      console.log('raw', raw);
       const resultCode = raw?.messages?.resultCode;
+      console.log('resultCode', resultCode);
       const msg = raw?.messages?.message?.[0]?.text;
+      console.log('msg', msg);
       console.log('🔑 Auth test →', resultCode, msg);
       return resultCode === 'Ok';
     } catch (e) {
