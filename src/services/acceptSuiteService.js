@@ -101,15 +101,7 @@ class AcceptSuiteService {
 
   async testAuth() {
     try {
-      console.log('🔧 AcceptSuiteService: testAuth() called');
-      console.log('🔧 AcceptSuiteService: Merchant authentication:', this.getMerchantAuthentication());
-      console.log('🔧 AcceptSuiteService: Environment:', this.environment);
-      console.log('🔧 AcceptSuiteService: API Login ID:', this.apiLoginId);
-      console.log('🔧 AcceptSuiteService: Transaction Key:', this.transactionKey);
-      console.log('🔧 AcceptSuiteService: Client Key:', this.clientKey);
-      console.log('🔧 AcceptSuiteService: Environment:', this.environment);
-      console.log('🔧 AcceptSuiteService: API Login ID:', this.apiLoginId);
-      console.log('🔧 AcceptSuiteService: Transaction Key:', this.transactionKey);
+      
       const req = new AuthenticateTestRequest();
       req.setMerchantAuthentication(this.getMerchantAuthentication());
       console.log('req', req);
@@ -124,21 +116,20 @@ class AcceptSuiteService {
       const raw = await new Promise((resolve, reject) => {
         ctrl.execute(() => { 
           try { 
-            console.log("try of raw")
+            
             resolve(ctrl.getResponse()); 
           } 
           catch (e) { 
-            console.log("catch of raw", e);
+            
             reject(e); 
           } 
         });
       });
-      console.log('raw', raw);
+     
       const resultCode = raw?.messages?.resultCode;
-      console.log('resultCode', resultCode);
+    
       const msg = raw?.messages?.message?.[0]?.text;
-      console.log('msg', msg);
-      console.log('🔑 Auth test →', resultCode, msg);
+      
       return resultCode === 'Ok';
     } catch (e) {
       console.error('🔑 Auth test exception:', e);
@@ -181,7 +172,6 @@ class AcceptSuiteService {
       }
 
       if (!opaqueData || !opaqueData.dataDescriptor || !opaqueData.dataValue) {
-        console.log('❌ AcceptSuiteService: Invalid opaqueData:', opaqueData);
         return {
           success: false,
           code: 'INVALID_OPAQUE_DATA',
@@ -189,9 +179,7 @@ class AcceptSuiteService {
         };
       }
 
-      console.log('🔧 Using env:', process.env.ANET_ENV, 'endpoint:', this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production');
-      console.log('🔧 API Login ID:', this.mask(this.apiLoginId), 'TxnKey set:', !!this.transactionKey);
-
+      
       
       const authOk = await this.testAuth();
       if (!authOk) {
