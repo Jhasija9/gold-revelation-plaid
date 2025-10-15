@@ -241,6 +241,7 @@ class AcceptSuiteService {
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
       const reqJson = createRequest.getJSON();
+      console.log('🚨 DEBUG - Request JSON:', JSON.stringify(reqJson, null, 2));
       // console.log('📦 Request root keys:', Object.keys(reqJson)); // expect ['createTransactionRequest']
 
       const controller = new CreateTransactionController(reqJson, {
