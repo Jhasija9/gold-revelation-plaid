@@ -54,7 +54,7 @@ class SettlementService {
           catch (e) { reject(e); }
         });
       });
-      console.log('🔍 Raw API Response:', JSON.stringify(raw, null, 2));
+      // console.log('🔍 Raw API Response:', JSON.stringify(raw, null, 2));
 
 
       const response = new ApiContracts.GetSettledBatchListResponse(raw);

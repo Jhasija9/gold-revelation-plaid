@@ -75,12 +75,12 @@ router.get('/config', (req, res) => {
 // Charge with opaqueData from AcceptUI
 router.post('/charge', async (req, res) => {
   console.log('🌐 Payments Route: /charge endpoint called');
-  console.log('🌐 Payments Route: Request body:', {
-    amount: req.body.amount,
-    user_id: req.body.user_id,
-    hasOpaqueData: !!req.body.opaqueData,
-    description: req.body.description
-  });
+  // console.log('🌐 Payments Route: Request body:', {
+  //   amount: req.body.amount,
+  //   user_id: req.body.user_id,
+  //   hasOpaqueData: !!req.body.opaqueData,
+  //   description: req.body.description
+  // });
   
   try {
     const {
@@ -139,12 +139,12 @@ router.post('/charge', async (req, res) => {
       customerIP: req.ip || req.connection.remoteAddress
     };
 
-    console.log('🌐 Payments Route: Prepared payment data:', {
-      amount: paymentData.amount,
-      description: paymentData.description,
-      customerEmail: paymentData.customerData.email,
-      customerIP: paymentData.customerIP
-    });
+    // console.log('🌐 Payments Route: Prepared payment data:', {
+    //   amount: paymentData.amount,
+    //   description: paymentData.description,
+    //   customerEmail: paymentData.customerData.email,
+    //   customerIP: paymentData.customerIP
+    // });
 
     // Process the payment
     console.log('🌐 Payments Route: Calling acceptSuiteService.chargeWithOpaqueData()');
@@ -171,11 +171,11 @@ router.post('/charge', async (req, res) => {
         created_at: new Date().toISOString(),
       };
 
-      console.log('🌐 Payments Route: Storing transaction record:', {
-        transactionId: chargeResult.transactionId,
-        authCode: chargeResult.authCode,
-        amount: transactionRecord.amount
-      });
+      // console.log('🌐 Payments Route: Storing transaction record:', {
+      //   transactionId: chargeResult.transactionId,
+      //   authCode: chargeResult.authCode,
+      //   amount: transactionRecord.amount
+      // });
 
       const dbResult = await databaseService.query('transactions', 'insert', {
         values: [transactionRecord]

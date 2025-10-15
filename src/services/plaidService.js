@@ -294,7 +294,7 @@ class PlaidService {
       const authResponse = await this.client.transferAuthorizationCreate(
         authRequest
       );
-      console.log("Authorization response:", authResponse.data);
+      // console.log("Authorization response:", authResponse.data);
 
       if (
         !authResponse.data.authorization ||
@@ -316,7 +316,7 @@ class PlaidService {
       const transferResponse = await this.client.transferCreate(
         transferRequest
       );
-      console.log("Transfer response:", transferResponse.data);
+      // console.log("Transfer response:", transferResponse.data);
 
       return {
         success: true,

@@ -997,7 +997,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       var handler = Plaid.create({
         token: linkToken,
         onSuccess: function(public_token, metadata) {
-          console.log('Plaid Link success:', public_token, metadata);
+          // console.log('Plaid Link success:', public_token, metadata);
           
           // Exchange token
           fetch('/api/plaid/exchange-token', {
@@ -1010,7 +1010,7 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
           })
           .then(response => response.json())
           .then(data => {
-            console.log('Exchange result:', data);
+            // console.log('Exchange result:', data);
             if (data.success) {
               state.isConnected = true;
               state.accounts = data.accounts;

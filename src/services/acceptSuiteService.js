@@ -104,7 +104,7 @@ class AcceptSuiteService {
       
       const req = new AuthenticateTestRequest();
       req.setMerchantAuthentication(this.getMerchantAuthentication());
-      console.log('req', req);
+      // console.log('req', req);
       const ctrl = new AuthenticateTestController(req.getJSON(), {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
@@ -112,7 +112,7 @@ class AcceptSuiteService {
         environment: this.environment
       });
       ctrl.setEnvironment(this.environment);
-      console.log('ctrl', ctrl);
+      // console.log('ctrl', ctrl);
       const raw = await new Promise((resolve, reject) => {
         ctrl.execute(() => { 
           try { 
@@ -140,11 +140,11 @@ class AcceptSuiteService {
   // Process payment with opaqueData from AcceptUI
   async chargeWithOpaqueData(paymentData) {
     console.log('🔧 AcceptSuiteService: chargeWithOpaqueData() called');
-    console.log('🔧 AcceptSuiteService: Payment data received:', {
-      amount: paymentData.amount,
-      hasOpaqueData: !!paymentData.opaqueData,
-      description: paymentData.description
-    });
+    // console.log('🔧 AcceptSuiteService: Payment data received:', {
+    //   amount: paymentData.amount,
+    //   hasOpaqueData: !!paymentData.opaqueData,
+    //   description: paymentData.description
+    // });
     
     try {
       const configCheck = this.checkConfiguration();
@@ -241,7 +241,7 @@ class AcceptSuiteService {
       // Execute the transaction
       console.log('🔄 AcceptSuiteService: Executing Authorize.Net transaction...');
       const reqJson = createRequest.getJSON();
-      console.log('📦 Request root keys:', Object.keys(reqJson)); // expect ['createTransactionRequest']
+      // console.log('📦 Request root keys:', Object.keys(reqJson)); // expect ['createTransactionRequest']
 
       const controller = new CreateTransactionController(reqJson, {
         logger: { enabled: false, location: './', level: 'error' },
@@ -269,15 +269,15 @@ class AcceptSuiteService {
       const tr  = apiResp?.getTransactionResponse();
 
       console.log('�� AcceptSuiteService: Authorize.Net response received');
-      console.log('🔧 AcceptSuiteService: Response messages result code:', apiResp?.messages?.resultCode);
+      // console.log('🔧 AcceptSuiteService: Response messages result code:', apiResp?.messages?.resultCode);
       const resultCode = apiResp?.getMessages?.()?.getResultCode?.();
-console.log('🔧 AcceptSuiteService: Result code:', resultCode);
+// console.log('🔧 AcceptSuiteService: Result code:', resultCode);
 
       // Parse response
       if (ok && tr) {
         console.log('✅ AcceptSuiteService: Transaction successful');
-        console.log('🔧 AcceptSuiteService: Transaction ID:', tr.transId);
-        console.log('🔧 AcceptSuiteService: Auth Code:', tr.authCode);
+        // console.log('🔧 AcceptSuiteService: Transaction ID:', tr.transId);
+        // console.log('🔧 AcceptSuiteService: Auth Code:', tr.authCode);
         
         return {
           success: true,
