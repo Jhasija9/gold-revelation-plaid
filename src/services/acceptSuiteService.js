@@ -52,6 +52,7 @@ class AcceptSuiteService {
     const merchantAuth = new MerchantAuthenticationType();
     merchantAuth.setName(this.apiLoginId);
     merchantAuth.setTransactionKey(this.transactionKey);
+    merchantAuth.setClientKey(this.clientKey);
     return merchantAuth;
   }
 
