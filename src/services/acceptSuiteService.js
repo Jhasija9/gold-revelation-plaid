@@ -121,6 +121,7 @@ class AcceptSuiteService {
         timeout: 120000,
         environment: this.environment
       });
+      ctrl.setEnvironment(this.environment);
       console.log('ctrl', ctrl);
       const raw = await new Promise((resolve, reject) => {
         ctrl.execute(() => { 
