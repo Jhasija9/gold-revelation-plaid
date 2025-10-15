@@ -172,6 +172,7 @@ class AcceptSuiteService {
       console.log('🔧 Using env:', process.env.ANET_ENV, 'endpoint:', this.environment === Constants.endpoint.sandbox ? 'sandbox' : 'production');
       console.log('🔧 API Login ID:', this.mask(this.apiLoginId), 'TxnKey set:', !!this.transactionKey);
 
+      
       const authOk = await this.testAuth();
       if (!authOk) {
         return {
