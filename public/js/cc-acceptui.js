@@ -177,7 +177,8 @@ console.log('  - environment:', cfg.environment);
     environment: cfg.environment
   });
 }
-
+  console.log('🔍 DEBUG - Config environment:', cfg.environment);
+  console.log('🔍 DEBUG - Config apiLoginId:', cfg);
     const src = cfg.environment === 'production'
       ? 'https://js.authorize.net/v3/AcceptUI.js'
       : 'https://jstest.authorize.net/v3/AcceptUI.js';
