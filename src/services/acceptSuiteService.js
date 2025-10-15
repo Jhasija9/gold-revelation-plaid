@@ -51,9 +51,7 @@ class AcceptSuiteService {
   getMerchantAuthentication() {
     const merchantAuth = new MerchantAuthenticationType();
     merchantAuth.setName(this.apiLoginId);
-    merchantAuth.setTransactionKey(this.transactionKey);
-    merchantAuth.setClientKey(this.clientKey);
-    return merchantAuth;
+    merchantAuth.setTransactionKey(this.transactionKey);    return merchantAuth;
   }
 
   // Check if service is properly configured
@@ -261,8 +259,9 @@ class AcceptSuiteService {
         logger: { enabled: false, location: './', level: 'error' },
         proxy:  { setProxy: false, proxyUrl: '' },
         timeout: 120000,
-        environment: Constants.endpoint.sandbox
+        environment: this.environment
       });
+      controller.setEnvironment(this.environment);
       
       // defensive: make sure request has only the proper root
       if ('clientId' in createRequest) delete createRequest.clientId;
