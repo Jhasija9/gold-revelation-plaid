@@ -92,8 +92,14 @@ class ARBService {
 console.log('🔧 ARBService: Environment:', this.environment);
 console.log('🔧 ARBService: API Login ID:', this.apiLoginId ? 'Set' : 'Missing');
 console.log('🔧 ARBService: Transaction Key:', this.transactionKey ? 'Set' : 'Missing');
+console.log('🔧 ARBService: Request JSON:', arbRequest.getJSON());
+console.log('🔧 ARBService: About to call controller.execute()...');
         controller.execute(() => {
+          console.log('🔧 ARBService: Callback executed - got response');
+
           const apiResponse = controller.getResponse();
+          console.log('🔧 ARBService: API Response received');
+
           const response = apiResponse.getSubscriptionResponse();
           
           if (response.getMessages().getResultCode() === ApiContracts.MessageTypeEnum.OK) {
