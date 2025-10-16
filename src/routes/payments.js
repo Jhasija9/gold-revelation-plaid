@@ -5,6 +5,7 @@ const databaseService = require('../services/databaseService');
 const Transaction = require('../models/Transaction');
 const settlementService = require('../services/settlementService');
 const crypto = require('crypto');
+const subscriptionController = require('../controllers/subscriptionController');
 
 function verifyWebhookSignature(rawBody, signature) {
   const signatureKey = process.env.ANET_SIGNATURE_KEY;

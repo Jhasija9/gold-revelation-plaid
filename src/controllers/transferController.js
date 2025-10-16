@@ -7,7 +7,7 @@ class TransferController {
   async createTransfer(req, res) {
     try {
       console.log("=== CREATE TRANSFER CALLED ===");
-      console.log("req.body:", req.body);
+      // console.log("req.body:", req.body);
 
       const { user_id, account_id, amount, description } = req.body;
 

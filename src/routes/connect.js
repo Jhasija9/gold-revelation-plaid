@@ -1300,12 +1300,26 @@ router.get("/", async (req, res, next) => {
     // (Optional) Only mark used after link token creation succeeds
     await LinkSession.markUsed(session.id);
 
-    return res.status(200).send(renderPage({ 
-        linkToken,
-        error: null,
-        userId: session.user_id,
-      selectedPlan: selected_plan || null
-    }));
+    // return res.status(200).send(renderPage({ 
+    //     linkToken,
+    //     error: null,
+    //     userId: session.user_id,
+    //   selectedPlan: selected_plan || null
+    // }));
+    const isSubscription = selected_plan === 'Gold Subscription';
+
+return res.status(200).send(renderPage({ 
+    linkToken,
+    error: null,
+    userId: session.user_id,
+    selectedPlan: selected_plan || null,
+    isSubscription: isSubscription,
+    paymentType: isSubscription ? 'subscription' : 'one_time',
+    planName: selected_plan,
+    amount: isSubscription ? 500 : 0,
+    amountEditable: !isSubscription,
+    description: isSubscription ? 'Gold Monthly Subscription - $500/month' : 'Gold Investment Plan'
+}));
   } catch (err) {
     next(err);
   }

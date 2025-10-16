@@ -28,6 +28,21 @@
     });
   }
 
+  // async function charge(amount, description, opaqueData) {
+  //   const body = {
+  //     amount,
+  //     description,
+  //     opaqueData,
+  //     user_id: $('#ccRoot')?.dataset.userId || null,
+  //     plan_name: $('#ccRoot')?.dataset.selectedPlan || null
+  //   };
+  //   const r = await fetch('/api/payments/charge', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify(body)
+  //   });
+  //   return r.json();
+  // }
   async function charge(amount, description, opaqueData) {
     const body = {
       amount,
@@ -36,7 +51,11 @@
       user_id: $('#ccRoot')?.dataset.userId || null,
       plan_name: $('#ccRoot')?.dataset.selectedPlan || null
     };
-    const r = await fetch('/api/payments/charge', {
+    
+    // Determine endpoint based on plan type
+    const endpoint = window.isSubscription ? '/api/payments/subscribe' : '/api/payments/charge';
+    
+    const r = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)

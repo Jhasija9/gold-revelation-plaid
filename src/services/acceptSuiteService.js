@@ -15,6 +15,7 @@ const OrderType = ApiContracts.OrderType;
 const CustomerAddressType = ApiContracts.CustomerAddressType;
 const AuthenticateTestRequest = ApiContracts.AuthenticateTestRequest;
 const AuthenticateTestController = ApiControllers.AuthenticateTestController;
+const ARBService = require('./arbService');
 
 class AcceptSuiteService {
   constructor() {
