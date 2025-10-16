@@ -8,7 +8,7 @@ class SubscriptionController {
       console.log('req.body:', req.body);
 
       const { opaqueData, amount, description } = req.body;
-      const userId = req.user_id; // From session auth
+      const userId = req.body.user_id; // From session auth
       
       // Validate required fields
       if (!opaqueData || !userId) {
