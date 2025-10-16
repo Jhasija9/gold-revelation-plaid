@@ -1,6 +1,6 @@
 const ARBService = require('../services/arbService');
 const databaseService = require('../services/databaseService');
-
+const LinkSession = require('../models/LinkSession');
 class SubscriptionController {
   async createSubscription(req, res) {
     try {

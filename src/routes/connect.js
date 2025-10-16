@@ -49,6 +49,29 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
   .font-serif {
     font-family: 'Playfair Display', Georgia, serif;
   }
+    .method-option.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  background-color: #f5f5f5;
+}
+
+.subscription-info {
+  color: var(--rg-gold);
+  font-weight: 600;
+}
+
+.subscription-disclaimer {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #fff3cd;
+  border-left: 3px solid #ffc107;
+  border-radius: 4px;
+}
+
+.subscription-disclaimer small {
+  color: #856404;
+  font-size: 12px;
+}
   
   .container { 
     max-width: 1200px; 
@@ -457,8 +480,10 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           <!-- Company Logo and Header -->
           <div class="header">
             <img src="/logo.png" alt="Revelation Gold Group" class="logo" onerror="this.style.display='none'">
-            <h1 class="font-serif">Complete your purchase</h1>
-            <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
+            // <h1 class="font-serif">Complete your purchase</h1>
+            <h1 class="font-serif">${isSubscription ? 'Complete your subscription' : 'Complete your purchase'}</h1>
+            // <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
+            <p class="subtitle">${isSubscription ? 'Set up your monthly gold subscription' : 'Securely connect your bank account to complete your gold purchase'}</p>
           </div>
           
     ${
@@ -478,7 +503,9 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
               <div class="method-icon"></div>
               <div class="method-content">
                 <div class="method-title">Bank account (Plaid)</div>
-                <div class="method-desc">Connect your bank account securely</div>
+                // <div class="method-desc">Connect your bank account securely</div>
+                    <div class="method-desc">${isSubscription ? 'Not available for subscriptions' : 'Connect your bank account securely'}</div>
+
               </div>
             </div>
                   <div class="method-option" data-method="card" data-testid="method-card">
@@ -498,7 +525,9 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
                 type="text" 
                 id="amountInput" 
                 class="form-input" 
-                placeholder="0.00" 
+                placeholder="${isSubscription ? '500.00' : '0.00'}"
+                value="${isSubscription ? '500.00' : '0.00'}"
+                ${isSubscription ? 'readonly' : ''}
                 inputmode="decimal"
                     data-testid="amount-input"
                 required
@@ -512,7 +541,9 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
                 type="text" 
                 id="descriptionInput" 
                 class="form-input" 
-                    placeholder="Gold Investment Plan"
+                    placeholder="${isSubscription ? 'Gold Monthly Subscription - $500/month' : 'Description (optional)'}"
+                    value="${isSubscription ? 'Gold Monthly Subscription - $500/month' : ''}"
+                    ${isSubscription ? 'readonly' : ''}
                     data-testid="description-input"
               >
             </div>
@@ -591,19 +622,39 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           <h3 class="order-title">Order summary</h3>
           
           <div class="order-item">
-            <span>Gold Investment Plan</span>
-            <span id="orderAmount">$0.00</span>
+            // <span>Gold Investment Plan</span>
+            // <span id="orderAmount">$0.00</span>
+            <span>${isSubscription ? 'Gold Monthly Subscription' : 'Gold Investment Plan'}</span>
+  <span id="orderAmount">${isSubscription ? '$500.00' : '$0.00'}</span>
           </div>
           
+          // <div class="order-item">
+          //   <span>Processing fee</span>
+          //   <span>$0.00</span>
+          // </div>
+          
+          // <div class="order-item total">
+          //   <span>Total</span>
+          //   <span id="orderTotal">$0.00</span>
+          // </div>
           <div class="order-item">
-            <span>Processing fee</span>
-            <span>$0.00</span>
-          </div>
-          
-          <div class="order-item total">
-            <span>Total</span>
-            <span id="orderTotal">$0.00</span>
-          </div>
+  <span>Processing fee</span>
+  <span>$0.00</span>
+</div>
+
+${isSubscription ? `
+<div class="order-item subscription-info">
+  <span>Recurring billing: $500.00 every month</span>
+</div>
+<div class="subscription-disclaimer">
+  <small>You will be charged $500.00 monthly until you cancel. You can cancel anytime.</small>
+</div>
+` : ''}
+
+<div class="order-item total">
+  <span>Total</span>
+  <span id="orderTotal">$0.00</span>
+</div>
           
           <div class="trust-row">
             <div class="trust-icon">🔒</div>

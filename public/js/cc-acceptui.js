@@ -105,14 +105,38 @@
 
       if (res?.success) {
         const successView = document.getElementById('successView');
+        const successTitle = successView.querySelector('.success-title');
         const successAmount = document.getElementById('successAmount');
         const successAccount = document.getElementById('successAccount');
         const successDate = document.getElementById('successDate');
 
-        if (successAmount) successAmount.textContent = formatCurrency(amount);
-        if (successAccount) successAccount.textContent = 'Credit Card';
-        if (successDate) successDate.textContent = new Date().toLocaleDateString();
+        if (successTitle) {
+          successTitle.textContent = window.isSubscription ? 'Subscription Created!' : 'Payment successful';
+        }
+      
 
+        // if (successAmount) successAmount.textContent = formatCurrency(amount);
+        // if (successAccount) successAccount.textContent = 'Credit Card';
+        // if (successDate) successDate.textContent = new Date().toLocaleDateString();
+
+        // if (successView) {
+        //   successView.classList.remove('hidden');
+        //   const primaryActionArea = document.getElementById('primaryActionArea');
+        //   if (primaryActionArea) primaryActionArea.style.display = 'none';
+        // }
+        if (successAccount) {
+          successAccount.textContent = window.isSubscription ? 
+            res.planName : 
+            'Credit Card';
+        }
+      
+        // Update date display
+        if (successDate) {
+          successDate.textContent = window.isSubscription ? 
+            res.nextBillingDate : 
+            new Date().toLocaleDateString();
+        }
+      
         if (successView) {
           successView.classList.remove('hidden');
           const primaryActionArea = document.getElementById('primaryActionArea');

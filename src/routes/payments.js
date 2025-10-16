@@ -6,6 +6,7 @@ const Transaction = require('../models/Transaction');
 const settlementService = require('../services/settlementService');
 const crypto = require('crypto');
 const subscriptionController = require('../controllers/subscriptionController');
+const sessionAuth = require('../middleware/sessionAuth');
 
 function verifyWebhookSignature(rawBody, signature) {
   const signatureKey = process.env.ANET_SIGNATURE_KEY;
@@ -264,6 +265,18 @@ router.post('/webhook', async (req, res) => {
   case 'net.authorize.payment.refund.created':
     await updateTransactionStatus(transactionId, 'refunded');
     break;
+    case 'net.authorize.payment.subscription.created':
+    console.log('✅ Subscription created:', transactionId);
+    break;
+  case 'net.authorize.payment.subscription.updated':
+    console.log('✅ Subscription updated:', transactionId);
+    break;
+  case 'net.authorize.payment.subscription.cancelled':
+    console.log('✅ Subscription cancelled:', transactionId);
+    break;
+  case 'net.authorize.payment.subscription.suspended':
+    console.log('⚠️ Subscription suspended:', transactionId);
+    break;
     }
     
     res.status(200).json({ received: true });
@@ -292,6 +305,11 @@ router.post('/settlement/check', async (req, res) => {
     });
   }
 });
+// Subscription Routes (NEW - don't modify existing routes)
+router.post('/subscribe', sessionAuth.validateSession, subscriptionController.createSubscription);
+router.delete('/subscriptions/:subscriptionId', sessionAuth.validateSession, subscriptionController.cancelSubscription);
+
+
 
 
 module.exports = router;
