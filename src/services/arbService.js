@@ -88,6 +88,10 @@ class ARBService {
       controller.setEnvironment(this.environment);
       
       return new Promise((resolve) => {
+        console.log('🔧 ARBService: About to execute ARB request...');
+console.log('🔧 ARBService: Environment:', this.environment);
+console.log('🔧 ARBService: API Login ID:', this.apiLoginId ? 'Set' : 'Missing');
+console.log('🔧 ARBService: Transaction Key:', this.transactionKey ? 'Set' : 'Missing');
         controller.execute(() => {
           const apiResponse = controller.getResponse();
           const response = apiResponse.getSubscriptionResponse();

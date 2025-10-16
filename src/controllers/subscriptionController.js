@@ -66,7 +66,13 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       console.log('🔧 SubscriptionController: Creating ARB subscription...');
       
       // Create ARB subscription
-      const arbResult = await ARBService.createSubscription(subscriptionData);
+      // const arbResult = await ARBService.createSubscription(subscriptionData);
+      const arbResult = await Promise.race([
+        ARBService.createSubscription(subscriptionData),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('ARB service timeout after 10 seconds')), 10000)
+        )
+      ]);
       
       if (!arbResult.success) {
         console.error('❌ SubscriptionController: ARB creation failed:', arbResult.error);
