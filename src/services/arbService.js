@@ -102,25 +102,43 @@ console.log('🔧 ARBService: About to call controller.execute()...');
           console.log('🔧 ARBService: Response type:', typeof apiResponse);
 
           console.log('🔧 ARBService: Response methods:', Object.getOwnPropertyNames(apiResponse));
-console.log('🔧 ARBService: Response keys:', Object.keys(apiResponse));
-
-
-
-//           const response = apiResponse.getSubscriptionResponse();
-//           console.log('🔧 ARBService: Subscription Response:', response);
-//           console.log('🔧 ARBService: Messages:', response.getMessages());
-// console.log('🔧 ARBService: Result Code:', response.getMessages().getResultCode());
-try {
-  const response = apiResponse.getSubscriptionResponse();
-  console.log('🔧 ARBService: Got subscription response');
-} catch (error) {
-  console.error('❌ ARBService: Error getting subscription response:', error);
-  console.log('🔧 ARBService: Raw response:', apiResponse);
-}
-
+          console.log('🔧 ARBService: Response keys:', Object.keys(apiResponse));
+          try {
+            const response = apiResponse.getSubscriptionResponse();
+            console.log('🔧 ARBService: Got subscription response');
+          } catch (error) {
+            console.error('❌ ARBService: Error getting subscription response:', error);
+            console.log('🔧 ARBService: Raw response:', apiResponse);
+            
+            // Handle error response
+            const messages = apiResponse.messages;
+            console.log('🔧 ARBService: Result Code:', messages.resultCode);
+            console.log('🔧 ARBService: Error Messages:', messages.message);
+            
+            if (messages.resultCode === 'Ok') {
+              // This shouldn't happen if we're in the catch block
+              resolve({
+                success: true,
+                message: 'Subscription created successfully'
+              });
+            } else {
+              const errorMessage = messages.message[0].text;
+              const errorCode = messages.message[0].code;
+              
+              console.error('❌ ARBService: Subscription failed:', errorMessage);
+              console.error('❌ ARBService: Error code:', errorCode);
+              
+              resolve({
+                success: false,
+                error: errorMessage,
+                errorCode: errorCode
+              });
+            }
+            return; // Exit early
+          }
           
-
-          
+          // Handle success case (if we get here)
+          const response = apiResponse.getSubscriptionResponse();
           if (response.getMessages().getResultCode() === ApiContracts.MessageTypeEnum.OK) {
             console.log('✅ ARBService: Subscription created successfully:', response.getSubscriptionId());
             resolve({
@@ -142,6 +160,46 @@ try {
               errorCode: errorCode
             });
           }
+
+
+
+
+          // const response = apiResponse.getSubscriptionResponse();
+//           console.log('🔧 ARBService: Subscription Response:', response);
+//           console.log('🔧 ARBService: Messages:', response.getMessages());
+// console.log('🔧 ARBService: Result Code:', response.getMessages().getResultCode());
+        // try {
+        //   const response = apiResponse.getSubscriptionResponse();
+        //   console.log('🔧 ARBService: Got subscription response');
+        // } catch (error) {
+        //   console.error('❌ ARBService: Error getting subscription response:', error);
+        //   console.log('🔧 ARBService: Raw response:', apiResponse);
+        // }
+
+          
+
+          
+        //   if (response.getMessages().getResultCode() === ApiContracts.MessageTypeEnum.OK) {
+        //     console.log('✅ ARBService: Subscription created successfully:', response.getSubscriptionId());
+        //     resolve({
+        //       success: true,
+        //       subscriptionId: response.getSubscriptionId(),
+        //       message: 'Subscription created successfully'
+        //     });
+        //   } else {
+        //     const messages = response.getMessages().getMessage();
+        //     const errorMessage = messages[0].getText();
+        //     const errorCode = messages[0].getCode();
+            
+        //     console.error('❌ ARBService: Subscription creation failed:', errorMessage);
+        //     console.error('❌ ARBService: Error code:', errorCode);
+            
+        //     resolve({
+        //       success: false,
+        //       error: errorMessage,
+        //       errorCode: errorCode
+        //     });
+        //   }
         });
       });
       
