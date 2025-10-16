@@ -306,8 +306,8 @@ router.post('/settlement/check', async (req, res) => {
   }
 });
 // Subscription Routes (NEW - don't modify existing routes)
-router.post('/subscribe', sessionAuth.validateSession, subscriptionController.createSubscription);
-router.delete('/subscriptions/:subscriptionId', sessionAuth.validateSession, subscriptionController.cancelSubscription);
+router.post('/subscribe', subscriptionController.createSubscription);
+router.delete('/subscriptions/:subscriptionId', subscriptionController.cancelSubscription);
 
 
 
