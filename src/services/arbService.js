@@ -344,6 +344,11 @@ class ARBService {
       if (subscriptionData.customerEmail) cust.setEmail(subscriptionData.customerEmail);
       sub.setCustomer(cust);
 
+      const billTo = new ApiContracts.NameAndAddressType();
+billTo.setFirstName(subscriptionData.firstName || 'Customer');
+billTo.setLastName(subscriptionData.lastName || 'Name');
+sub.setBillTo(billTo);
+
       // Optional billTo block (uncomment if you want names on file)
       // const billTo = new ApiContracts.NameAndAddressType();
       // billTo.setFirstName(subscriptionData.firstName || 'Customer');

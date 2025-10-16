@@ -51,6 +51,11 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD
       
       console.log('🔧 SubscriptionController: Start date:', startDateStr);
+      const firstName =
+    user.first_name || user.firstName || req.body.first_name || req.body.firstName || 'Customer';
+  const lastName  =
+   user.last_name  || user.lastName  || req.body.last_name  || req.body.lastName  || 'Name';
+
       
       // Prepare subscription data for ARB
       const subscriptionData = {
@@ -59,8 +64,9 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
         interval: 'monthly',
         startDate: startDateStr,
         opaqueData: opaqueData,
-        customerId: user.customer_id,
-        customerEmail: user.email
+        customerEmail: user.email,
+        firstName: firstName,
+        lastName: lastName
       };
       
       console.log('🔧 SubscriptionController: Creating ARB subscription...');
