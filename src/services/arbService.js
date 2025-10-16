@@ -340,7 +340,7 @@ class ARBService {
 
       // Customer (id/email OK; billTo optional)
       const cust = new ApiContracts.CustomerType();
-      if (subscriptionData.customerId) cust.setId(subscriptionData.customerId);
+      // if (subscriptionData.customerId) cust.setId(subscriptionData.customerId);
       if (subscriptionData.customerEmail) cust.setEmail(subscriptionData.customerEmail);
       sub.setCustomer(cust);
 
