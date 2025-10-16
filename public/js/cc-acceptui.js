@@ -60,7 +60,17 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    return r.json();
+    let payload;
+const ct = r.headers.get('content-type') || '';
+
+if (ct.includes('application/json')) {
+  payload = await r.json();
+} else {
+  const text = await r.text();
+  payload = { success: false, message: `HTTP ${r.status}: ${text.slice(0,200)}` };
+}
+
+return payload;
   }
 
   function formatCurrency(v) {
