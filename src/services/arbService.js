@@ -101,11 +101,22 @@ console.log('🔧 ARBService: About to call controller.execute()...');
           console.log('🔧 ARBService: API Response received');
           console.log('🔧 ARBService: Response type:', typeof apiResponse);
 
+          console.log('🔧 ARBService: Response methods:', Object.getOwnPropertyNames(apiResponse));
+console.log('🔧 ARBService: Response keys:', Object.keys(apiResponse));
 
-          const response = apiResponse.getSubscriptionResponse();
-          console.log('🔧 ARBService: Subscription Response:', response);
-          console.log('🔧 ARBService: Messages:', response.getMessages());
-console.log('🔧 ARBService: Result Code:', response.getMessages().getResultCode());
+
+
+//           const response = apiResponse.getSubscriptionResponse();
+//           console.log('🔧 ARBService: Subscription Response:', response);
+//           console.log('🔧 ARBService: Messages:', response.getMessages());
+// console.log('🔧 ARBService: Result Code:', response.getMessages().getResultCode());
+try {
+  const response = apiResponse.getSubscriptionResponse();
+  console.log('🔧 ARBService: Got subscription response');
+} catch (error) {
+  console.error('❌ ARBService: Error getting subscription response:', error);
+  console.log('🔧 ARBService: Raw response:', apiResponse);
+}
 
           
 
