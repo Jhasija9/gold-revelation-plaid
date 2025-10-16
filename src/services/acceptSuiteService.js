@@ -362,6 +362,21 @@ else if (tr && tr.responseCode) {
       error: 'This payment method is no longer supported. Please use the credit card option.'
     };
   }
+    // ARB Subscription Methods (NEW - don't modify existing methods)
+    async createARBSubscription(subscriptionData) {
+      console.log('🔧 AcceptSuiteService: Creating ARB subscription via ARBService');
+      return await ARBService.createSubscription(subscriptionData);
+    }
+  
+    async cancelARBSubscription(subscriptionId) {
+      console.log('🔧 AcceptSuiteService: Cancelling ARB subscription via ARBService');
+      return await ARBService.cancelSubscription(subscriptionId);
+    }
+  
+    async getARBSubscription(subscriptionId) {
+      console.log('🔧 AcceptSuiteService: Getting ARB subscription via ARBService');
+      return await ARBService.getSubscription(subscriptionId);
+    }
 }
 
 module.exports = new AcceptSuiteService();
