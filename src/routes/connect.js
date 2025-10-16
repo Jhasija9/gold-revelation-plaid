@@ -11,7 +11,7 @@ function parseCookies(req) {
   return cookie.parse(header);
 }
 
-function renderPage({ linkToken, error, userId, selectedPlan }) {
+function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, paymentType, planName, amount, amountEditable, description }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -628,6 +628,11 @@ function renderPage({ linkToken, error, userId, selectedPlan }) {
       var USER_ID = ${JSON.stringify(userId ?? null)};
       var linkToken = ${JSON.stringify(linkToken)};
       var selectedPlan = ${JSON.stringify(selectedPlan || '')};
+      window.isSubscription = ${isSubscription || false};
+window.paymentType = ${JSON.stringify(paymentType || 'one_time')};
+window.planName = ${JSON.stringify(planName || '')};
+window.currentAmount = ${amount || 0};
+window.currentDescription = ${JSON.stringify(description || '')};
       
       // State machine - single source of truth
       var state = {
