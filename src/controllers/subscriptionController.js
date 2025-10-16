@@ -32,6 +32,8 @@ class SubscriptionController {
       
       const user = userResult.data[0];
       console.log('🔧 SubscriptionController: User found:', user.email);
+      console.log('🔧 SubscriptionController: User selected_plan:', user.selected_plan);
+console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_name);
       
       // Check if user selected subscription plan
       if (user.selected_plan !== 'Gold Subscription') {
