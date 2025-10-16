@@ -59,7 +59,8 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
         interval: 'monthly',
         startDate: startDateStr,
         opaqueData: opaqueData,
-        customerId: user.customer_id,
+        // customerId: user.customer_id,
+        customerId: userId.substring(0, 20),
         customerEmail: user.email
       };
       
