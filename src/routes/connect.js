@@ -1139,6 +1139,13 @@ window.currentDescription = ${JSON.stringify(description || '')};
             state.desc = selectedPlan;
           }
         }
+          if (window.isSubscription) {
+    var amountInput = document.getElementById('amountInput');
+    if (amountInput) {
+      state.amount = amountInput.value; // Set the pre-filled amount
+      state.isAmountValid = true; // Mark as valid since it's pre-filled
+    }
+  }
         
         updatePrimaryAction();
         updateOrderSummary();
