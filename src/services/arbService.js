@@ -99,8 +99,16 @@ console.log('🔧 ARBService: About to call controller.execute()...');
 
           const apiResponse = controller.getResponse();
           console.log('🔧 ARBService: API Response received');
+          console.log('🔧 ARBService: Response type:', typeof apiResponse);
+
 
           const response = apiResponse.getSubscriptionResponse();
+          console.log('🔧 ARBService: Subscription Response:', response);
+          console.log('🔧 ARBService: Messages:', response.getMessages());
+console.log('🔧 ARBService: Result Code:', response.getMessages().getResultCode());
+
+          
+
           
           if (response.getMessages().getResultCode() === ApiContracts.MessageTypeEnum.OK) {
             console.log('✅ ARBService: Subscription created successfully:', response.getSubscriptionId());
