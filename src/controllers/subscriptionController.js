@@ -36,7 +36,7 @@ class SubscriptionController {
 console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_name);
       
       // Check if user selected subscription plan
-      if (user.selected_plan !== 'Gold Subscription') {
+      if (req.body.selected_plan !== 'Gold Subscription') {
         return res.status(400).json({
           success: false,
           error: 'Invalid plan for subscription'
