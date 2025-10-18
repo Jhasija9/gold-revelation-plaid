@@ -62,8 +62,8 @@ class ARBService {
       const interval = new ApiContracts.PaymentScheduleType.Interval();
       interval.setLength(1);
       interval.setUnit(
-        subscriptionData.interval === 'days'
-          ? ApiContracts.ARBSubscriptionUnitEnum.DAYS
+        subscriptionData.interval === 'weeks'
+          ? ApiContracts.ARBSubscriptionUnitEnum.WEEKS
           : ApiContracts.ARBSubscriptionUnitEnum.YEARS
       );
       schedule.setInterval(interval);
