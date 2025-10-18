@@ -61,8 +61,9 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       const subscriptionData = {
         name: 'Gold Monthly Subscription',
         amount: 500.00, // Fixed amount for subscription
-        interval: 'monthly',
+        interval: 'days',
         startDate: startDateStr,
+        intervalLength: 1,  
         opaqueData: opaqueData,
         customerEmail: user.email,
         firstName: firstName,
@@ -91,7 +92,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
         plan_name: 'Gold Monthly Subscription',
         amount: 500.00,
         interval: 'monthly',
-        status: 'pending',
+        status: 'active',
         authorize_net_subscription_id: arbResult.subscriptionId,
         next_billing_date: startDateStr,
         created_at: new Date().toISOString()
@@ -119,29 +120,29 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       console.log('✅ SubscriptionController: Subscription stored in database:', dbResult.data[0].id);
       
       // Store initial payment in transactions table
-      const transactionRecord = {
-        user_id: userId,
-        subscription_id: dbResult.data[0].id,
-        transaction_type: 'subscription_payment',
-        amount: 500.00,
-        status: 'completed',
-        description: 'Gold Monthly Subscription - Initial Payment',
-        payment_method: 'credit_card',
-        authorize_net_transaction_id: arbResult.subscriptionId,
-        created_at: new Date().toISOString(),
-        completed_at: new Date().toISOString()
-      };
+      // const transactionRecord = {
+      //   user_id: userId,
+      //   subscription_id: dbResult.data[0].id,
+      //   transaction_type: 'subscription_payment',
+      //   amount: 500.00,
+      //   status: 'completed',
+      //   description: 'Gold Monthly Subscription - Initial Payment',
+      //   payment_method: 'credit_card',
+      //   authorize_net_transaction_id: arbResult.subscriptionId,
+      //   created_at: new Date().toISOString(),
+      //   completed_at: new Date().toISOString()
+      // };
       
-      console.log('🔧 SubscriptionController: Storing initial payment in transactions...');
+      // console.log('🔧 SubscriptionController: Storing initial payment in transactions...');
       
-      const transactionResult = await databaseService.query('transactions', 'insert', {
-        values: [transactionRecord]
-      });
+      // const transactionResult = await databaseService.query('transactions', 'insert', {
+      //   values: [transactionRecord]
+      // });
       
-      if (!transactionResult.success) {
-        console.error('❌ SubscriptionController: Transaction insert failed:', transactionResult.error);
-        // Don't fail the request, just log the error
-      }
+      // if (!transactionResult.success) {
+      //   console.error('❌ SubscriptionController: Transaction insert failed:', transactionResult.error);
+      //   // Don't fail the request, just log the error
+      // }
       
       res.json({
         success: true,
