@@ -60,13 +60,13 @@ class ARBService {
       schedule.setStartDate(subscriptionData.startDate);
 
       const interval = new ApiContracts.PaymentScheduleType.Interval();
-      interval.setLength(1);
-      interval.setUnit(
-        subscriptionData.interval === 'weeks'
-          ? ApiContracts.ARBSubscriptionUnitEnum.WEEKS
-          : ApiContracts.ARBSubscriptionUnitEnum.YEARS
-      );
-      schedule.setInterval(interval);
+      interval.setLength(Math.max(subscriptionData.intervalLength || 7, 7));
+interval.setUnit(
+  subscriptionData.interval === 'days'
+    ? ApiContracts.ARBSubscriptionUnitEnum.DAYS
+    : ApiContracts.ARBSubscriptionUnitEnum.MONTHS
+);
+schedule.setInterval(interval);
 
       // Keep charging until cancel (Authorize.Net requires totalOccurrences)
       schedule.setTotalOccurrences(9999);

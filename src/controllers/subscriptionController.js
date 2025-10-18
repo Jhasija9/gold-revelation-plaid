@@ -63,7 +63,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
         amount: 500.00, // Fixed amount for subscription
         interval: 'days',
         startDate: startDateStr,
-        intervalLength: 1,  
+        intervalLength: 7,  
         opaqueData: opaqueData,
         customerEmail: user.email,
         firstName: firstName,
