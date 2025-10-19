@@ -874,7 +874,6 @@ window.currentDescription = ${JSON.stringify(description || '')};
               }
             });
             primaryActionArea.appendChild(button);
-            primaryActionArea.appendChild(button);
         } else {
             // Show connect button
             var button = document.createElement('button');
@@ -1017,6 +1016,10 @@ window.currentDescription = ${JSON.stringify(description || '')};
         // ADD THIS: ACH recurring subscription creator
 async function createAchSubscription() {
   try {
+    if (state.loading) return;
+    state.loading = true;
+    updatePrimaryAction();
+    
     var userId = USER_ID; // matches how bank one-time uses USER_ID
     var accountId = state.selectedAccountId;
     var amount = parseAmount(state.amount);
