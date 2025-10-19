@@ -27,6 +27,7 @@ async function createRecurringTransfer({
   network = 'ach',
   user_present = false,
   idempotency_key,
+  user,
 }) {
   const body = {
     access_token,
