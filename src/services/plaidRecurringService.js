@@ -67,11 +67,15 @@ async function createRecurringTransfer({
     user,
   };
   const resp = await client.transferRecurringCreate(body);
+  const rt = resp?.data?.recurring_transfer;
+  if (!rt?.id) throw new Error('Plaid did not return recurring_transfer.id');
+
+
   return {
     success: true,
-    recurring_transfer_id: resp.data.recurring_transfer_id,
-    schedule: resp.data.schedule,
-    status: resp.data.status,
+    recurring_transfer_id: rt?.id,        // ✅ correct
+    schedule: rt?.schedule,               // ✅ correct
+    status: rt?.status, 
   };
 }
 
