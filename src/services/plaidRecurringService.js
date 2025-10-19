@@ -16,8 +16,31 @@ function makeClient() {
 }
 
 const client = makeClient();
+function getShortDescription(description) {
+  const shortDescriptions = {
+    'Gold Subscription': 'Gold Sub',
+    'Silver Plan': 'Silver',
+    'Platinum Package': 'Platinum',
+    'GoldIRA': 'GoldIRA',
+    'Silver IRA': 'Silver IRA',
+    'Platinum IRA': 'Platinum IRA',
+    'Gold Investment': 'Gold Invest',
+    'Silver Investment': 'Silver Inv',
+    'Platinum Investment': 'Platinum Inv',
+    'Gold Purchase': 'Gold Purchase',
+    'Silver Purchase': 'Silver Purch',
+    'Platinum Purchase': 'Platinum Pur',
+    'Gold Plan': 'Gold Plan',
+    'Silver Plan': 'Silver Plan',
+    'Platinum Plan': 'Platinum Plan'
+  };
+  const d = (description || 'Subscription').toString();
+  return shortDescriptions[d] || d.substring(0, 15);
+}
+
 
 async function createRecurringTransfer({
+  
   access_token,
   account_id,
   amount,              // string, e.g. "500.00"
@@ -29,6 +52,7 @@ async function createRecurringTransfer({
   idempotency_key,
   user,
 }) {
+  const desc = getShortDescription(description);
   const body = {
     access_token,
     account_id,
@@ -37,7 +61,7 @@ async function createRecurringTransfer({
     ach_class,
     amount,
     user_present,
-    description,
+    description: desc,
     idempotency_key,
     schedule,
     user,
