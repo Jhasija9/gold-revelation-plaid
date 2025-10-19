@@ -72,7 +72,7 @@ async function createRecurringTransfer({
     const rt = data.recurring_transfer || {};
   
     // Plaid may return either top-level fields or nested under recurring_transfer
-    const id = data.recurring_transfer_id || rt.id;
+    const id = rt.recurring_transfer_id || rt.id;
     const schedule = data.schedule || rt.schedule;
     const status = data.status || rt.status;
   
