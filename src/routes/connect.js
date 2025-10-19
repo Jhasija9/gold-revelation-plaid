@@ -839,26 +839,42 @@ window.currentDescription = ${JSON.stringify(description || '')};
             
             primaryActionArea.appendChild(accountDropdown);
             
-            // Add event listener for account selection
+              // Add event listener for account selection
             var select = accountDropdown.querySelector('select');
             select.addEventListener('change', function() {
               state.selectedAccountId = this.value;
+              // ADD THIS
+              window.state = window.state || {};
+              window.state.selectedAccount = { id: this.value };
               // Update connected badge text when account changes
               var selected = getSelectedAccount();
               var connectedText = connectedBadge.querySelector('#connectedText');
               if (connectedText && selected) {
-            var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
+                var accountName = selected.name || selected.official_name || selected.subtype || 'Account';
                 connectedText.textContent = 'Connected — ' + accountName + ' ••••' + selected.mask;
               }
               updatePrimaryAction();
             });
             
             // Then add the complete payment button
+            // Then add the complete payment button
             var button = document.createElement('button');
             button.className = 'primary-action-btn';
             button.textContent = 'Complete payment';
             button.disabled = !state.isAmountValid || !state.selectedAccountId || state.loading;
-            button.addEventListener('click', handleBankPayment);
+            // REPLACE this line:
+            // button.addEventListener('click', handleBankPayment);
+            // WITH this:
+            button.addEventListener('click', function() {
+              if (window.isSubscription) {
+                // ACH recurring subscription
+                createAchSubscription();
+              } else {
+                // one-time bank payment (existing)
+                handleBankPayment();
+              }
+            });
+            primaryActionArea.appendChild(button);
             primaryActionArea.appendChild(button);
         } else {
             // Show connect button
@@ -999,6 +1015,50 @@ window.currentDescription = ${JSON.stringify(description || '')};
           updatePrimaryAction();
         });
       }
+        // ADD THIS: ACH recurring subscription creator
+async function createAchSubscription() {
+  try {
+    var userId = USER_ID; // matches how bank one-time uses USER_ID
+    var accountId = state.selectedAccountId;
+    var amount = parseAmount(state.amount);
+    var planName = selectedPlan || 'Gold Subscription';
+
+    if (!userId || !accountId) {
+      throw new Error('Please connect and select a bank account first.');
+    }
+
+    // Monthly schedule starting today; clamp day to 28 to avoid month-end issues
+    var startDate = new Date().toISOString().slice(0, 10);
+    var day = Math.min(new Date().getUTCDate(), 28);
+
+    var r = await fetch('/api/subscriptions/ach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: userId,
+        plan_name: planName,
+        amount: amount,                // backend converts to Number()
+        account_id: accountId,
+        interval_unit: 'month',
+        interval_count: 1,
+        interval_execution_day: day,
+        start_date: startDate
+      })
+    });
+    var res = await r.json();
+    if (!res || !res.success) {
+      throw new Error((res && res.error) || 'Failed to create ACH subscription');
+    }
+
+    showSuccessView();
+    return res;
+  } catch (err) {
+    showInlineError('Error: ' + (err.message || String(err)));
+    console.error('ACH subscription error:', err);
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
       
       // Show success view
       function showSuccessView() {
@@ -1167,6 +1227,10 @@ window.currentDescription = ${JSON.stringify(description || '')};
             
             // Update state
             state.method = method;
+            
+            // ADD THIS
+            window.state = window.state || {};
+            window.state.selectedMethod = method;
             
             // Update UI
             methodOptions.forEach(function(opt) {
