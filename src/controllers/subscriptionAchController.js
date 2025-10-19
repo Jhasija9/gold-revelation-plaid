@@ -55,7 +55,7 @@ class SubscriptionAchController {
       const now = new Date();
       const base = start_date ? new Date(start_date) : now;
       const dom = Math.min(base.getUTCDate(), 28);
-      const unit = interval_unit === 'week' ? 'week' : 'month';
+      const unit = interval_unit === 'week';
       const startForSeriesISO = (req.body.charge_now === true)
         ? addIntervalISO(base.toISOString(), unit, 1)
         : base.toISOString();
