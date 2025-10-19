@@ -56,6 +56,19 @@ class SubscriptionAchController {
 
       const plaidAmount = Number(amount).toFixed(2);
       const idempotency_key = crypto.randomUUID();
+      const userRes = await databaseService.query('users', 'select', { where: { id: user_id } });
+      if (!userRes.success || !userRes.data.length) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+      const u = userRes.data[0];
+
+      // Build Plaid transfer user
+      const legal_name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.email;
+      const plaidUser = {
+        legal_name,
+        email_address: u.email || undefined,
+        phone_number: u.phone || undefined,
+      };
 
       const r = await plaidRecurring.createRecurringTransfer({
         access_token,
@@ -67,6 +80,7 @@ class SubscriptionAchController {
         network: 'ach',
         user_present: false,
         idempotency_key,
+        user: plaidUser,
       });
 
       if (!r.success) {

@@ -39,6 +39,7 @@ async function createRecurringTransfer({
     description,
     idempotency_key,
     schedule,
+    user,
   };
   const resp = await client.transferRecurringCreate(body);
   return {
