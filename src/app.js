@@ -15,6 +15,8 @@ const settlementService = require('./services/settlementService');
 const cron = require('node-cron');
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
+const subscriptionsAchRoutes = require('./routes/subscriptionsAch');
+
 
 const app = express();
 
@@ -76,6 +78,7 @@ app.use(
     next();
   }
 );
+app.use('/api', subscriptionsAchRoutes);
 app.use(
   "/api/payments/webhook",
   bodyParser.raw({ type: "application/json" }),
