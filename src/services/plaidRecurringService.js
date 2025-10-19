@@ -66,18 +66,39 @@ async function createRecurringTransfer({
     schedule,
     user,
   };
-  const resp = await client.transferRecurringCreate(body);
-  const rt = resp?.data?.recurring_transfer;
-  if (!rt?.id) throw new Error('Plaid did not return recurring_transfer.id');
-
-
-  return {
-    success: true,
-    recurring_transfer_id: rt?.id,        // ✅ correct
-    schedule: rt?.schedule,               // ✅ correct
-    status: rt?.status, 
-  };
-}
+  try {
+    const resp = await client.transferRecurringCreate(body);
+    const data = resp?.data || {};
+    const rt = data.recurring_transfer || {};
+  
+    // Plaid may return either top-level fields or nested under recurring_transfer
+    const id = data.recurring_transfer_id || rt.id;
+    const schedule = data.schedule || rt.schedule;
+    const status = data.status || rt.status;
+  
+    console.log('Plaid recurring create resp:', data);
+  
+    if (!id) {
+      console.error('❌ Missing recurring_transfer id in Plaid response', data);
+      return { success: false, error: 'MISSING_RECURRING_ID', data };
+    }
+  
+    return {
+      success: true,
+      recurring_transfer_id: id,
+      schedule,
+      status,
+    };
+  } catch (err) {
+    const request_id = err?.response?.data?.request_id;
+    console.error('❌ Plaid recurring create error:', request_id || err.message, err?.response?.data || '');
+    return {
+      success: false,
+      error: err?.response?.data?.error_message || err.message,
+      request_id,
+      data: err?.response?.data,
+    };
+  }}
 
 async function cancelRecurringTransfer(recurring_transfer_id) {
   const resp = await client.transferRecurringCancel({ recurring_transfer_id });
