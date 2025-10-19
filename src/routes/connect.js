@@ -504,8 +504,7 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
               <div class="method-content">
                 <div class="method-title">Bank account (Plaid)</div>
                 // <div class="method-desc">Connect your bank account securely</div>
-                    <div class="method-desc">${isSubscription ? 'Not available for subscriptions' : 'Connect your bank account securely'}</div>
-
+          <div class="method-desc">Connect your bank account securely</div>
               </div>
             </div>
                   <div class="method-option" data-method="card" data-testid="method-card">
@@ -1039,10 +1038,7 @@ async function createAchSubscription() {
         plan_name: planName,
         amount: amount,                // backend converts to Number()
         account_id: accountId,
-        interval_unit: 'month',
-        interval_count: 1,
-        interval_execution_day: day,
-        start_date: startDate
+        charge_now: true
       })
     });
     var res = await r.json();

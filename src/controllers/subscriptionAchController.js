@@ -51,9 +51,20 @@ class SubscriptionAchController {
       const access_token = decryptToken(JSON.parse(itemRes.data[0].access_token_encrypted));
 
       // Build schedule per Plaid docs
-      const startISO = (start_date ? new Date(start_date) : new Date()).toISOString().slice(0, 10); // YYYY-MM-DD
-      const schedule = { interval_unit, interval_count, interval_execution_day, start_date: startISO };
-
+      // Build schedule per Plaid docs (charge-now => start next cycle on today's DOM)
+      const now = new Date();
+      const base = start_date ? new Date(start_date) : now;
+      const dom = Math.min(base.getUTCDate(), 28);
+      const unit = interval_unit === 'week' ? 'week' : 'month';
+      const startForSeriesISO = (req.body.charge_now === true)
+        ? addIntervalISO(base.toISOString(), unit, 1)
+        : base.toISOString();
+      const schedule = {
+        interval_unit,
+        interval_count,
+        interval_execution_day: dom,
+        start_date: new Date(startForSeriesISO).toISOString().slice(0, 10) // YYYY-MM-DD
+      };
       const plaidAmount = Number(amount).toFixed(2);
       const idempotency_key = crypto.randomUUID();
       const userRes = await databaseService.query('users', 'select', { where: { id: user_id } });
@@ -88,7 +99,9 @@ class SubscriptionAchController {
       }
 
       // First next billing date = schedule start
-      const firstNextISO = new Date(startISO + 'T00:00:00Z').toISOString();
+      // const firstNextISO = new Date(startISO + 'T00:00:00Z').toISOString();
+      // First next billing date = schedule start (next cycle if charge_now)
+      const firstNextISO = new Date(schedule.start_date + 'T00:00:00Z').toISOString();
 
       // Insert subscription (ACH). payment_method set explicitly; nullable columns are OK.
       const subInsert = await databaseService.query('subscriptions', 'insert', {
@@ -106,9 +119,72 @@ class SubscriptionAchController {
         }],
       });
 
+
       if (!subInsert.success) {
         return res.status(500).json({ success: false, error: 'Failed to store subscription' });
       }
+      // OPTIONAL: charge immediately and count this as current cycle
+if (req.body.charge_now === true) {
+  const plaidService = require('../services/plaidService');
+
+  const t = await plaidService.createTransferUI({
+    access_token,
+    account_id: account.plaid_account_id,
+    amount: plaidAmount,
+    description: plan_name,
+    user_id,
+    user_legal_name: legal_name,
+    user_email: u.email || undefined,
+  });
+
+  // Insert transaction tied to this subscription
+  const txInsert = await databaseService.query('transactions', 'insert', {
+    values: [{
+      user_id,
+      subscription_id: subInsert.data[0].id,
+      transaction_type: 'subscription_payment',
+      amount: Number(amount),
+      status: 'pending',
+      description: plan_name,
+      payment_method: 'bank_transfer',
+      plaid_transfer_id: t.transfer_id,
+      created_at: new Date().toISOString(),
+    }],
+  });
+  const txId = txInsert.success ? txInsert.data[0].id : null;
+
+  // Determine occurrence number (running count)
+  const countRes = await databaseService.query('subscription_payments', 'select', {
+    where: { subscription_id: subInsert.data[0].id },
+  });
+  const occurrence = (countRes.success ? countRes.data.length : 0) + 1;
+
+  // Insert subscription_payments row for the immediate charge
+  await databaseService.query('subscription_payments', 'insert', {
+    values: [{
+      subscription_id: subInsert.data[0].id,
+      transaction_id: txId,
+      occurrence_number: occurrence,
+      amount: Number(amount),
+      status: 'pending',
+      payment_method: 'bank_transfer',
+      billing_date: new Date().toISOString(),
+      retry_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }],
+  });
+
+  // Update subscription dates
+  await databaseService.query('subscriptions', 'update', {
+    where: { id: subInsert.data[0].id },
+    values: {
+      last_billing_date: new Date().toISOString(),
+      next_billing_date: firstNextISO,
+      updated_at: new Date().toISOString(),
+    },
+  });
+}
 
       return res.json({
         success: true,
