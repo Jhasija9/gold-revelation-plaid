@@ -95,6 +95,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
         status: 'active',
         authorize_net_subscription_id: arbResult.subscriptionId,
         next_billing_date: startDateStr,
+        payment_method: 'credit_card',
         created_at: new Date().toISOString()
       };
       

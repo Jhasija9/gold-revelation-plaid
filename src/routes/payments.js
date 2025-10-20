@@ -128,8 +128,10 @@ async function upsertTransactionFromWebhook(payload) {
     authorize_net_response_code: responseCode   // <= 10 chars
   };
 
-  await databaseService.query('transactions', 'insert', { values: [txRecord] });
-
+  const txInsert = await databaseService.query('transactions', 'insert', {
+    values: [txRecord]
+  });
+  
   if (subscriptionRow && txInsert.success && txInsert.data?.[0]?.id) {
     const countRes = await databaseService.query('subscription_payments', 'select', {
       where: { subscription_id: subscriptionRow.id }
