@@ -480,9 +480,7 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           <!-- Company Logo and Header -->
           <div class="header">
             <img src="/logo.png" alt="Revelation Gold Group" class="logo" onerror="this.style.display='none'">
-            // <h1 class="font-serif">Complete your purchase</h1>
             <h1 class="font-serif">${isSubscription ? 'Complete your subscription' : 'Complete your purchase'}</h1>
-            // <p class="subtitle">Securely connect your bank account to complete your gold purchase</p>
             <p class="subtitle">${isSubscription ? 'Set up your monthly gold subscription' : 'Securely connect your bank account to complete your gold purchase'}</p>
           </div>
           
@@ -503,7 +501,6 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
               <div class="method-icon"></div>
               <div class="method-content">
                 <div class="method-title">Bank account (Plaid)</div>
-                // <div class="method-desc">Connect your bank account securely</div>
           <div class="method-desc">Connect your bank account securely</div>
               </div>
             </div>
@@ -621,21 +618,12 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           <h3 class="order-title">Order summary</h3>
           
           <div class="order-item">
-            // <span>Gold Investment Plan</span>
-            // <span id="orderAmount">$0.00</span>
+            
             <span>${isSubscription ? 'Gold Monthly Subscription' : 'Gold Investment Plan'}</span>
   <span id="orderAmount">${isSubscription ? '$500.00' : '$0.00'}</span>
           </div>
           
-          // <div class="order-item">
-          //   <span>Processing fee</span>
-          //   <span>$0.00</span>
-          // </div>
           
-          // <div class="order-item total">
-          //   <span>Total</span>
-          //   <span id="orderTotal">$0.00</span>
-          // </div>
           <div class="order-item">
   <span>Processing fee</span>
   <span>$0.00</span>
