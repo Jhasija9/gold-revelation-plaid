@@ -81,16 +81,32 @@ async function upsertTransactionFromWebhook(payload) {
   if (existing.success && existing.data.length > 0) return;
 
   // Link to local subscription (if this webhook is from ARB)
-  const arbSubId = payload?.subscription?.id;
-  let subscriptionRow = null;
-  if (arbSubId) {
-    const subRes = await databaseService.query('subscriptions', 'select', {
-      where: { authorize_net_subscription_id: arbSubId }
-    });
-    if (subRes.success && subRes.data.length > 0) {
-      subscriptionRow = subRes.data[0];
-    }
-  }
+  // const arbSubId = payload?.subscription?.id;
+  // let subscriptionRow = null;
+  // if (arbSubId) {
+  //   const subRes = await databaseService.query('subscriptions', 'select', {
+  //     where: { authorize_net_subscription_id: arbSubId }
+  //   });
+  //   if (subRes.success && subRes.data.length > 0) {
+  //     subscriptionRow = subRes.data[0];
+  //   }
+  // }
+  // Link to local subscription (if this webhook is from ARB)
+const arbSubId =
+payload?.subscription?.id ||
+payload?.subscriptionId ||
+payload?.order?.invoiceNumber ||
+null;
+
+let subscriptionRow = null;
+if (arbSubId) {
+const subRes = await databaseService.query('subscriptions', 'select', {
+  where: { authorize_net_subscription_id: arbSubId }
+});
+if (subRes.success && subRes.data.length > 0) {
+  subscriptionRow = subRes.data[0];
+}
+}
 
   const amount = Number(payload?.authAmount ?? payload?.settlementAmount ?? 0) || 0;
   const cardType = payload?.payment?.accountType || null;                   // e.g., 'Visa'
