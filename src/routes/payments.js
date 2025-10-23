@@ -8,6 +8,8 @@ const crypto = require('crypto');
 const subscriptionController = require('../controllers/subscriptionController');
 const sessionAuth = require('../middleware/sessionAuth');
 
+const { getTransactionDetails } = require('../services/anetReportingService');
+
 function verifyWebhookSignature(rawBody, signature) {
   const signatureKey = process.env.ANET_SIGNATURE_KEY;
   
@@ -70,62 +72,260 @@ async function updateTransactionStatus(transactionId, status) {
     throw error;
   }
 }
+// async function upsertTransactionFromWebhook(payload) {
+//   const txId = payload?.id;
+//   if (!txId) return;
+
+//   // If we already recorded this transaction, skip
+//   const existing = await databaseService.query('transactions', 'select', {
+//     where: { authorize_net_transaction_id: txId }
+//   });
+//   if (existing.success && existing.data.length > 0) return;
+
+//   // Link to local subscription (if this webhook is from ARB)
+//   // const arbSubId = payload?.subscription?.id;
+//   // let subscriptionRow = null;
+//   // if (arbSubId) {
+//   //   const subRes = await databaseService.query('subscriptions', 'select', {
+//   //     where: { authorize_net_subscription_id: arbSubId }
+//   //   });
+//   //   if (subRes.success && subRes.data.length > 0) {
+//   //     subscriptionRow = subRes.data[0];
+//   //   }
+//   // }
+//   // Link to local subscription (if this webhook is from ARB)
+// const arbSubId =
+// payload?.subscription?.id ||
+// payload?.subscriptionId ||
+// payload?.order?.invoiceNumber ||
+// null;
+
+// let subscriptionRow = null;
+// if (arbSubId) {
+// const subRes = await databaseService.query('subscriptions', 'select', {
+//   where: { authorize_net_subscription_id: arbSubId }
+// });
+// if (subRes.success && subRes.data.length > 0) {
+//   subscriptionRow = subRes.data[0];
+// }
+// }
+
+//   const amount = Number(payload?.authAmount ?? payload?.settlementAmount ?? 0) || 0;
+//   const cardType = payload?.payment?.accountType || null;                   // e.g., 'Visa'
+//   const masked = payload?.payment?.cardNumber || '';                        // e.g., 'XXXX1111'
+//   const last4 = masked.slice(-4) || null;
+//   const authCode = payload?.authCode || null;                               // <= 20 chars
+//   const responseCode = payload?.responseCode ? String(payload.responseCode) : null; // <= 10
+//   const submittedISO = payload?.submitTimeUTC
+//     ? new Date(payload.submitTimeUTC).toISOString()
+//     : new Date().toISOString();
+
+
+//   const txRecord = {
+//     user_id: subscriptionRow?.user_id || null,
+//     account_id: null,
+//     subscription_id: subscriptionRow?.id || null,
+//     transaction_type: subscriptionRow ? 'subscription_payment' : 'payment',
+//     amount,
+//     status: 'pending',                          // will be advanced by status updates below
+//     description: subscriptionRow ? 'Subscription payment' : 'Card payment',
+//     plaid_transaction_id: null,
+//     ach_reference_id: null,
+//     failure_reason: null,
+//     created_at: new Date().toISOString(),
+//     processed_at: null,
+//     completed_at: null,
+//     failed_at: null,
+//     plaid_transfer_id: null,
+//     payment_method: 'credit_card',
+//     authorize_net_transaction_id: txId,         // <= 50 chars
+//     card_last_four: last4,                      // <= 4 chars
+//     card_type: cardType,                        // <= 20 chars
+//     customer_profile_id: null,
+//     authorize_net_auth_code: authCode,          // <= 20 chars
+//     authorize_net_response_code: responseCode   // <= 10 chars
+//   };
+
+//   const txInsert = await databaseService.query('transactions', 'insert', {
+//     values: [txRecord]
+//   });
+  
+//   if (subscriptionRow && txInsert.success && txInsert.data?.[0]?.id) {
+//     const countRes = await databaseService.query('subscription_payments', 'select', {
+//       where: { subscription_id: subscriptionRow.id }
+//     });
+//     const occurrenceNumber = (countRes.success ? countRes.data.length : 0) + 1;
+
+//     await databaseService.query('subscription_payments', 'insert', {
+//       values: [{
+//         subscription_id: subscriptionRow.id,
+//         transaction_id: txInsert.data[0].id,
+//         occurrence_number: occurrenceNumber,
+//         amount,
+//         status: 'pending',
+//         billing_date: submittedISO,
+//         retry_count: 0,
+//         failure_reason: null,
+//         created_at: new Date().toISOString(),
+//         updated_at: new Date().toISOString()
+//       }]
+//     });
+
+//     // Optional: keep dates/counter if you already have these columns
+//     const nextBillingISO = addMonthsUTC(submittedISO, 1);
+//     await databaseService.query('subscriptions', 'update', {
+//       where: { id: subscriptionRow.id },
+//       values: {
+//         last_billing_date: submittedISO,
+//         next_billing_date: nextBillingISO,
+//         payments_count: (subscriptionRow.payments_count || 0) + 1,
+//         updated_at: new Date().toISOString()
+//       }
+//     });
+//   }
+// }
 async function upsertTransactionFromWebhook(payload) {
   const txId = payload?.id;
   if (!txId) return;
 
-  // If we already recorded this transaction, skip
-  const existing = await databaseService.query('transactions', 'select', {
+  // Always fetch full details (has subscription.id and payNum)
+  let details = null;
+  try {
+    details = await getTransactionDetails(txId);
+  } catch (e) {
+    console.error('⚠️ getTransactionDetails failed:', e?.message || e);
+  }
+
+  // Find subscription id from details first, then webhook fallbacks
+  const arbSubId =
+    details?.subscription?.id ||
+    payload?.subscription?.id ||
+    payload?.subscriptionId ||
+    payload?.order?.invoiceNumber ||
+    null;
+
+  // Existing tx?
+  const existingRes = await databaseService.query('transactions', 'select', {
     where: { authorize_net_transaction_id: txId }
   });
-  if (existing.success && existing.data.length > 0) return;
+  const existingTx = existingRes.success && existingRes.data?.[0];
 
-  // Link to local subscription (if this webhook is from ARB)
-  // const arbSubId = payload?.subscription?.id;
-  // let subscriptionRow = null;
-  // if (arbSubId) {
-  //   const subRes = await databaseService.query('subscriptions', 'select', {
-  //     where: { authorize_net_subscription_id: arbSubId }
-  //   });
-  //   if (subRes.success && subRes.data.length > 0) {
-  //     subscriptionRow = subRes.data[0];
+  // Load local subscription row if we have ARB id
+  let subscriptionRow = null;
+  if (arbSubId) {
+    const subRes = await databaseService.query('subscriptions', 'select', {
+      where: { authorize_net_subscription_id: arbSubId }
+    });
+    if (subRes.success && subRes.data.length > 0) {
+      subscriptionRow = subRes.data[0];
+    }
+  }
+
+  // If tx already exists, optionally attach subscription_id if missing
+  // if (existingTx) {
+  //   if (subscriptionRow && !existingTx.subscription_id) {
+  //     await databaseService.query('transactions', 'update', {
+  //       where: { id: existingTx.id },
+  //       values: {
+  //         subscription_id: subscriptionRow.id,
+  //         user_id: subscriptionRow.user_id,
+  //         transaction_type: 'subscription_payment',
+  //         updated_at: new Date().toISOString()
+  //       }
+  //     });
   //   }
+  //   return;
   // }
-  // Link to local subscription (if this webhook is from ARB)
-const arbSubId =
-payload?.subscription?.id ||
-payload?.subscriptionId ||
-payload?.order?.invoiceNumber ||
-null;
+  // If tx already exists, attach subscription and ensure subscription_payments exists
+if (existingTx) {
+  // attach subscription to tx if missing
+  if (subscriptionRow && !existingTx.subscription_id) {
+    await databaseService.query('transactions', 'update', {
+      where: { id: existingTx.id },
+      values: {
+        subscription_id: subscriptionRow.id,
+        user_id: subscriptionRow.user_id,
+        transaction_type: 'subscription_payment',
+        updated_at: new Date().toISOString()
+      }
+    });
+  }
 
-let subscriptionRow = null;
-if (arbSubId) {
-const subRes = await databaseService.query('subscriptions', 'select', {
-  where: { authorize_net_subscription_id: arbSubId }
-});
-if (subRes.success && subRes.data.length > 0) {
-  subscriptionRow = subRes.data[0];
-}
+  if (subscriptionRow) {
+    // Determine occurrence number
+    let occurrenceNumber = Number(details?.subscription?.payNum || 0);
+    if (!occurrenceNumber) {
+      const countRes = await databaseService.query('subscription_payments', 'select', {
+        where: { subscription_id: subscriptionRow.id }
+      });
+      occurrenceNumber = (countRes.success ? countRes.data.length : 0) + 1;
+    }
+
+    // Idempotency: if payNum is available, guard by (subscription_id, occurrence_number),
+    // otherwise guard by transaction_id
+    const spWhere = details?.subscription?.payNum
+      ? { subscription_id: subscriptionRow.id, occurrence_number: occurrenceNumber }
+      : { transaction_id: existingTx.id };
+
+    const spCheck = await databaseService.query('subscription_payments', 'select', { where: spWhere });
+
+    if (!spCheck.success || spCheck.data.length === 0) {
+      const submittedISO = payload?.submitTimeUTC
+        ? new Date(payload.submitTimeUTC).toISOString()
+        : new Date().toISOString();
+      const amount = Number(details?.amount ?? payload?.authAmount ?? payload?.settlementAmount ?? 0) || 0;
+
+      await databaseService.query('subscription_payments', 'insert', {
+        values: [{
+          subscription_id: subscriptionRow.id,
+          transaction_id: existingTx.id,
+          occurrence_number: occurrenceNumber,
+          amount,
+          status: 'pending',
+          billing_date: submittedISO,
+          retry_count: 0,
+          failure_reason: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          payment_method: 'credit_card'
+        }]
+      });
+
+      const nextBillingISO = addMonthsUTC(submittedISO, 1);
+      await databaseService.query('subscriptions', 'update', {
+        where: { id: subscriptionRow.id },
+        values: {
+          last_billing_date: submittedISO,
+          next_billing_date: nextBillingISO,
+          payments_count: (subscriptionRow.payments_count || 0) + 1,
+          updated_at: new Date().toISOString()
+        }
+      });
+    }
+  }
+
+  return;
 }
 
-  const amount = Number(payload?.authAmount ?? payload?.settlementAmount ?? 0) || 0;
-  const cardType = payload?.payment?.accountType || null;                   // e.g., 'Visa'
-  const masked = payload?.payment?.cardNumber || '';                        // e.g., 'XXXX1111'
+  // Prefer details for amount/auth/response
+  const amount = Number(details?.amount ?? payload?.authAmount ?? payload?.settlementAmount ?? 0) || 0;
+  const authCode = details?.authCode ?? payload?.authCode ?? null;
+  const responseCode = details?.responseCode ?? (payload?.responseCode ? String(payload.responseCode) : null);
+
+  const cardType = payload?.payment?.accountType || null;
+  const masked = payload?.payment?.cardNumber || '';
   const last4 = masked.slice(-4) || null;
-  const authCode = payload?.authCode || null;                               // <= 20 chars
-  const responseCode = payload?.responseCode ? String(payload.responseCode) : null; // <= 10
+
   const submittedISO = payload?.submitTimeUTC
     ? new Date(payload.submitTimeUTC).toISOString()
     : new Date().toISOString();
-
-
   const txRecord = {
     user_id: subscriptionRow?.user_id || null,
     account_id: null,
     subscription_id: subscriptionRow?.id || null,
     transaction_type: subscriptionRow ? 'subscription_payment' : 'payment',
     amount,
-    status: 'pending',                          // will be advanced by status updates below
+    status: 'pending',
     description: subscriptionRow ? 'Subscription payment' : 'Card payment',
     plaid_transaction_id: null,
     ach_reference_id: null,
@@ -136,23 +336,25 @@ if (subRes.success && subRes.data.length > 0) {
     failed_at: null,
     plaid_transfer_id: null,
     payment_method: 'credit_card',
-    authorize_net_transaction_id: txId,         // <= 50 chars
-    card_last_four: last4,                      // <= 4 chars
-    card_type: cardType,                        // <= 20 chars
+    authorize_net_transaction_id: txId,
+    card_last_four: last4,
+    card_type: cardType,
     customer_profile_id: null,
-    authorize_net_auth_code: authCode,          // <= 20 chars
-    authorize_net_response_code: responseCode   // <= 10 chars
+    authorize_net_auth_code: authCode,
+    authorize_net_response_code: responseCode
   };
 
-  const txInsert = await databaseService.query('transactions', 'insert', {
-    values: [txRecord]
-  });
-  
+  const txInsert = await databaseService.query('transactions', 'insert', { values: [txRecord] });
+
   if (subscriptionRow && txInsert.success && txInsert.data?.[0]?.id) {
-    const countRes = await databaseService.query('subscription_payments', 'select', {
-      where: { subscription_id: subscriptionRow.id }
-    });
-    const occurrenceNumber = (countRes.success ? countRes.data.length : 0) + 1;
+    // Use payNum from details if available; otherwise count+1
+    let occurrenceNumber = Number(details?.subscription?.payNum || 0);
+    if (!occurrenceNumber) {
+      const countRes = await databaseService.query('subscription_payments', 'select', {
+        where: { subscription_id: subscriptionRow.id }
+      });
+      occurrenceNumber = (countRes.success ? countRes.data.length : 0) + 1;
+    }
 
     await databaseService.query('subscription_payments', 'insert', {
       values: [{
@@ -165,11 +367,11 @@ if (subRes.success && subRes.data.length > 0) {
         retry_count: 0,
         failure_reason: null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        payment_method: 'credit_card'
       }]
     });
 
-    // Optional: keep dates/counter if you already have these columns
     const nextBillingISO = addMonthsUTC(submittedISO, 1);
     await databaseService.query('subscriptions', 'update', {
       where: { id: subscriptionRow.id },
@@ -404,9 +606,9 @@ router.post('/webhook', async (req, res) => {
         await updateTransactionStatus(transactionId, 'captured');
         await updateSubscriptionPaymentStatusByGatewayTxId(payload.id, 'captured');
         break;
-        case 'net.authorize.payment.void.created':  // ← Make sure this exists
-    await updateTransactionStatus(transactionId, 'cancelled');
-    break;
+    //     case 'net.authorize.payment.void.created':  // ← Make sure this exists
+    // await updateTransactionStatus(transactionId, 'cancelled');
+    // break;
    
     case 'net.authorize.customer.subscription.created':
       await databaseService.query('subscriptions', 'update', {
@@ -436,16 +638,19 @@ router.post('/webhook', async (req, res) => {
       });
       break;
       case 'net.authorize.payment.funded':
+        await upsertTransactionFromWebhook(payload);
   await updateTransactionStatus(payload.id, 'settled');        // keep
   await updateSubscriptionPaymentStatusByGatewayTxId(payload.id, 'settled');  // add
   break;
 
 case 'net.authorize.payment.void.created':
+  await upsertTransactionFromWebhook(payload);
   await updateTransactionStatus(payload.id, 'cancelled');      // keep
   await updateSubscriptionPaymentStatusByGatewayTxId(payload.id, 'cancelled'); // add
   break;
 
 case 'net.authorize.payment.refund.created':
+  await upsertTransactionFromWebhook(payload);
   await updateTransactionStatus(payload.id, 'refunded');       // keep
   await updateSubscriptionPaymentStatusByGatewayTxId(payload.id, 'refunded');  // add
   break;
