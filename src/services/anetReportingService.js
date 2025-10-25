@@ -43,24 +43,25 @@ function getTransactionDetails(transId) {
           ? tx.getSubscription()
           : undefined;
 
-        resolve({
-          transId: tx.getTransId?.(),
-          status: tx.getTransactionStatus?.(),  // e.g., 'settledSuccessfully', 'capturedPendingSettlement'
-          authCode: tx.getAuthCode?.(),
-          responseCode: tx.getResponseCode?.(),
-          amount: tx.getAuthAmount?.() || tx.getSettleAmount?.(),
-          subscription: subscription
-            ? {
-                id: subscription.getId?.(),        // ARB subscriptionId
-                payNum: subscription.getPayNum?.(), // attempt number
-              }
-            : null,
-          customerProfileId: tx.getProfile?.()?.getCustomerProfileId?.(),
-          customerPaymentProfileId: tx.getProfile?.()?.getCustomerPaymentProfileId?.(),
-          billingEmail: tx.getCustomer?.()?.getEmail?.(),
-          billingFirstName: tx.getBillTo?.()?.getFirstName?.(),
-          billingLastName: tx.getBillTo?.()?.getLastName?.(),
-        });
+          resolve({
+            transId: tx.getTransId?.(),
+            status: tx.getTransactionStatus?.(),
+            authCode: tx.getAuthCode?.(),
+            responseCode: tx.getResponseCode?.(),
+            amount: tx.getAuthAmount?.() || tx.getSettleAmount?.(),
+            subscription: subscription
+              ? {
+                  id: subscription.getId?.(),
+                  payNum: subscription.getPayNum?.(),
+                }
+              : null,
+            invoiceNumber: tx.getOrder?.()?.getInvoiceNumber?.(),   // <-- add
+            customerProfileId: tx.getProfile?.()?.getCustomerProfileId?.(),
+            customerPaymentProfileId: tx.getProfile?.()?.getCustomerPaymentProfileId?.(),
+            billingEmail: tx.getCustomer?.()?.getEmail?.(),
+            billingFirstName: tx.getBillTo?.()?.getFirstName?.(),
+            billingLastName: tx.getBillTo?.()?.getLastName?.(),
+          });
       } catch (err) {
         reject(err);
       }
