@@ -460,6 +460,8 @@ class PlaidService {
       }
 
       const transfers = result.data;
+      const plaidTransfers = transfers.filter(t => t.plaid_transfer_id !== null);
+
       console.log(`📋 Found ${transfers.length} transfers to check:`, transfers.map(t => ({
         id: t.id,
         plaid_transfer_id: t.plaid_transfer_id,
@@ -469,7 +471,7 @@ class PlaidService {
       const events = [];
 
       // Check each transfer's current status
-      for (const transfer of transfers) {
+      for (const transfer of plaidTransfers) {
         try {
           console.log(`🔍 Checking transfer ${transfer.plaid_transfer_id} (current status: ${transfer.status})`);
 
