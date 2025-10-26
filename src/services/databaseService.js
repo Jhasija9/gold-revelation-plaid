@@ -30,12 +30,35 @@ class DatabaseService {
       let result;
 
       switch (operation) {
+        // case "select":
+        //   result = await this.supabase
+        //     .from(table)
+        //     .select(data.columns || "*")
+        //     .match(data.where || {});
+        //   break;
         case "select":
-          result = await this.supabase
-            .from(table)
-            .select(data.columns || "*")
-            .match(data.where || {});
-          break;
+  let query = this.supabase.from(table).select(data.columns || "*");
+  
+  // Handle where conditions
+  if (data.where) {
+    for (const [key, value] of Object.entries(data.where)) {
+      if (typeof value === 'object' && value.not_in) {
+        // Handle not_in syntax
+        query = query.not(key, 'in', `(${value.not_in.map(v => `'${v}'`).join(',')})`);
+      } else {
+        // Regular match
+        query = query.match({ [key]: value });
+      }
+    }
+  }
+  
+  // Handle limit
+  if (data.limit) {
+    query = query.limit(data.limit);
+  }
+  
+  result = await query;
+  break;
 
         case "insert":
           result = await this.supabase.from(table).insert(data.values).select();
