@@ -438,6 +438,7 @@ class PlaidService {
   async syncTransferEvents(accessToken, afterEventId = null) {
     try {
       const databaseService = require('./databaseService');
+      console.log(`🔍 Searching for transfers with non-final status...`);
       
       // ✅ FIXED: Get all non-final status transfers (not just pending)
       const result = await databaseService.query("transactions", "select", {
@@ -446,6 +447,12 @@ class PlaidService {
         },
         limit: 25
       });
+      console.log(`📊 Database query result:`, {
+        success: result.success,
+        dataLength: result.data?.length || 0,
+        error: result.error
+      });
+
 
       if (!result.success) {
         console.error('Failed to get transfers:', result.error);
@@ -453,18 +460,35 @@ class PlaidService {
       }
 
       const transfers = result.data;
+      console.log(`📋 Found ${transfers.length} transfers to check:`, transfers.map(t => ({
+        id: t.id,
+        plaid_transfer_id: t.plaid_transfer_id,
+        status: t.status,
+        amount: t.amount
+      })));
       const events = [];
 
       // Check each transfer's current status
       for (const transfer of transfers) {
         try {
+          console.log(`🔍 Checking transfer ${transfer.plaid_transfer_id} (current status: ${transfer.status})`);
+
           const transferResult = await this.getTransferById(accessToken, transfer.plaid_transfer_id);
-          
+          console.log(`📊 Plaid API result for ${transfer.plaid_transfer_id}:`, {
+            success: transferResult.success,
+            status: transferResult.transfer?.status,
+            error: transferResult.error
+          });
           if (transferResult.success) {
             const plaidTransfer = transferResult.transfer;
+            console.log(`🔄 Status comparison: DB(${transfer.status}) vs Plaid(${plaidTransfer.status})`);
+
+
             
             // Create event if status has changed
             if (plaidTransfer.status !== transfer.status) {
+              console.log(`✅ Status changed! Creating event: ${transfer.status} → ${plaidTransfer.status}`);
+
               events.push({
                 event_id: `${transfer.plaid_transfer_id}_${Date.now()}`,
                 transfer_id: transfer.plaid_transfer_id,
@@ -474,13 +498,19 @@ class PlaidService {
                 failure_reason: plaidTransfer.failure_reason,
                 return_reason: plaidTransfer.return_reason
               });
+            } else {
+              console.log(`🔄 No status change detected for ${transfer.plaid_transfer_id}`);
+            }}
+            else {
+              console.error(`❌ Failed to get transfer ${transfer.plaid_transfer_id}:`, transferResult.error);
             }
           }
-        } catch (error) {
+        catch (error) {
           console.error(`Error checking transfer ${transfer.plaid_transfer_id}:`, error);
         }
       }
-      
+      console.log(`📦 Created ${events.length} events:`, events);
+
       return {
         success: true,
         events: events,

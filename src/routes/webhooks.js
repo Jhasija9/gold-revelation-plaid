@@ -5,6 +5,8 @@ const transferEventSyncService = require('../services/transferEventSyncService')
 // POST /webhooks/plaid/transfer
 router.post('/plaid/transfer', async (req, res) => {
   try {
+    console.log('🔔 Raw webhook body:', JSON.stringify(req.body, null, 2));
+
     const { webhook_type, webhook_code } = req.body;
 
     // Log webhook received
@@ -21,6 +23,8 @@ router.post('/plaid/transfer', async (req, res) => {
       try {
         console.log('🔄 Processing TRANSFER_EVENTS_UPDATE webhook...');
         const result = await transferEventSyncService.syncTransferEvents();
+        console.log('📊 Webhook processing result:', result);
+
         
         if (result.success) {
           console.log(`✅ Webhook processing completed. Processed ${result.eventsProcessed} events`);

@@ -76,7 +76,8 @@ class TransferEventSyncService {
 
       // Get all active access tokens
       const accessTokens = await this.getActiveAccessTokens();
-      
+
+      console.log('🔄 Access tokens:', accessTokens);
       if (accessTokens.length === 0) {
         console.log('⚠️ No active access tokens found');
         return { success: true, eventsProcessed: 0 };
@@ -86,8 +87,10 @@ class TransferEventSyncService {
 
       // Sync events for each access token
       for (const accessToken of accessTokens) {
+        console.log('🔄 Syncing events for access token:', accessToken);
         const eventsProcessed = await this.syncEventsForToken(accessToken, lastEventId);
         totalEventsProcessed += eventsProcessed;
+        console.log('🔄 Events processed:', eventsProcessed);
       }
 
       console.log(`✅ Transfer event sync completed. Processed ${totalEventsProcessed} events`);
@@ -184,6 +187,11 @@ class TransferEventSyncService {
       const transactionResult = await databaseService.query("transactions", "select", {
         where: { plaid_transfer_id: transfer_id }
       });
+      console.log(`📊 Transaction lookup result:`, {
+        success: transactionResult.success,
+        found: transactionResult.data?.length || 0,
+        error: transactionResult.error
+      });
 
       if (!transactionResult.success || transactionResult.data.length === 0) {
         console.log(`⚠️ No transaction found for transfer_id: ${transfer_id}`);
@@ -192,9 +200,16 @@ class TransferEventSyncService {
 
       const transaction = transactionResult.data[0];
       const currentStatus = transaction.status;
+      console.log(`📋 Found transaction:`, {
+        id: transaction.id,
+        currentStatus: currentStatus,
+        plaid_transfer_id: transaction.plaid_transfer_id
+      });
 
       // Map event type to database status
       const newStatus = this.mapEventTypeToStatus(event_type);
+      console.log(`🔄 Status mapping: ${event_type} → ${newStatus}`);
+
       
       if (!newStatus) {
         console.log(`⚠️ Unknown event type: ${event_type}`);
@@ -209,11 +224,19 @@ class TransferEventSyncService {
 
       // Prepare update data
       const updateData = this.prepareStatusUpdate(newStatus, event);
+      console.log(`📝 Update data:`, updateData);
+      console.log(`💾 Updating transaction ${transaction.id}...`);
+
+
 
       // Update the transaction
       const updateResult = await databaseService.query("transactions", "update", {
         where: { plaid_transfer_id: transfer_id },
         values: updateData
+      });
+      console.log(`📊 Update result:`, {
+        success: updateResult.success,
+        error: updateResult.error
       });
 
       if (updateResult.success) {
