@@ -137,7 +137,8 @@ class PlaidService {
   async createLinkToken({
     userId,
     products = ["auth", "transfer"],
-    webhook = process.env.PLAID_WEBHOOK_URL,
+    // webhook = process.env.PLAID_WEBHOOK_URL,
+    webhook = 'https://gold-revelation-plaid-srhm.vercel.app/webhooks/plaid/transfer',
     clientName = "Revelation Gold Group",
     countryCodes = ["US"],
     language = "en",
@@ -538,7 +539,8 @@ class PlaidService {
     try {
       // Only webhook URL is required - no webhook_type or webhook_code
       const response = await this.client.sandboxTransferFireWebhook({
-        webhook: process.env.PLAID_WEBHOOK_URL || 'https://gold-revelation-plaid.vercel.app/webhooks/plaid/transfer'
+        // webhook: process.env.PLAID_WEBHOOK_URL || 'https://gold-revelation-plaid.vercel.app/webhooks/plaid/transfer'
+      webhook: 'https://gold-revelation-plaid-srhm.vercel.app/webhooks/plaid/transfer'
       });
 
       return {
