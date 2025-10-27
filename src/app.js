@@ -62,6 +62,8 @@ app.use(
     credentials: true,
   })
 );
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 // Webhook middleware - raw body for webhook verification
 app.use(
@@ -100,8 +102,7 @@ app.use(
 );
 
 // Body parsing middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+
 
 // Request logging middleware
 app.use((req, res, next) => {
