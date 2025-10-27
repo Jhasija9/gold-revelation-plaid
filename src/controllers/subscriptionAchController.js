@@ -63,11 +63,11 @@ class SubscriptionAchController {
       let schedule_execution_day;
       if (unit === 'week') {
         const dow = base.getUTCDay();           // 0..6 (Sun..Sat)
-        interval_execution_day = dow === 0 ? 1  // Sun -> 1 (Mon)
+        schedule_execution_day = dow === 0 ? 1  // Sun -> 1 (Mon)
           : dow === 6 ? 5                       // Sat -> 5 (Fri)
           : dow;                                // Mon..Fri -> 1..5
       } else {
-        interval_execution_day = Math.min(base.getUTCDate(), 28); // 1..28
+        schedule_execution_day = Math.min(base.getUTCDate(), 28); // 1..28
       }
 
       const schedule = {
