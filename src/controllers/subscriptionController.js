@@ -58,6 +58,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
 
       
       // Prepare subscription data for ARB
+      const planName = req.body.plan_name || 'Gold Subscription';
       const subscriptionData = {
         name: 'Gold Subscription',
         amount: 500.00, // Fixed amount for subscription
@@ -90,7 +91,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       // Store subscription in database
       const subscriptionRecord = {
         user_id: userId,
-        plan_name: 'Gold Monthly Subscription',
+        plan_name: planName,
         amount: 500.00,
         interval: intervalUnit === 'week' ? 'days' : 'months',
         status: 'active',
