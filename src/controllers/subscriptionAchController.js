@@ -25,7 +25,7 @@ class SubscriptionAchController {
     try {
       const {
         user_id, plan_name, amount, account_id,
-        interval_unit = 'month', interval_count = 1, interval_execution_day = 1, start_date,
+        interval_unit = 'week', interval_count = 1, interval_execution_day = 1, start_date,
       } = req.body;
 
       if (!user_id || !plan_name || !amount || !account_id) {
@@ -55,7 +55,7 @@ class SubscriptionAchController {
       const now = new Date();
       const base = start_date ? new Date(start_date) : now;
       const dom = Math.min(base.getUTCDate(), 28);
-      const unit = interval_unit === 'week';
+      const unit = interval_unit === 'week' ? 'week' : 'month';
       const startForSeriesISO = (req.body.charge_now === true)
         ? addIntervalISO(base.toISOString(), unit, 1)
         : base.toISOString();

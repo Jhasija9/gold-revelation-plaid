@@ -42,6 +42,9 @@ function getTransactionDetails(transId) {
         const subscription = tx.getSubscription
           ? tx.getSubscription()
           : undefined;
+          const cc = tx.getPayment?.()?.getCreditCard?.();
+const maskedCard = cc?.getCardNumber?.() || null;  // e.g. 'XXXX1111'
+const cardType = cc?.getCardType?.() || null;     
 
           resolve({
             transId: tx.getTransId?.(),
@@ -61,6 +64,8 @@ function getTransactionDetails(transId) {
             billingEmail: tx.getCustomer?.()?.getEmail?.(),
             billingFirstName: tx.getBillTo?.()?.getFirstName?.(),
             billingLastName: tx.getBillTo?.()?.getLastName?.(),
+            maskedCard: maskedCard,
+            cardType: cardType,
           });
       } catch (err) {
         reject(err);

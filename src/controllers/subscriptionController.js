@@ -59,7 +59,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       
       // Prepare subscription data for ARB
       const subscriptionData = {
-        name: 'Gold Monthly Subscription',
+        name: 'Gold Subscription',
         amount: 500.00, // Fixed amount for subscription
         interval: 'days',
         startDate: startDateStr,
@@ -85,13 +85,14 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       }
       
       console.log('✅ SubscriptionController: ARB subscription created:', arbResult.subscriptionId);
-      
+      const intervalUnit = req.body.interval_unit === 'month' ? 'month' : 'week';
+
       // Store subscription in database
       const subscriptionRecord = {
         user_id: userId,
         plan_name: 'Gold Monthly Subscription',
         amount: 500.00,
-        interval: 'monthly',
+        interval: intervalUnit === 'week' ? 'days' : 'months',
         status: 'active',
         authorize_net_subscription_id: arbResult.subscriptionId,
         next_billing_date: startDateStr,
@@ -151,7 +152,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
         authorizeNetSubscriptionId: arbResult.subscriptionId,
         status: 'active',
         nextBillingDate: startDateStr,
-        planName: 'Gold Monthly Subscription',
+        planName: 'Gold Subscription',
         amount: 500.00,
         interval: 'monthly',
         message: 'Subscription created successfully'

@@ -631,7 +631,7 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
 
 ${isSubscription ? `
 <div class="order-item subscription-info">
-  <span>Recurring billing: $500.00 every month</span>
+  <span>Recurring billing: $500.00 every week</span>
 </div>
 <div class="subscription-disclaimer">
   <small>You will be charged $500.00 monthly until you cancel. You can cancel anytime.</small>
@@ -1029,6 +1029,8 @@ async function createAchSubscription() {
         plan_name: planName,
         amount: amount,                // backend converts to Number()
         account_id: accountId,
+        interval_unit: 'week',
+        interval_count: 1,
         charge_now: true
       })
     });

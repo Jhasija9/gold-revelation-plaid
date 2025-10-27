@@ -61,16 +61,52 @@ async function ensureSubscriptionPayment({ subscriptionRow, transactionId, occur
     }]
   });
 
-  const nextBillingISO = addMonthsUTC(billingISO, 1);
-  await databaseService.query('subscriptions', 'update', {
-    where: { id: subscriptionRow.id },
-    values: {
-      last_billing_date: billingISO,
-      next_billing_date: nextBillingISO,
-      payments_count: (subscriptionRow.payments_count || 0) + 1,
-      updated_at: new Date().toISOString()
-    }
-  });
+  // const nextBillingISO = addMonthsUTC(billingISO, 1);
+  // function addIntervalISO(iso, unit, count) {
+  //   const d = new Date(iso);
+  //   if (unit === 'week') return new Date(d.getTime() + count * 7 * 24 * 60 * 60 * 1000).toISOString();
+  //   const y = d.getUTCFullYear(), m = d.getUTCMonth(), dom = Math.min(d.getUTCDate(), 28);
+  //   const next = new Date(Date.UTC(y, m + count, 1));
+  //   next.setUTCDate(Math.min(dom, 28));
+  //   return next.toISOString();
+  // }
+  
+  // const unit = subscriptionRow.interval === 'weekly' ? 'week' : 'month';
+  // const anchor = subscriptionRow.next_billing_date || billingISO; // advance from the scheduled date
+  // const nextBillingISO = addIntervalISO(anchor, unit, 1);
+  // await databaseService.query('subscriptions', 'update', {
+  //   where: { id: subscriptionRow.id },
+  //   values: {
+  //     last_billing_date: billingISO,
+  //     next_billing_date: nextBillingISO,
+  //     payments_count: (subscriptionRow.payments_count || 0) + 1,
+  //     updated_at: new Date().toISOString()
+  //   }
+  // });
+  // helper near the top if you haven’t added it:
+function addIntervalISO(iso, unit, count) {
+  const d = new Date(iso);
+  if (unit === 'week') return new Date(d.getTime() + count * 7 * 24 * 60 * 60 * 1000).toISOString();
+  const y = d.getUTCFullYear(), m = d.getUTCMonth(), dom = Math.min(d.getUTCDate(), 28);
+  const next = new Date(Date.UTC(y, m + count, 1));
+  next.setUTCDate(Math.min(dom, 28));
+  return next.toISOString();
+}
+
+// in ensureSubscriptionPayment(...)
+const unit = subscriptionRow.interval === 'weekly' ? 'week' : 'month';
+const anchor = subscriptionRow.next_billing_date || billingISO; // advance from scheduled date
+const nextBillingISO = addIntervalISO(anchor, unit, 1);
+
+await databaseService.query('subscriptions', 'update', {
+  where: { id: subscriptionRow.id },
+  values: {
+    last_billing_date: billingISO,
+    next_billing_date: nextBillingISO,
+    payments_count: (subscriptionRow.payments_count || 0) + 1,
+    updated_at: new Date().toISOString()
+  }
+});
 }
 function mapAnetStatus(detailsStatus, eventType) {
   const s = String(detailsStatus || '').toLowerCase();
@@ -474,12 +510,14 @@ async function upsertTransactionFromWebhook(payload, eventType) {
 
   // Candidate ARB subscriptionId
   const arbSubId =
-    details?.subscription?.id ||
-    details?.invoiceNumber ||
-    payload?.subscription?.id ||
-    payload?.subscriptionId ||
-    payload?.order?.invoiceNumber ||
-    null;
+  details?.subscription?.id ||
+  payload?.subscription?.id ||
+  payload?.subscriptionId ||
+  null;
+  const localSubId =
+  details?.invoiceNumber ||
+  payload?.order?.invoiceNumber ||
+  null;
 
   logStep('upsertTX.arbSubId', { arbSubId });
 
@@ -489,8 +527,13 @@ async function upsertTransactionFromWebhook(payload, eventType) {
     const subRes = await databaseService.query('subscriptions', 'select', {
       where: { authorize_net_subscription_id: arbSubId }
     });
-    logStep('upsertTX.subLookup.byArb', subRes);
     if (subRes.success && subRes.data.length > 0) subscriptionRow = subRes.data[0];
+  }
+  if (!subscriptionRow && localSubId) {
+    const subByLocal = await databaseService.query('subscriptions', 'select', {
+      where: { id: localSubId }
+    });
+    if (subByLocal.success && subByLocal.data.length > 0) subscriptionRow = subByLocal.data[0];
   }
 
   // If still none, try to infer user+subscription
@@ -580,9 +623,9 @@ async function upsertTransactionFromWebhook(payload, eventType) {
   // New tx insert
   const authCode = details?.authCode ?? payload?.authCode ?? null;
   const responseCode = details?.responseCode ?? (payload?.responseCode ? String(payload.responseCode) : null);
-  const cardType = payload?.payment?.accountType || null;
-  const masked = payload?.payment?.cardNumber || '';
-  const last4 = masked.slice(-4) || null;
+  const cardType = details?.cardType || null;
+const masked = details?.maskedCard || '';
+const last4 = masked ? masked.slice(-4) : null;
 
   const txRecord = {
     user_id: subscriptionRow?.user_id || userRow?.id || null,
@@ -591,7 +634,7 @@ async function upsertTransactionFromWebhook(payload, eventType) {
     transaction_type: subscriptionRow ? 'subscription_payment' : 'payment',
     amount,
     status: normalizedStatus || 'pending',
-    description: subscriptionRow ? 'Subscription payment' : 'Card payment',
+    description: subscriptionRow?.plan_name  || null,
     plaid_transaction_id: null,
     ach_reference_id: null,
     failure_reason: null,
@@ -855,7 +898,7 @@ router.post('/webhook', async (req, res) => {
     switch (eventType) {
       case 'net.authorize.payment.authcapture.created':
         logStep('WEBHOOK.authcapture', { transactionId, eventType });
-        await upsertTransactionFromWebhook(payload);   
+        await upsertTransactionFromWebhook(payload, eventType);   
         await updateTransactionStatus(transactionId, 'captured');
         await updateSubscriptionPaymentStatusByGatewayTxId(payload.id, 'captured');
         break;
