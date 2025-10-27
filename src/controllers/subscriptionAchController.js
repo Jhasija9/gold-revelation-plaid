@@ -54,17 +54,41 @@ class SubscriptionAchController {
       // Build schedule per Plaid docs (charge-now => start next cycle on today's DOM)
       const now = new Date();
       const base = start_date ? new Date(start_date) : now;
-      const dom = Math.min(base.getUTCDate(), 28);
       const unit = interval_unit === 'week' ? 'week' : 'month';
       const startForSeriesISO = (req.body.charge_now === true)
-        ? addIntervalISO(base.toISOString(), unit, 1)
-        : base.toISOString();
+      ? addIntervalISO(base.toISOString(), unit, 1)
+      : base.toISOString();
+
+// set execution day correctly
+      let schedule_execution_day;
+      if (unit === 'week') {
+        const dow = base.getUTCDay();           // 0..6 (Sun..Sat)
+        interval_execution_day = dow === 0 ? 1  // Sun -> 1 (Mon)
+          : dow === 6 ? 5                       // Sat -> 5 (Fri)
+          : dow;                                // Mon..Fri -> 1..5
+      } else {
+        interval_execution_day = Math.min(base.getUTCDate(), 28); // 1..28
+      }
+
       const schedule = {
         interval_unit,
         interval_count,
-        interval_execution_day: dom,
-        start_date: new Date(startForSeriesISO).toISOString().slice(0, 10) // YYYY-MM-DD
+        interval_execution_day:schedule_execution_day,
+        start_date: new Date(startForSeriesISO).toISOString().slice(0, 10)
       };
+      // const dom = Math.min(base.getUTCDate(), 28);
+      // const unit = interval_unit === 'week' ? 'week' : 'month';
+      // const startForSeriesISO = (req.body.charge_now === true)
+      //   ? addIntervalISO(base.toISOString(), unit, 1)
+      //   : base.toISOString();
+      
+      // const schedule = {
+      //   interval_unit,
+      //   interval_count,
+      //   interval_execution_day: dom,
+      //   start_date: new Date(startForSeriesISO).toISOString().slice(0, 10) // YYYY-MM-DD
+      // };
+      
       const plaidAmount = Number(amount).toFixed(2);
       const idempotency_key = crypto.randomUUID();
       const userRes = await databaseService.query('users', 'select', { where: { id: user_id } });
