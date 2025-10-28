@@ -25,7 +25,7 @@ class SubscriptionAchController {
     try {
       const {
         user_id, plan_name, amount, account_id,
-        interval_unit = 'week', interval_count = 1, interval_execution_day = 1, start_date,
+        interval_unit = 'month', interval_count = 1, interval_execution_day = 1, start_date,
       } = req.body;
 
       if (!user_id || !plan_name || !amount || !account_id) {
@@ -54,7 +54,7 @@ class SubscriptionAchController {
       // Build schedule per Plaid docs (charge-now => start next cycle on today's DOM)
       const now = new Date();
       const base = start_date ? new Date(start_date) : now;
-      const unit = interval_unit === 'week' ? 'week' : 'month';
+      const unit = 'month';
       const startForSeriesISO = (req.body.charge_now === true)
       ? addIntervalISO(base.toISOString(), unit, 1)
       : base.toISOString();
@@ -71,8 +71,8 @@ class SubscriptionAchController {
       }
 
       const schedule = {
-        interval_unit,
-        interval_count,
+        interval_unit: 'month',
+        interval_count: 1,
         interval_execution_day:schedule_execution_day,
         start_date: new Date(startForSeriesISO).toISOString().slice(0, 10)
       };
@@ -133,7 +133,7 @@ class SubscriptionAchController {
           user_id,
           plan_name,
           amount: Number(amount),
-          interval: interval_unit === 'week' ? 'weekly' : 'monthly',
+          interval: 'monthly',
           status: 'pending', // flip to 'active' after first successful debit if you want
           payment_method: 'bank_transfer',
           plaid_recurring_transfer_id: r.recurring_transfer_id,
@@ -273,7 +273,8 @@ if (req.body.charge_now === true) {
       });
 
       // Update last/next billing dates (advance only on originations)
-      const nextISO = addIntervalISO(new Date().toISOString(), sub.interval === 'weekly' ? 'week' : 'month', 1);
+      // const nextISO = addIntervalISO(new Date().toISOString(), sub.interval === 'month', 1);
+      const nextISO = addIntervalISO(new Date().toISOString(), 'month', 1);
       await databaseService.query('subscriptions', 'update', {
         where: { id: sub.id },
         values: {

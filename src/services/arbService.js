@@ -59,12 +59,22 @@ class ARBService {
       // Start date as YYYY-MM-DD
       schedule.setStartDate(subscriptionData.startDate);
 
-      const interval = new ApiContracts.PaymentScheduleType.Interval();
-      interval.setLength(Math.max(subscriptionData.intervalLength || 7, 7));
-interval.setUnit(
-  subscriptionData.interval === 'days'
-    ? ApiContracts.ARBSubscriptionUnitEnum.DAYS
-    : ApiContracts.ARBSubscriptionUnitEnum.MONTHS
+//       const interval = new ApiContracts.PaymentScheduleType.Interval();
+//       interval.setLength(Math.max(subscriptionData.intervalLength || 7, 7));
+// interval.setUnit(
+//   subscriptionData.interval === 'days'
+//     ? ApiContracts.ARBSubscriptionUnitEnum.DAYS
+//     : ApiContracts.ARBSubscriptionUnitEnum.MONTHS
+// );
+// schedule.setInterval(interval);
+const interval = new ApiContracts.PaymentScheduleType.Interval();
+const isDays = subscriptionData.interval === 'days';     // days = weekly-style; months = monthly
+const minLen = isDays ? 7 : 1;                           // 7 days min; 1 month min
+const len = Math.max(Number(subscriptionData.intervalLength || minLen), minLen);
+interval.setLength(len);
+interval.setUnit(isDays
+  ? ApiContracts.ARBSubscriptionUnitEnum.DAYS
+  : ApiContracts.ARBSubscriptionUnitEnum.MONTHS
 );
 schedule.setInterval(interval);
 

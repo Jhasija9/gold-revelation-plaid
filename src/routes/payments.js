@@ -86,7 +86,7 @@ async function ensureSubscriptionPayment({ subscriptionRow, transactionId, occur
   // helper near the top if you haven’t added it:
 function addIntervalISO(iso, unit, count) {
   const d = new Date(iso);
-  if (unit === 'week') return new Date(d.getTime() + count * 7 * 24 * 60 * 60 * 1000).toISOString();
+  // if (unit === 'week') return new Date(d.getTime() + count * 7 * 24 * 60 * 60 * 1000).toISOString();
   const y = d.getUTCFullYear(), m = d.getUTCMonth(), dom = Math.min(d.getUTCDate(), 28);
   const next = new Date(Date.UTC(y, m + count, 1));
   next.setUTCDate(Math.min(dom, 28));
@@ -94,7 +94,7 @@ function addIntervalISO(iso, unit, count) {
 }
 
 // in ensureSubscriptionPayment(...)
-const unit = subscriptionRow.interval === 'weekly' ? 'week' : 'month';
+const unit =  'month';
 const anchor = subscriptionRow.next_billing_date || billingISO; // advance from scheduled date
 const nextBillingISO = addIntervalISO(anchor, unit, 1);
 

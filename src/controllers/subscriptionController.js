@@ -62,9 +62,9 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       const subscriptionData = {
         name: 'Gold Subscription',
         amount: 500.00, // Fixed amount for subscription
-        interval: 'days',
+        interval: 'months',
         startDate: startDateStr,
-        intervalLength: 7,  
+        intervalLength: 1,  
         opaqueData: opaqueData,
         customerEmail: user.email,
         firstName: firstName,
@@ -86,14 +86,14 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       }
       
       console.log('✅ SubscriptionController: ARB subscription created:', arbResult.subscriptionId);
-      const intervalUnit = req.body.interval_unit === 'month' ? 'month' : 'week';
+      // const intervalUnit = req.body.interval_unit === 'month' ? 'month' : 'week';
 
       // Store subscription in database
       const subscriptionRecord = {
         user_id: userId,
         plan_name: planName,
         amount: 500.00,
-        interval: intervalUnit === 'week' ? 'days' : 'months',
+        interval: 'monthly',
         status: 'active',
         authorize_net_subscription_id: arbResult.subscriptionId,
         next_billing_date: startDateStr,
