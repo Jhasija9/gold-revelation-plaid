@@ -8,6 +8,48 @@ class SubscriptionController {
       console.log('req.body:', req.body);
 
       const { opaqueData, amount, description } = req.body;
+
+      console.log('\n🔐 [BACKEND] ========== OPAQUE DATA RECEIVED IN CONTROLLER ==========');
+      console.log('🔐 [BACKEND] Timestamp:', new Date().toISOString());
+      console.log('🔐 [BACKEND] Complete Request Body:', JSON.stringify(req.body, null, 2));
+      console.log('🔐 [BACKEND] Opaque Data Object:', JSON.stringify(opaqueData, null, 2));
+      console.log('🔐 [BACKEND] Opaque Data Type:', typeof opaqueData);
+      console.log('🔐 [BACKEND] Is Array?', Array.isArray(opaqueData));
+      console.log('🔐 [BACKEND] Is Null?', opaqueData === null);
+      console.log('🔐 [BACKEND] Is Undefined?', opaqueData === undefined);
+      
+      if (opaqueData) {
+        console.log('🔐 [BACKEND] dataDescriptor:', opaqueData.dataDescriptor);
+        console.log('🔐 [BACKEND] dataDescriptor Type:', typeof opaqueData.dataDescriptor);
+        console.log('🔐 [BACKEND] dataDescriptor Length:', opaqueData.dataDescriptor?.length || 0);
+        console.log('🔐 [BACKEND] dataValue:', opaqueData.dataValue);
+        console.log('🔐 [BACKEND] dataValue Type:', typeof opaqueData.dataValue);
+        console.log('🔐 [BACKEND] dataValue Length:', opaqueData.dataValue?.length || 0);
+        
+        // E00114 Specific Validation
+        if (opaqueData.dataValue) {
+          const dv = opaqueData.dataValue;
+          console.log('🔐 [BACKEND] dataValue Character Codes (first 50):', Array.from(dv.slice(0, 50)).map(c => c.charCodeAt(0)));
+          console.log('🔐 [BACKEND] Has Leading Whitespace?', /^\s/.test(dv));
+          console.log('🔐 [BACKEND] Has Trailing Whitespace?', /\s$/.test(dv));
+          console.log('🔐 [BACKEND] Has Newlines?', /\n|\r/.test(dv));
+          console.log('🔐 [BACKEND] Is Empty?', dv === '');
+          console.log('🔐 [BACKEND] First 100 chars:', dv.substring(0, 100));
+          console.log('🔐 [BACKEND] Last 100 chars:', dv.substring(Math.max(0, dv.length - 100)));
+          console.log('🔐 [BACKEND] Truncated?', dv.length < 100 ? 'MAYBE' : 'NO');
+        }
+        
+        // Check if dataDescriptor or dataValue are corrupted
+        if (!opaqueData.dataDescriptor || !opaqueData.dataValue) {
+          console.error('❌ [BACKEND] MISSING REQUIRED FIELDS!');
+          console.error('❌ [BACKEND] dataDescriptor present?', !!opaqueData.dataDescriptor);
+          console.error('❌ [BACKEND] dataValue present?', !!opaqueData.dataValue);
+        }
+      } else {
+        console.error('❌ [BACKEND] OPAQUE DATA IS NULL/UNDEFINED!');
+      }
+      console.log('🔐 [BACKEND] ========== END CONTROLLER LOGGING ==========\n');
+      
       const userId = req.body.user_id; // From session auth
       
       // Validate required fields

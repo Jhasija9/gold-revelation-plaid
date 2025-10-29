@@ -89,7 +89,38 @@ schedule.setInterval(interval);
 
       // Payment via opaqueData from AcceptUI
       const payment = new ApiContracts.PaymentType();
+      console.log('\n🔐 [ARB SERVICE] ========== OPAQUE DATA IN ARB SERVICE ==========');
+      console.log('🔐 [ARB SERVICE] Timestamp:', new Date().toISOString());
+      console.log('🔐 [ARB SERVICE] Subscription Data:', JSON.stringify(subscriptionData, null, 2));
+      console.log('🔐 [ARB SERVICE] Opaque Data Object:', JSON.stringify(subscriptionData.opaqueData, null, 2));
+      console.log('🔐 [ARB SERVICE] dataDescriptor:', subscriptionData.opaqueData?.dataDescriptor);
+      console.log('🔐 [ARB SERVICE] dataDescriptor Type:', typeof subscriptionData.opaqueData?.dataDescriptor);
+      console.log('🔐 [ARB SERVICE] dataDescriptor Length:', subscriptionData.opaqueData?.dataDescriptor?.length || 0);
+      console.log('🔐 [ARB SERVICE] dataValue:', subscriptionData.opaqueData?.dataValue);
+      console.log('🔐 [ARB SERVICE] dataValue Type:', typeof subscriptionData.opaqueData?.dataValue);
+      console.log('🔐 [ARB SERVICE] dataValue Length:', subscriptionData.opaqueData?.dataValue?.length || 0);
+      
+      // E00114 Specific Validation
+      if (subscriptionData.opaqueData?.dataValue) {
+        const dv = subscriptionData.opaqueData.dataValue;
+        console.log('🔐 [ARB SERVICE] dataValue Character Codes (first 50):', Array.from(dv.slice(0, 50)).map(c => c.charCodeAt(0)));
+        console.log('🔐 [ARB SERVICE] Has Whitespace?', /\s/.test(dv));
+        console.log('🔐 [ARB SERVICE] Has Newlines?', /\n|\r/.test(dv));
+        console.log('🔐 [ARB SERVICE] First 100 chars:', dv.substring(0, 100));
+        console.log('🔐 [ARB SERVICE] Last 100 chars:', dv.substring(Math.max(0, dv.length - 100)));
+      }
+      console.log('🔐 [ARB SERVICE] ========== END ARB LOGGING ==========\n');
+      // ========== END OPAQUE DATA LOGGING ==========
+      
       const opaque = new ApiContracts.OpaqueDataType();
+      opaque.setDataDescriptor(subscriptionData.opaqueData.dataDescriptor);
+      opaque.setDataValue(subscriptionData.opaqueData.dataValue);
+      
+      // ========== LOG AFTER SETTING VALUES ==========
+      console.log('🔐 [ARB SERVICE] After setting on OpaqueDataType:');
+      console.log('🔐 [ARB SERVICE] Opaque Object Type:', opaque.constructor.name);
+      console.log('🔐 [ARB SERVICE] ========== END SET LOGGING ==========\n');
+      // ========== END SET LOGGING ==========
       opaque.setDataDescriptor(subscriptionData.opaqueData.dataDescriptor);
       opaque.setDataValue(subscriptionData.opaqueData.dataValue);
       payment.setOpaqueData(opaque);
@@ -150,6 +181,17 @@ sub.setBillTo(billTo);
                 const msgs = response.getMessages().getMessage();
                 const errText = msgs && msgs[0] && msgs[0].getText();
                 const errCode = msgs && msgs[0] && msgs[0].getCode();
+                if (errCode === 'E00114' || errText?.includes('OTS Token')) {
+                  console.error('\n❌ [ARB SERVICE] ========== E00114 INVALID OTS TOKEN DETECTED ==========');
+                  console.error('❌ [ARB SERVICE] Error Code:', errCode);
+                  console.error('❌ [ARB SERVICE] Error Text:', errText);
+                  console.error('❌ [ARB SERVICE] Opaque Data That Failed:');
+                  console.error('❌ [ARB SERVICE]   dataDescriptor:', subscriptionData.opaqueData?.dataDescriptor);
+                  console.error('❌ [ARB SERVICE]   dataValue:', subscriptionData.opaqueData?.dataValue);
+                  console.error('❌ [ARB SERVICE]   dataValue Length:', subscriptionData.opaqueData?.dataValue?.length);
+                  console.error('❌ [ARB SERVICE] Full API Response:', JSON.stringify(apiResponse, null, 2));
+                  console.error('❌ [ARB SERVICE] ========== END E00114 LOGGING ==========\n');
+                }
                 console.error('❌ ARBService: Subscription creation failed:', errCode, errText);
                 return resolve({ success: false, error: errText || 'ARB create failed', errorCode: errCode, raw: apiResponse });
               }

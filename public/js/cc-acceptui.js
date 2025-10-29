@@ -94,6 +94,30 @@ return payload;
       }
 
       const opaqueData = response.opaqueData;
+      // ========== DETAILED OPAQUE DATA LOGGING ==========
+      console.log('\n🎯 [FRONTEND] ========== ACCEPTUI RESPONSE HANDLER ==========');
+      console.log('🎯 [FRONTEND] Timestamp:', new Date().toISOString());
+      console.log('🎯 [FRONTEND] Full AcceptUI Response:', JSON.stringify(response, null, 2));
+      console.log('🎯 [FRONTEND] Opaque Data Object:', JSON.stringify(opaqueData, null, 2));
+      console.log('🎯 [FRONTEND] Opaque Data Type:', typeof opaqueData);
+      console.log('🎯 [FRONTEND] dataDescriptor:', opaqueData?.dataDescriptor);
+      console.log('🎯 [FRONTEND] dataDescriptor Type:', typeof opaqueData?.dataDescriptor);
+      console.log('🎯 [FRONTEND] dataDescriptor Length:', opaqueData?.dataDescriptor?.length || 0);
+      console.log('🎯 [FRONTEND] dataValue:', opaqueData?.dataValue);
+      console.log('🎯 [FRONTEND] dataValue Type:', typeof opaqueData?.dataValue);
+      console.log('🎯 [FRONTEND] dataValue Length:', opaqueData?.dataValue?.length || 0);
+      
+      // E00114 Specific Validation
+      if (opaqueData?.dataValue) {
+        const dv = opaqueData.dataValue;
+        console.log('🎯 [FRONTEND] dataValue Character Codes:', Array.from(dv.slice(0, 50)).map(c => c.charCodeAt(0)));
+        console.log('🎯 [FRONTEND] Has Whitespace?', /\s/.test(dv));
+        console.log('🎯 [FRONTEND] Has Newlines?', /\n|\r/.test(dv));
+        console.log('🎯 [FRONTEND] Is Empty String?', dv === '');
+        console.log('🎯 [FRONTEND] First 100 chars:', dv.substring(0, 100));
+        console.log('🎯 [FRONTEND] Last 100 chars:', dv.substring(Math.max(0, dv.length - 100)));
+      }
+      console.log('🎯 [FRONTEND] ========== END ACCEPTUI LOGGING ==========\n');
       const amountEl = $('#amountInput');
       const descEl = $('#descriptionInput');
       const amount = Number((amountEl?.value || '0').replace(/[^0-9.]/g, ''));
@@ -109,6 +133,26 @@ return payload;
       }
 
       const btns = document.querySelectorAll('.AcceptUI, .primary-action-btn');
+      console.log('\n📤 [FRONTEND] ========== SENDING OPAQUE DATA TO BACKEND ==========');
+      console.log('📤 [FRONTEND] Timestamp:', new Date().toISOString());
+      console.log('📤 [FRONTEND] Endpoint:', window.isSubscription ? '/api/payments/subscribe' : '/api/payments/charge');
+      console.log('📤 [FRONTEND] Amount:', amount);
+      console.log('📤 [FRONTEND] Description:', description);
+      console.log('📤 [FRONTEND] Is Subscription?', window.isSubscription);
+      console.log('📤 [FRONTEND] Full Opaque Data Object:', JSON.stringify(opaqueData, null, 2));
+      console.log('📤 [FRONTEND] dataDescriptor:', opaqueData?.dataDescriptor);
+      console.log('📤 [FRONTEND] dataDescriptor Length:', opaqueData?.dataDescriptor?.length || 0);
+      console.log('📤 [FRONTEND] dataValue:', opaqueData?.dataValue);
+      console.log('📤 [FRONTEND] dataValue Length:', opaqueData?.dataValue?.length || 0);
+      console.log('📤 [FRONTEND] Full Request Body:', JSON.stringify({
+        amount,
+        description,
+        opaqueData,
+        user_id: $('#ccRoot')?.dataset.userId || null,
+        plan_name: $('#ccRoot')?.dataset.selectedPlan || null
+      }, null, 2));
+      console.log('📤 [FRONTEND] ========== END SEND LOGGING ==========\n');
+      // ========== END SEND LOGGING ==========
       btns.forEach(b => { b.disabled = true; b.textContent = 'Processing...'; });
 
       const res = await charge(amount, description, opaqueData);
