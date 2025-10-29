@@ -1409,7 +1409,7 @@ router.get("/", async (req, res, next) => {
     // Issue a new link_token for THIS user
     const linkToken = await plaidService.createLinkToken({
       userId: session.user_id,
-      products: ["auth", "transfer"],
+      products: ["auth"],
       webhook: process.env.PLAID_WEBHOOK_URL || undefined,
     });
 
