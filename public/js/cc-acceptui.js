@@ -94,15 +94,68 @@ return payload;
       }
 
       const opaqueData = response.opaqueData;
+      // ========== ACCEPTUI ENVIRONMENT CHECK ==========
+      console.log('\n🎯 [FRONTEND] ========== ACCEPTUI RESPONSE HANDLER ==========');
+      console.log('🎯 [FRONTEND] Timestamp:', new Date().toISOString());
+      
+      // Log AcceptUI environment details
+      const acceptUIButton = document.getElementById('staticAcceptUIButton');
+      const buttonEnv = acceptUIButton?.getAttribute('data-environment') || 'NOT FOUND';
+      const configEnv = window.acceptUIConfig?.environment || 'NOT FOUND';
+      const apiLoginId = acceptUIButton?.getAttribute('data-apiLoginID') || 'NOT FOUND';
+      const clientKey = acceptUIButton?.getAttribute('data-clientKey') ? 'SET (hidden)' : 'NOT FOUND';
+      
+      // Detect actual AcceptUI script source
+      const scripts = Array.from(document.scripts);
+      const acceptUIScript = scripts.find(s => s.src && (s.src.includes('AcceptUI.js') || s.src.includes('authorize.net')));
+      const scriptSrc = acceptUIScript?.src || 'NOT FOUND';
+      const isProductionScript = scriptSrc.includes('js.authorize.net');
+      const isSandboxScript = scriptSrc.includes('jstest.authorize.net');
+      
+      console.log('🎯 [FRONTEND] ========== ACCEPTUI ENVIRONMENT CHECK ==========');
+      console.log('🎯 [FRONTEND] Button data-environment:', buttonEnv);
+      console.log('🎯 [FRONTEND] Config environment:', configEnv);
+      console.log('🎯 [FRONTEND] AcceptUI Script Source:', scriptSrc);
+      console.log('🎯 [FRONTEND] Is Production Script?', isProductionScript);
+      console.log('🎯 [FRONTEND] Is Sandbox Script?', isSandboxScript);
+      console.log('🎯 [FRONTEND] Detected Environment:', isProductionScript ? 'PRODUCTION' : isSandboxScript ? 'SANDBOX' : 'UNKNOWN');
+      console.log('🎯 [FRONTEND] API Login ID:', apiLoginId !== 'NOT FOUND' ? `${apiLoginId.substring(0, 4)}...${apiLoginId.substring(apiLoginId.length - 4)}` : 'NOT FOUND');
+      console.log('🎯 [FRONTEND] Client Key:', clientKey);
+      console.log('🎯 [FRONTEND] ========== END ENVIRONMENT CHECK ==========\n');
+      // ========== END ENVIRONMENT CHECK ==========
+      
+      // ========== DETAILED OPAQUE DATA LOGGING ==========
+      console.log('🎯 [FRONTEND] Full AcceptUI Response:', JSON.stringify(response, null, 2));
+      console.log('🎯 [FRONTEND] Opaque Data Object:', JSON.stringify(opaqueData, null, 2));
+      console.log('🎯 [FRONTEND] Opaque Data Type:', typeof opaqueData);
+      console.log('🎯 [FRONTEND] dataDescriptor:', opaqueData?.dataDescriptor);
+      console.log('🎯 [FRONTEND] dataDescriptor Type:', typeof opaqueData?.dataDescriptor);
+      console.log('🎯 [FRONTEND] dataDescriptor Length:', opaqueData?.dataDescriptor?.length || 0);
+      console.log('🎯 [FRONTEND] dataValue:', opaqueData?.dataValue);
+      console.log('🎯 [FRONTEND] dataValue Type:', typeof opaqueData?.dataValue);
+      console.log('🎯 [FRONTEND] dataValue Length:', opaqueData?.dataValue?.length || 0);
+      
+      // E00114 Specific Validation
+      if (opaqueData?.dataValue) {
+        const dv = opaqueData.dataValue;
+        console.log('🎯 [FRONTEND] dataValue Character Codes:', Array.from(dv.slice(0, 50)).map(c => c.charCodeAt(0)));
+        console.log('🎯 [FRONTEND] Has Whitespace?', /\s/.test(dv));
+        console.log('🎯 [FRONTEND] Has Newlines?', /\n|\r/.test(dv));
+        console.log('🎯 [FRONTEND] Is Empty String?', dv === '');
+        console.log('🎯 [FRONTEND] First 100 chars:', dv.substring(0, 100));
+        console.log('🎯 [FRONTEND] Last 100 chars:', dv.substring(Math.max(0, dv.length - 100)));
+      }
+      console.log('🎯 [FRONTEND] ========== END ACCEPTUI LOGGING ==========\n');
+      // ========== END OPAQUE DATA LOGGING ==========
       // ========== DETAILED OPAQUE DATA LOGGING ==========
       const acceptUIEnv = window.acceptUIConfig?.environment || 'unknown';
-      const acceptUIButton = document.getElementById('staticAcceptUIButton');
-      const buttonEnv = acceptUIButton?.getAttribute('data-environment') || 'unknown';
+      // const acceptUIButton = document.getElementById('staticAcceptUIButton');
+      // const buttonEnv = acceptUIButton?.getAttribute('data-environment') || 'unknown';
       console.log('🎯 [FRONTEND] AcceptUI Config Environment:', acceptUIEnv);
       console.log('🎯 [FRONTEND] AcceptUI Button Environment:', buttonEnv);
       console.log('🎯 [FRONTEND] AcceptUI Script Source:', acceptUIEnv === 'production' ? 'js.authorize.net' : 'jstest.authorize.net');
       console.log('🎯 [FRONTEND] ========== ENVIRONMENT LOG ==========\n');
-      
+
       console.log('\n🎯 [FRONTEND] ========== ACCEPTUI RESPONSE HANDLER ==========');
       console.log('🎯 [FRONTEND] Timestamp:', new Date().toISOString());
       console.log('🎯 [FRONTEND] Full AcceptUI Response:', JSON.stringify(response, null, 2));
