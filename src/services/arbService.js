@@ -150,12 +150,14 @@ sub.setBillTo(billTo);
       controller.setEnvironment(this.environment);
 
       console.log('🔧 ARBService: About to execute ARB request...');
+      console.log('🔍 [ARB SERVICE] ANET_ENV env var:', process.env.ANET_ENV || 'NOT SET');
+
       console.log('🔧 ARBService: Environment:', this.environment);
       console.log('🔧 ARBService: API Login ID:', this.apiLoginId ? 'Set' : 'Missing');
       console.log('🔧 ARBService: Transaction Key:', this.transactionKey ? 'Set' : 'Missing');
       console.log('🔧 ARBService: Request JSON:', req.getJSON());
       console.log('🔧 ARBService: About to call controller.execute()...');
-      onsole.log('\n📤 [ARB SERVICE] ========== ACTUAL REQUEST TO AUTHORIZE.NET ==========');
+      console.log('\n📤 [ARB SERVICE] ========== ACTUAL REQUEST TO AUTHORIZE.NET ==========');
       const requestJson = req.getJSON();
       console.log('📤 [ARB SERVICE] Full Request JSON:', JSON.stringify(requestJson, null, 2));
       console.log('📤 [ARB SERVICE] Opaque Data in Request:', JSON.stringify(requestJson.ARBCreateSubscriptionRequest?.subscription?.payment?.opaqueData || 'NOT FOUND', null, 2));
