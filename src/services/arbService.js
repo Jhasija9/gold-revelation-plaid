@@ -148,6 +148,25 @@ sub.setBillTo(billTo);
       // ----- Execute -----
       const controller = new ApiControllers.ARBCreateSubscriptionController(req.getJSON());
       controller.setEnvironment(this.environment);
+      console.log('\n🔑 [ARB SERVICE] ========== BACKEND CREDENTIALS USED TO VALIDATE TOKEN ==========');
+      console.log('🔑 [ARB SERVICE] Timestamp:', new Date().toISOString());
+      console.log('🔑 [ARB SERVICE] API Login ID (first 4, last 4):', 
+        this.apiLoginId 
+          ? `${this.apiLoginId.substring(0, 4)}...${this.apiLoginId.substring(this.apiLoginId.length - 4)}` 
+          : 'MISSING');
+      console.log('🔑 [ARB SERVICE] API Login ID FULL:', this.apiLoginId);
+      console.log('🔑 [ARB SERVICE] Transaction Key (first 4, last 4):', 
+        this.transactionKey 
+          ? `${this.transactionKey.substring(0, 4)}...${this.transactionKey.substring(this.transactionKey.length - 4)}` 
+          : 'MISSING');
+      console.log('🔑 [ARB SERVICE] Transaction Key FULL:', this.transactionKey);
+      console.log('🔑 [ARB SERVICE] Environment:', process.env.ANET_ENV || 'sandbox');
+      console.log('🔑 [ARB SERVICE] ========== END BACKEND CREDENTIALS ==========\n');
+      console.log('🔑 [ARB SERVICE] ========== CREDENTIALS MATCH CHECK ==========');
+      console.log('🔑 [ARB SERVICE] ⚠️  Compare Frontend API Login ID with Backend API Login ID above!');
+      console.log('🔑 [ARB SERVICE] ⚠️  They MUST match exactly for opaque tokens to work!');
+      console.log('🔑 [ARB SERVICE] ========== END MATCH CHECK ==========\n');
+      // ========== END CREDENTIALS CHECK ==========
 
       console.log('🔧 ARBService: About to execute ARB request...');
       console.log('🔍 [ARB SERVICE] ANET_ENV env var:', process.env.ANET_ENV || 'NOT SET');

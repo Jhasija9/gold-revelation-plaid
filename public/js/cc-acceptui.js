@@ -94,12 +94,28 @@ return payload;
       }
 
       const opaqueData = response.opaqueData;
+      console.log('\n🔑 [FRONTEND] ========== ACCEPTUI CREDENTIALS USED TO GENERATE TOKEN ==========');
+      console.log('🔑 [FRONTEND] Timestamp:', new Date().toISOString());
+      
+      const acceptUIButton = document.getElementById('staticAcceptUIButton');
+      const frontendApiLoginId = acceptUIButton?.getAttribute('data-apiLoginID') || 'NOT FOUND';
+      const frontendClientKey = acceptUIButton?.getAttribute('data-clientKey') ? 'SET (hidden)' : 'NOT FOUND';
+      const frontendEnv = acceptUIButton?.getAttribute('data-environment') || 'NOT FOUND';
+      
+      console.log('🔑 [FRONTEND] API Login ID (first 4, last 4):', 
+        frontendApiLoginId !== 'NOT FOUND' 
+          ? `${frontendApiLoginId.substring(0, 4)}...${frontendApiLoginId.substring(frontendApiLoginId.length - 4)}` 
+          : 'NOT FOUND');
+      console.log('🔑 [FRONTEND] API Login ID FULL:', frontendApiLoginId);
+      console.log('🔑 [FRONTEND] Client Key:', frontendClientKey);
+      console.log('🔑 [FRONTEND] Environment:', frontendEnv);
+      console.log('🔑 [FRONTEND] ========== END FRONTEND CREDENTIALS ==========\n');
       // ========== ACCEPTUI ENVIRONMENT CHECK ==========
       console.log('\n🎯 [FRONTEND] ========== ACCEPTUI RESPONSE HANDLER ==========');
       console.log('🎯 [FRONTEND] Timestamp:', new Date().toISOString());
       
       // Log AcceptUI environment details
-      const acceptUIButton = document.getElementById('staticAcceptUIButton');
+      // const acceptUIButton = document.getElementById('staticAcceptUIButton');
       const buttonEnv = acceptUIButton?.getAttribute('data-environment') || 'NOT FOUND';
       const configEnv = window.acceptUIConfig?.environment || 'NOT FOUND';
       const apiLoginId = acceptUIButton?.getAttribute('data-apiLoginID') || 'NOT FOUND';
