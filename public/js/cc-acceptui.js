@@ -95,6 +95,14 @@ return payload;
 
       const opaqueData = response.opaqueData;
       // ========== DETAILED OPAQUE DATA LOGGING ==========
+      const acceptUIEnv = window.acceptUIConfig?.environment || 'unknown';
+      const acceptUIButton = document.getElementById('staticAcceptUIButton');
+      const buttonEnv = acceptUIButton?.getAttribute('data-environment') || 'unknown';
+      console.log('🎯 [FRONTEND] AcceptUI Config Environment:', acceptUIEnv);
+      console.log('🎯 [FRONTEND] AcceptUI Button Environment:', buttonEnv);
+      console.log('🎯 [FRONTEND] AcceptUI Script Source:', acceptUIEnv === 'production' ? 'js.authorize.net' : 'jstest.authorize.net');
+      console.log('🎯 [FRONTEND] ========== ENVIRONMENT LOG ==========\n');
+      
       console.log('\n🎯 [FRONTEND] ========== ACCEPTUI RESPONSE HANDLER ==========');
       console.log('🎯 [FRONTEND] Timestamp:', new Date().toISOString());
       console.log('🎯 [FRONTEND] Full AcceptUI Response:', JSON.stringify(response, null, 2));

@@ -121,8 +121,8 @@ schedule.setInterval(interval);
       console.log('🔐 [ARB SERVICE] Opaque Object Type:', opaque.constructor.name);
       console.log('🔐 [ARB SERVICE] ========== END SET LOGGING ==========\n');
       // ========== END SET LOGGING ==========
-      opaque.setDataDescriptor(subscriptionData.opaqueData.dataDescriptor);
-      opaque.setDataValue(subscriptionData.opaqueData.dataValue);
+      // opaque.setDataDescriptor(subscriptionData.opaqueData.dataDescriptor);
+      // opaque.setDataValue(subscriptionData.opaqueData.dataValue);
       payment.setOpaqueData(opaque);
       sub.setPayment(payment);
 
@@ -155,6 +155,11 @@ sub.setBillTo(billTo);
       console.log('🔧 ARBService: Transaction Key:', this.transactionKey ? 'Set' : 'Missing');
       console.log('🔧 ARBService: Request JSON:', req.getJSON());
       console.log('🔧 ARBService: About to call controller.execute()...');
+      onsole.log('\n📤 [ARB SERVICE] ========== ACTUAL REQUEST TO AUTHORIZE.NET ==========');
+      const requestJson = req.getJSON();
+      console.log('📤 [ARB SERVICE] Full Request JSON:', JSON.stringify(requestJson, null, 2));
+      console.log('📤 [ARB SERVICE] Opaque Data in Request:', JSON.stringify(requestJson.ARBCreateSubscriptionRequest?.subscription?.payment?.opaqueData || 'NOT FOUND', null, 2));
+      console.log('📤 [ARB SERVICE] ========== END REQUEST LOGGING ==========\n');
 
       return await new Promise((resolve) => {
         controller.execute(() => {
@@ -185,6 +190,9 @@ sub.setBillTo(billTo);
                   console.error('\n❌ [ARB SERVICE] ========== E00114 INVALID OTS TOKEN DETECTED ==========');
                   console.error('❌ [ARB SERVICE] Error Code:', errCode);
                   console.error('❌ [ARB SERVICE] Error Text:', errText);
+                  console.error('❌ [ARB SERVICE] ARB API Environment:', this.environment);
+                  console.error('❌ [ARB SERVICE] Expected AcceptUI Environment:', process.env.ANET_ENV || 'sandbox');
+                  console.error('❌ [ARB SERVICE] ENVIRONMENT MATCH?', (this.environment === Constants.endpoint.production && (process.env.ANET_ENV === 'production')) || (this.environment === Constants.endpoint.sandbox && (process.env.ANET_ENV !== 'production')));
                   console.error('❌ [ARB SERVICE] Opaque Data That Failed:');
                   console.error('❌ [ARB SERVICE]   dataDescriptor:', subscriptionData.opaqueData?.dataDescriptor);
                   console.error('❌ [ARB SERVICE]   dataValue:', subscriptionData.opaqueData?.dataValue);
