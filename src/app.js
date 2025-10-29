@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 require("dotenv").config();
+console.log("...kdkdm");
 
 // Import routes
 const plaidRoutes = require("./routes/plaid");
