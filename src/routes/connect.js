@@ -843,6 +843,7 @@ window.currentDescription = ${JSON.stringify(description || '')};
               updatePrimaryAction();
             });
             
+            
             // Then add the complete payment button
             // Then add the complete payment button
             var button = document.createElement('button');
