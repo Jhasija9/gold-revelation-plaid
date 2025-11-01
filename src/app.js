@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const cookie = require("cookie");
 require("dotenv").config();
 console.log("...kdkdm");
 
@@ -135,12 +136,51 @@ app.use('/api/payment-form', paymentFormRoutes);
 const connectRoute = require("./routes/connect");
 app.use("/connect", connectRoute);
 
-// Root endpoint
+// Root endpoint - Clear all cookies when visiting homepage
 app.get("/", (req, res) => {
+  // Clear all cookies by setting them with expired dates
+  const cookiesToClear = ['rg_link_session']; // Add other cookie names if needed
+  const clearedCookieHeaders = [];
+  
+  // Clear known cookies with proper attributes
+  cookiesToClear.forEach(cookieName => {
+    const clearedCookie = cookie.serialize(cookieName, '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      maxAge: 0, // Expire immediately
+      expires: new Date(0) // Set to epoch time to ensure expiration
+    });
+    clearedCookieHeaders.push(clearedCookie);
+  });
+  
+  // Also try to clear any other cookies from the request
+  if (req.headers.cookie) {
+    const parsedCookies = cookie.parse(req.headers.cookie);
+    Object.keys(parsedCookies).forEach(cookieName => {
+      if (!cookiesToClear.includes(cookieName)) {
+        const clearedCookie = cookie.serialize(cookieName, '', {
+          path: '/',
+          maxAge: 0,
+          expires: new Date(0)
+        });
+        clearedCookieHeaders.push(clearedCookie);
+      }
+    });
+  }
+  
+  // Set all cookie clearing headers
+  if (clearedCookieHeaders.length > 0) {
+    res.setHeader('Set-Cookie', clearedCookieHeaders);
+    console.log('🧹 Homepage visited - Cleared', clearedCookieHeaders.length, 'cookie(s)');
+  }
+  
   res.json({
     message: "Revelation Gold Group API",
     version: "1.0.0",
     status: "running",
+    cookiesCleared: clearedCookieHeaders.length > 0,
     endpoints: {
       health: "/health",
       plaid: "/api/plaid",
