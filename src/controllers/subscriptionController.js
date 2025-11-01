@@ -114,7 +114,8 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
       };
       
       console.log('🔧 SubscriptionController: Creating ARB subscription...');
-
+ 
+      
 // Add delay for production ARB subscriptions (token propagation issue)
 // One-time payments don't need this, but ARB subscriptions do
 if (process.env.ANET_ENV === 'production') {
