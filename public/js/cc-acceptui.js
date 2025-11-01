@@ -339,18 +339,22 @@ console.log('  - environment:', cfg.environment);
     // Set up the static button with config immediately
     const staticButton = document.getElementById('staticAcceptUIButton');
     if (staticButton) {
+      // UPDATE the button attributes with fetched config to ensure they match backend
+      staticButton.setAttribute('data-apiLoginID', cfg.apiLoginId);
+      staticButton.setAttribute('data-clientKey', cfg.clientKey);
+      staticButton.setAttribute('data-environment', cfg.environment);
       
       // DEBUG: Verify what was actually set on the button
-  console.log('🔍 DEBUG - Button attributes after setting:');
-  console.log('  - data-apiLoginID:', staticButton.getAttribute('data-apiLoginID'));
-  console.log('  - data-clientKey:', staticButton.getAttribute('data-clientKey'));
-  console.log('  - data-environment:', staticButton.getAttribute('data-environment'));
-  console.log('✅ AcceptUI: Static button configured with:', {
-    apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
-    clientKey: cfg.clientKey ? 'Set' : 'Missing',
-    environment: cfg.environment
-  });
-}
+      console.log('🔍 DEBUG - Button attributes after setting:');
+      console.log('  - data-apiLoginID:', staticButton.getAttribute('data-apiLoginID'));
+      console.log('  - data-clientKey:', staticButton.getAttribute('data-clientKey') ? 'SET (hidden)' : 'NOT SET');
+      console.log('  - data-environment:', staticButton.getAttribute('data-environment'));
+      console.log('✅ AcceptUI: Static button configured with:', {
+        apiLoginId: cfg.apiLoginId ? 'Set' : 'Missing',
+        clientKey: cfg.clientKey ? 'Set' : 'Missing',
+        environment: cfg.environment
+      });
+    }
   console.log('🔍 DEBUG - Config environment:', cfg.environment);
   console.log('🔍 DEBUG - Config apiLoginId:', cfg);
     const src = cfg.environment === 'production'
