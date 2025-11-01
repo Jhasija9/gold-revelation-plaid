@@ -94,7 +94,14 @@ class AcceptSuiteService {
       }
     };
     
-    console.log('✅ AcceptSuiteService: Returning valid config:', config);
+    console.log('✅ AcceptSuiteService: Returning valid config');
+    console.log('🔑 [CONFIG] API Login ID (first 4, last 4):', 
+      this.apiLoginId 
+        ? `${this.apiLoginId.substring(0, 4)}...${this.apiLoginId.substring(this.apiLoginId.length - 4)}` 
+        : 'MISSING');
+    console.log('🔑 [CONFIG] API Login ID FULL:', this.apiLoginId);
+    console.log('🔑 [CONFIG] Environment:', process.env.ANET_ENV || 'sandbox');
+    console.log('🔑 [CONFIG] ⚠️  This MUST match Backend API Login ID in ARB Service!');
     return config;
   }
 

@@ -98,6 +98,15 @@ return payload;
       console.log('🔑 [FRONTEND] Timestamp:', new Date().toISOString());
       
       const acceptUIButton = document.getElementById('staticAcceptUIButton');
+      
+      // Double-check: Ensure button has correct credentials from config (defensive)
+      if (window.acceptUIConfig && acceptUIButton) {
+        acceptUIButton.setAttribute('data-apiLoginID', window.acceptUIConfig.apiLoginId);
+        acceptUIButton.setAttribute('data-clientKey', window.acceptUIConfig.clientKey);
+        acceptUIButton.setAttribute('data-environment', window.acceptUIConfig.environment);
+        console.log('🔑 [FRONTEND] Updated button attributes from acceptUIConfig');
+      }
+      
       const frontendApiLoginId = acceptUIButton?.getAttribute('data-apiLoginID') || 'NOT FOUND';
       const frontendClientKey = acceptUIButton?.getAttribute('data-clientKey') ? 'SET (hidden)' : 'NOT FOUND';
       const frontendEnv = acceptUIButton?.getAttribute('data-environment') || 'NOT FOUND';
@@ -109,6 +118,8 @@ return payload;
       console.log('🔑 [FRONTEND] API Login ID FULL:', frontendApiLoginId);
       console.log('🔑 [FRONTEND] Client Key:', frontendClientKey);
       console.log('🔑 [FRONTEND] Environment:', frontendEnv);
+      console.log('🔑 [FRONTEND] ⚠️  Compare this with Backend API Login ID: 5L6z3CfFdkmh');
+      console.log('🔑 [FRONTEND] ⚠️  They MUST match exactly!');
       console.log('🔑 [FRONTEND] ========== END FRONTEND CREDENTIALS ==========\n');
       // ========== ACCEPTUI ENVIRONMENT CHECK ==========
       console.log('\n🎯 [FRONTEND] ========== ACCEPTUI RESPONSE HANDLER ==========');
@@ -355,8 +366,21 @@ console.log('  - environment:', cfg.environment);
         environment: cfg.environment
       });
     }
-  console.log('🔍 DEBUG - Config environment:', cfg.environment);
-  console.log('🔍 DEBUG - Config apiLoginId:', cfg);
+    console.log('🔍 DEBUG - Config environment:', cfg.environment);
+    console.log('🔍 DEBUG - Config apiLoginId:', cfg);
+    
+    // CRITICAL: Re-verify button attributes are set correctly before AcceptUI loads
+    const staticButtonCheck = document.getElementById('staticAcceptUIButton');
+    if (staticButtonCheck && cfg) {
+      staticButtonCheck.setAttribute('data-apiLoginID', cfg.apiLoginId);
+      staticButtonCheck.setAttribute('data-clientKey', cfg.clientKey);
+      staticButtonCheck.setAttribute('data-environment', cfg.environment);
+      console.log('🔍 DEBUG - Final button check before AcceptUI loads:');
+      console.log('  - data-apiLoginID:', staticButtonCheck.getAttribute('data-apiLoginID'));
+      console.log('  - data-environment:', staticButtonCheck.getAttribute('data-environment'));
+      console.log('  - Should match config apiLoginId:', cfg.apiLoginId);
+    }
+    
     const src = cfg.environment === 'production'
       ? 'https://js.authorize.net/v3/AcceptUI.js'
       : 'https://jstest.authorize.net/v3/AcceptUI.js';
