@@ -119,7 +119,7 @@ console.log('🔧 SubscriptionController: Request plan_name:', req.body.plan_nam
 // Add delay for production ARB subscriptions (token propagation issue)
 // One-time payments don't need this, but ARB subscriptions do
 if (process.env.ANET_ENV === 'production') {
-  const delaySeconds = 5;
+  const delaySeconds = 8;
   console.log(`⏳ SubscriptionController: Waiting ${delaySeconds} seconds for production ARB token propagation...`);
   await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
   console.log('✅ SubscriptionController: Delay complete, proceeding with ARB creation');
