@@ -196,7 +196,9 @@ sub.setBillTo(billTo);
             } catch (wrapErr) {
               console.warn('⚠️ ARBService: Could not wrap response, falling back to JSON parse:', wrapErr);
             }
-
+            console.log('🔧 ARBService: Response:', response);
+            console.log('🔧 ARBService: Response Messages:', response.getMessages());
+            console.log('🔧 ARBService: Response Messages Result Code:', response.getMessages().getResultCode());
             if (response && response.getMessages) {
               const result = response.getMessages().getResultCode();
               if (result === ApiContracts.MessageTypeEnum.OK) {
