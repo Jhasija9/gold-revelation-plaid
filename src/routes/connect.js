@@ -842,6 +842,7 @@ window.currentDescription = ${JSON.stringify(description || '')};
               }
               updatePrimaryAction();
             });
+
             
             
             // Then add the complete payment button
