@@ -59,7 +59,7 @@ app.use(
 app.use(
   cors({
     origin: process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim().replace(/\/$/, ""))
+      ? process.env.ALLOWED_ORIGINS.split(",")
       : "*",
     credentials: true,
   })
