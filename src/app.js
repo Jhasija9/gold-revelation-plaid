@@ -64,25 +64,6 @@ app.use(
     credentials: true,
   })
 );
-// const normalize = s => (s || '').trim().replace(/\/$/, '');
-// const ALLOW = (process.env.ALLOWED_ORIGINS || '')
-//   .split(',')
-//   .map(normalize)
-//   .filter(Boolean);
-
-// app.use(cors({
-//   origin: (origin, cb) => {
-//     if (!origin) return cb(null, true);              // non-browser / same-origin
-//     const ok = ALLOW.includes(normalize(origin));
-//     return cb(ok ? null : new Error('CORS: origin not allowed'), ok);
-//   },
-//   methods: ['GET','POST','OPTIONS'],
-//   allowedHeaders: ['Content-Type','Authorization','x-api-key'],
-//   credentials: true,
-//   maxAge: 86400,
-// }));
-// app.options('*', cors()); // handle preflight everywhere
-
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 

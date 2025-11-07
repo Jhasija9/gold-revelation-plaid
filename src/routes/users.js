@@ -130,7 +130,6 @@ router.post("/", async (req, res, next) => {
     res.setHeader("Set-Cookie", cookieStr);
 
     // 4) 303 redirect to /connect so the browser follows and the cookie sticks
-    
     const redirectUrl = `/connect?selected_plan=${encodeURIComponent(selected_plan)}`;
     res.status(303).setHeader("Location", redirectUrl).end();
     
