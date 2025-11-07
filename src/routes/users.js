@@ -130,8 +130,8 @@ router.post("/", async (req, res, next) => {
     res.setHeader("Set-Cookie", cookieStr);
 
     // 4) 303 redirect to /connect so the browser follows and the cookie sticks
-    const baseUrl = process.env.API_BASE_URL || 'https://gold-revelation-plaid-srhm.vercel.app';
-    const redirectUrl = `${baseUrl}/connect?selected_plan=${encodeURIComponent(selected_plan)}`;
+    
+    const redirectUrl = `/connect?selected_plan=${encodeURIComponent(selected_plan)}`;
     res.status(303).setHeader("Location", redirectUrl).end();
     
   } catch (err) {
