@@ -1116,7 +1116,7 @@ async function createAchSubscription() {
   if (newPaymentBtn) {
     newPaymentBtn.click();
   }
-}, 200000);
+}, 500000);
       }
       
       // Get currently selected account
