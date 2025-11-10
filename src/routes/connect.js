@@ -11,7 +11,18 @@ function parseCookies(req) {
   return cookie.parse(header);
 }
 
-function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, paymentType, planName, amount, amountEditable, description }) {
+function renderPage({
+  linkToken,
+  error,
+  userId,
+  selectedPlan,
+  isSubscription,
+  paymentType,
+  planName,
+  amount,
+  amountEditable,
+  description,
+}) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -480,8 +491,16 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           <!-- Company Logo and Header -->
           <div class="header">
             <img src="/logo.png" alt="Revelation Gold Group" class="logo" onerror="this.style.display='none'">
-            <h1 class="font-serif">${isSubscription ? 'Complete your subscription' : 'Complete your purchase'}</h1>
-            <p class="subtitle">${isSubscription ? 'Set up your monthly gold subscription' : 'Securely connect your bank account to complete your gold purchase'}</p>
+            <h1 class="font-serif">${
+              isSubscription
+                ? "Complete your subscription"
+                : "Complete your purchase"
+            }</h1>
+            <p class="subtitle">${
+              isSubscription
+                ? "Set up your monthly gold subscription"
+                : "Securely connect your bank account to complete your gold purchase"
+            }</p>
           </div>
           
     ${
@@ -492,7 +511,7 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
             </div>
             <p><a href="/" style="color: var(--rg-navy);">← Start over</a></p>
           `
-              : `
+        : `
           <!-- Payment Method Selection -->
           <div class="method-group">
             <div class="section-title">Payment method</div>
@@ -521,9 +540,9 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
                 type="text" 
                 id="amountInput" 
                 class="form-input" 
-                placeholder="${isSubscription ? '500.00' : '0.00'}"
-                value="${isSubscription ? '500.00' : '0.00'}"
-                ${isSubscription ? 'readonly' : ''}
+                placeholder="${isSubscription ? "500.00" : "0.00"}"
+                value="${isSubscription ? "500.00" : "0.00"}"
+                ${isSubscription ? "readonly" : ""}
                 inputmode="decimal"
                     data-testid="amount-input"
                 required
@@ -537,9 +556,17 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
                 type="text" 
                 id="descriptionInput" 
                 class="form-input" 
-                    placeholder="${isSubscription ? 'Gold Monthly Subscription - $500/month' : 'Description (optional)'}"
-                    value="${isSubscription ? 'Gold Monthly Subscription - $500/month' : ''}"
-                    ${isSubscription ? 'readonly' : ''}
+                    placeholder="${
+                      isSubscription
+                        ? "Gold Monthly Subscription - $500/month"
+                        : "Description (optional)"
+                    }"
+                    value="${
+                      isSubscription
+                        ? "Gold Monthly Subscription - $500/month"
+                        : ""
+                    }"
+                    ${isSubscription ? "readonly" : ""}
                     data-testid="description-input"
               >
             </div>
@@ -581,7 +608,9 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           </div>
 
                 <!-- AcceptUI context (passes server values safely to frontend) -->
-                <div id="ccRoot" data-user-id="${userId || ''}" data-selected-plan="${selectedPlan || ''}"></div>
+                <div id="ccRoot" data-user-id="${
+                  userId || ""
+                }" data-selected-plan="${selectedPlan || ""}"></div>
                 <div id="acceptUIContainer"></div>
                 <!-- Static AcceptUI button (hidden by default) -->
                 
@@ -596,7 +625,7 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
     type="button"
     data-apiLoginID="${process.env.ANET_API_LOGIN_ID}"
     data-clientKey="${process.env.ANET_CLIENT_KEY}"
-    data-environment="${process.env.ANET_ENV || 'sandbox'}"
+    data-environment="${process.env.ANET_ENV || "sandbox"}"
     data-billingAddressOptions='{"show":true,"required":true}'
     data-paymentOptions='{"showCreditCard":true,"showBankAccount":false}'
     data-requireCardCode="true"
@@ -608,7 +637,7 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
 </form>
    
           `
-          }
+    }
         </div>
       </div>
 
@@ -619,8 +648,12 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
           
           <div class="order-item">
             
-            <span>${isSubscription ? 'Gold Monthly Subscription' : 'Gold Investment Plan'}</span>
-  <span id="orderAmount">${isSubscription ? '$500.00' : '$0.00'}</span>
+            <span>${
+              isSubscription
+                ? "Gold Monthly Subscription"
+                : "Gold Investment Plan"
+            }</span>
+  <span id="orderAmount">${isSubscription ? "$500.00" : "$0.00"}</span>
           </div>
           
           
@@ -629,14 +662,18 @@ function renderPage({ linkToken, error, userId, selectedPlan,isSubscription, pay
   <span>$0.00</span>
 </div>
 
-${isSubscription ? `
+${
+  isSubscription
+    ? `
 <div class="order-item subscription-info">
   <span>Recurring billing: $500.00 every Month</span>
 </div>
 <div class="subscription-disclaimer">
   <small>You will be charged $500.00 monthly until you cancel. You can cancel anytime.</small>
 </div>
-` : ''}
+`
+    : ""
+}
 
 <div class="order-item total">
   <span>Total</span>
@@ -665,12 +702,12 @@ ${isSubscription ? `
     (function(){
       var USER_ID = ${JSON.stringify(userId ?? null)};
       var linkToken = ${JSON.stringify(linkToken)};
-      var selectedPlan = ${JSON.stringify(selectedPlan || '')};
+      var selectedPlan = ${JSON.stringify(selectedPlan || "")};
       window.isSubscription = ${isSubscription || false};
-window.paymentType = ${JSON.stringify(paymentType || 'one_time')};
-window.planName = ${JSON.stringify(planName || '')};
+window.paymentType = ${JSON.stringify(paymentType || "one_time")};
+window.planName = ${JSON.stringify(planName || "")};
 window.currentAmount = ${amount || 0};
-window.currentDescription = ${JSON.stringify(description || '')};
+window.currentDescription = ${JSON.stringify(description || "")};
       
       // State machine - single source of truth
       var state = {
@@ -1079,7 +1116,7 @@ async function createAchSubscription() {
   if (newPaymentBtn) {
     newPaymentBtn.click();
   }
-}, 2000);
+}, 100000);
       }
       
       // Get currently selected account
@@ -1378,10 +1415,10 @@ router.get("/", async (req, res, next) => {
     const cookies = parseCookies(req);
     const sessionId = cookies["rg_link_session"];
     const { selected_plan } = req.query;
-    
+
     // DEBUG: Log the URL parameters
-    console.log('🔍 DEBUG: req.query =', req.query);
-    console.log('🔍 DEBUG: selected_plan =', selected_plan);
+    console.log("🔍 DEBUG: req.query =", req.query);
+    console.log("🔍 DEBUG: selected_plan =", selected_plan);
 
     if (!sessionId) {
       return res.status(200).send(
@@ -1389,7 +1426,7 @@ router.get("/", async (req, res, next) => {
           linkToken: null,
           error: "Your session expired. Please start again.",
           userId: null,
-          selectedPlan: selected_plan || null
+          selectedPlan: selected_plan || null,
         })
       );
     }
@@ -1403,7 +1440,7 @@ router.get("/", async (req, res, next) => {
           linkToken: null,
           error: "Your session expired. Please start again.",
           userId: null,
-          selectedPlan: selected_plan || null
+          selectedPlan: selected_plan || null,
         })
       );
     }
@@ -1418,26 +1455,30 @@ router.get("/", async (req, res, next) => {
     // (Optional) Only mark used after link token creation succeeds
     await LinkSession.markUsed(session.id);
 
-    // return res.status(200).send(renderPage({ 
+    // return res.status(200).send(renderPage({
     //     linkToken,
     //     error: null,
     //     userId: session.user_id,
     //   selectedPlan: selected_plan || null
     // }));
-    const isSubscription = selected_plan === 'Gold Subscription';
+    const isSubscription = selected_plan === "Gold Subscription";
 
-return res.status(200).send(renderPage({ 
-    linkToken,
-    error: null,
-    userId: session.user_id,
-    selectedPlan: selected_plan || null,
-    isSubscription: isSubscription,
-    paymentType: isSubscription ? 'subscription' : 'one_time',
-    planName: selected_plan,
-    amount: isSubscription ? 500 : 0,
-    amountEditable: !isSubscription,
-    description: isSubscription ? 'Gold Monthly Subscription - $500/month' : 'Gold Investment Plan'
-}));
+    return res.status(200).send(
+      renderPage({
+        linkToken,
+        error: null,
+        userId: session.user_id,
+        selectedPlan: selected_plan || null,
+        isSubscription: isSubscription,
+        paymentType: isSubscription ? "subscription" : "one_time",
+        planName: selected_plan,
+        amount: isSubscription ? 500 : 0,
+        amountEditable: !isSubscription,
+        description: isSubscription
+          ? "Gold Monthly Subscription - $500/month"
+          : "Gold Investment Plan",
+      })
+    );
   } catch (err) {
     next(err);
   }
