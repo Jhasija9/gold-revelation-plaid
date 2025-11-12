@@ -683,9 +683,14 @@ ${
           <div class="trust-row">
             <div class="trust-icon">🔒</div>
             <div>
-              Bank connection is secure via Plaid. 
-              <a href="/terms">Terms</a> • 
-              <a href="/privacy">Privacy</a>
+              Your info will be saved to a Revelation Gold account. By continuing, you agree to Revelation Gold’s
+              <a href="https://docs.google.com/document/d/1CDfFa-l-C3ijxmvoZwfOEti_0mjYP5ZXjlzDqKhoTEA/edit?tab=t.0"
+                 target="_blank" rel="noopener noreferrer"
+                 style="color:#1a73e8;text-decoration:underline;font-weight:600;">
+                Terms of Service
+              </a>
+              and acknowledge the Privacy Policy
+              </a>.
             </div>
           </div>
         </div>
