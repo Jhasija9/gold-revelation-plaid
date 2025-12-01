@@ -681,6 +681,7 @@ ${
 </div>
           
           <div class="trust-row">
+          <div class="trust-icon">🔒</div>
             <div>
               Your info will be saved to a Revelation Gold account. By continuing, you agree to Revelation Gold’s
               <a href="https://docs.google.com/document/d/1CDfFa-l-C3ijxmvoZwfOEti_0mjYP5ZXjlzDqKhoTEA/edit?tab=t.0"
