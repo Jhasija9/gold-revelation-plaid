@@ -1,4 +1,3 @@
-
 // // src/routes/users.js
 // const express = require("express");
 // const router = express.Router();
@@ -58,7 +57,6 @@
 
 // module.exports = router;
 
-
 // src/routes/users.js
 const express = require("express");
 const router = express.Router();
@@ -70,16 +68,17 @@ const LinkSession = require("../models/LinkSession");
 
 router.post("/", async (req, res, next) => {
   try {
-    const { first_name, last_name, email, phone, selected_plan } = req.body || {};
+    const { first_name, last_name, email, phone, selected_plan } =
+      req.body || {};
 
     // 1) Check if user already exists
     let user_id;
     const existingUser = await User.findByEmail(email);
-    
+
     if (existingUser.success) {
       // User exists, use existing user
       user_id = existingUser.data.id;
-      console.log('✅ Using existing user:', email);
+      console.log("✅ Using existing user:", email);
     } else {
       // User doesn't exist, create new user
       const created = await User.create({
@@ -89,16 +88,16 @@ router.post("/", async (req, res, next) => {
         phone,
         selected_plan,
       });
-      
+
       if (created.id) {
         user_id = created.id;
-        console.log('✅ Created new user:', email);
+        console.log("✅ Created new user:", email);
       } else {
         // User creation failed
-        console.error('❌ User creation failed:', created);
+        console.error("❌ User creation failed:", created);
         return res.status(500).json({
           success: false,
-          error: 'Failed to create user account'
+          error: "Failed to create user account",
         });
       }
     }
@@ -107,7 +106,7 @@ router.post("/", async (req, res, next) => {
     if (!user_id) {
       return res.status(500).json({
         success: false,
-        error: 'Invalid user ID'
+        error: "Invalid user ID",
       });
     }
 
@@ -130,9 +129,10 @@ router.post("/", async (req, res, next) => {
     res.setHeader("Set-Cookie", cookieStr);
 
     // 4) 303 redirect to /connect so the browser follows and the cookie sticks
-    const redirectUrl = `/connect?selected_plan=${encodeURIComponent(selected_plan)}`;
+    const redirectUrl = `/connect?selected_plan=${encodeURIComponent(
+      selected_plan
+    )}`;
     res.status(303).setHeader("Location", redirectUrl).end();
-    
   } catch (err) {
     next(err);
   }
